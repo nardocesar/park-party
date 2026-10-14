@@ -34,7 +34,10 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
   // marcadores antes dos jogadores: numa torre, quem está em cima cobre o marcador de baixo
   for (const p of active) e.drawMarker(ctx, p);
   for (const p of active) e.drawPlayer(ctx, p, world.frame);
-  if (!world.key.used) e.drawKey(ctx, world.key.x, world.key.y, world.frame);
+  if (!world.key.used) {
+    e.drawKey(ctx, world.key.x, world.key.y, world.frame);
+    if (world.key.locked) e.drawCage(ctx, world.key.x, world.key.y);
+  }
   drawBlackout(ctx, world, cam);
   ctx.restore();
 }

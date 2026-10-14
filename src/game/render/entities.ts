@@ -1,6 +1,6 @@
 import { PLAYER_SIZE, TILE } from "../engine/constants";
 import type { ThornDir } from "../engine/level";
-import { gateRect, type Box, type Player, type World } from "../engine/world";
+import { countdownSeconds, gateRect, type Box, type Player, type World } from "../engine/world";
 import { hash, pixelText, px, spriteImage } from "./pixel";
 import { CACTUS, COWBOYS, COWBOYS_WALK, KEY_SPRITE, PLAYER_COLORS } from "./sprites";
 
@@ -20,10 +20,27 @@ function counter(ctx: CanvasRenderingContext2D, text: string, x: number, y: numb
   ctx.fillText(text, x, y);
 }
 
-/** Cerca de madeira; só a parte ainda fechada (topo) é desenhada. */
+/**
+ * Cerca de madeira; só a parte ainda fechada (topo) é desenhada.
+ * Portão invertido é uma ponte: tábuas quando sólida, contorno tracejado de onde vai surgir.
+ */
 export function drawGates(ctx: CanvasRenderingContext2D, world: World) {
   for (const gate of world.gates) {
     const r = gateRect(gate);
+    if (gate.inverted) {
+      if (gate.open > 0) {
+        ctx.strokeStyle = "rgba(255, 208, 106, 0.7)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 2]);
+        ctx.strokeRect(gate.x + 0.5, gate.y + 0.5, gate.w - 1, gate.h - 1);
+        ctx.setLineDash([]);
+      }
+      if (r.h <= 0) continue;
+      px(ctx, r.x, r.y, r.w, r.h, "#a8743a");
+      px(ctx, r.x, r.y, r.w, Math.min(2, r.h), "#e0b070");
+      for (let x = r.x; x < r.x + r.w; x += 8) px(ctx, x, r.y, 1, r.h, WOOD_DARK);
+      continue;
+    }
     if (r.h <= 0) continue;
     px(ctx, r.x, r.y, r.w, r.h, WOOD);
     for (let x = r.x + 3; x < r.x + r.w - 1; x += 4) px(ctx, x, r.y, 1, r.h, WOOD_DARK);
@@ -83,18 +100,31 @@ export function drawSwitches(ctx: CanvasRenderingContext2D, world: World) {
     px(ctx, sw.x + 1, sw.y + down, sw.w - 2, sw.h - 1 - down, "#c9a227");
     px(ctx, sw.x + 2, sw.y + down, sw.w - 4, Math.max(1, sw.h - 2 - down), color);
     px(ctx, sw.x + 3, sw.y + down, sw.w - 6, 1, "rgba(255,255,255,0.45)");
-    if (sw.timer > 0 && sw.rest > 0 && !sw.pressed) {
-      // barra do tempo restante
-      px(ctx, sw.x, sw.y - 4, (sw.w * sw.rest) / (sw.timer * 60), 2, "#d97706");
-    }
-    if (sw.delay > 0 && sw.countdown > 0) {
-      ctx.strokeStyle = "#2563eb";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(sw.x + sw.w / 2, sw.y - 6, 4, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * (1 - sw.countdown / (sw.delay * 60)));
-      ctx.stroke();
-    }
+    const seconds = countdownSeconds(sw);
+    if (seconds !== null) drawCountdown(ctx, seconds, sw.x + sw.w / 2, sw.y - 4, color);
   }
+}
+
+let westernFont: string | null = null;
+/** Família da fonte Rye carregada pela página (next/font expõe em --font-rye). */
+function western() {
+  if (westernFont === null && typeof document !== "undefined") {
+    westernFont = getComputedStyle(document.documentElement).getPropertyValue("--font-rye").trim() || "serif";
+  }
+  return westernFont ?? "serif";
+}
+
+/** Número grande da contagem (como no PICO PARK 2), com contorno escuro. */
+function drawCountdown(ctx: CanvasRenderingContext2D, seconds: number, cx: number, bottom: number, color: string) {
+  ctx.font = `16px ${western()}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = OUTLINE;
+  ctx.strokeText(String(seconds), cx, bottom);
+  ctx.fillStyle = color === "#2563eb" ? "#93c5fd" : "#ffd06a";
+  ctx.fillText(String(seconds), cx, bottom);
 }
 
 /** Vento: rajadas de poeira na direção do sopro (só quando ligado). */
@@ -424,6 +454,17 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: numb
   }
   ctx.drawImage(img, x, y - 2 * k, p.w, p.h + 2 * k);
   ctx.restore();
+}
+
+/** Jaula de ferro em volta da chave trancada. */
+export function drawCage(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  const cx = Math.round(x) - 4;
+  const cy = Math.round(y) - 4;
+  px(ctx, cx, cy, 18, 2, "#5c5f66");
+  px(ctx, cx, cy + 16, 18, 2, "#5c5f66");
+  for (let bx = cx; bx <= cx + 16; bx += 4) px(ctx, bx, cy, 2, 18, "#8a8e96");
+  px(ctx, cx + 7, cy + 12, 4, 4, "#ffd23f");
+  px(ctx, cx + 8, cy + 10, 2, 2, "#b8901f");
 }
 
 export function drawKey(ctx: CanvasRenderingContext2D, x: number, y: number, frame: number) {

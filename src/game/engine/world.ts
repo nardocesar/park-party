@@ -111,15 +111,17 @@ export type Switch = Rect & {
 };
 export type Blink = Rect & { on: number; off: number; visible: boolean; timer: number };
 /** `open` vai de 0 (fechado) a 1 (aberto); a parte sólida é o topo com altura h·(1−open). */
-export type Gate = Rect & { id: string; open: number; needAll: boolean };
+export type Gate = Rect & { id: string; open: number; needAll: boolean; inverted: boolean };
 
-export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean };
+/** `locked`: presa na jaula até o botão de `level.keyLock` ligar. */
+export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean; locked: boolean };
 export type Door = Rect & { open: boolean };
 
 /** O que aconteceu no último quadro, para o som (e outros efeitos) reagirem. */
 export type GameEvent =
   | "jump" | "flip" | "spring" | "warp" | "crumble" | "switch"
-  | "key" | "keyPass" | "door" | "enter" | "clear" | "death";
+  | "key" | "keyPass" | "door" | "enter" | "clear" | "death"
+  | "tick" | "release";
 
 export type World = {
   level: Level;
@@ -151,7 +153,7 @@ export function createWorld(level: Level, playerCount: number): World {
       kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0, color: b.color,
     })),
     switches: level.switches.map((sw) => ({ ...sw, on: false, pressed: false, rest: 0, countdown: 0, latched: false })),
-    gates: level.gates.map((g) => ({ ...g, open: 0 })),
+    gates: level.gates.map((g) => ({ ...g, open: g.inverted ? 1 : 0 })),
     falls: level.falls.map((f, index) => ({ kind: "fall", index, x: f.x, y: f.y, w: f.w, h: f.h, vy: 0, touched: false, timer: 0 })),
     thorns: level.thorns.map((t) => ({ ...t, x0: t.x, y0: t.y, t: 0, way: 1 })),
     rails: level.rails.map((r, index) => ({
@@ -162,7 +164,7 @@ export function createWorld(level: Level, playerCount: number): World {
     lifts: level.lifts.map((l, index) => ({
       kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0, wait: 0,
     })),
-    key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false },
+    key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false, locked: false },
     door: { x: level.door.x, y: level.door.y, w: DOOR_W, h: DOOR_H, open: false },
     cameraX: 0,
     status: "playing",
@@ -201,7 +203,7 @@ function placeEntities(world: World) {
   }
   for (const b of world.boxes) placeBox(world, b);
   for (const sw of world.switches) Object.assign(sw, { on: false, pressed: false, rest: 0, countdown: 0, latched: false });
-  for (const g of world.gates) g.open = 0;
+  for (const g of world.gates) g.open = g.inverted ? 1 : 0;
   world.blinks.forEach((b, i) => {
     const def = level.blinks[i];
     b.visible = def.startOn;
@@ -212,7 +214,9 @@ function placeEntities(world: World) {
   for (const t of world.thorns) Object.assign(t, { x: t.x0, y: t.y0, t: 0, way: 1 });
   world.rails.forEach((r, i) => Object.assign(r, { ...level.rails[i].path[0], s: 0, weight: 0, wait: 0, forward: true }));
   for (const p of world.pushers) Object.assign(p, { x: p.x0, offset: 0, state: "idle", timer: Math.round(MOVEWALL_IDLE * FPS) });
-  Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
+  Object.assign(world.key, {
+    x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false, locked: level.keyLock !== null,
+  });
   world.door.open = false;
   world.status = "playing";
   updateCamera(world);
@@ -739,11 +743,22 @@ function updateWarps(world: World) {
   }
 }
 
+/**
+ * Segundos que faltam na contagem do botão (para mostrar o número grande), ou null sem contagem:
+ * botão com tempo depois de solto, ou botão com atraso antes de disparar.
+ */
+export function countdownSeconds(sw: Switch): number | null {
+  if (sw.delay > 0 && sw.countdown > 0) return Math.ceil(sw.countdown / FPS);
+  if (sw.timer > 0 && !sw.pressed && sw.rest > 0) return Math.ceil(sw.rest / FPS);
+  return null;
+}
+
 function updateSwitches(world: World) {
   const things = bodies(world);
   for (const sw of world.switches) {
     const wasPressed = sw.pressed;
     const wasOn = sw.on;
+    const before = countdownSeconds(sw);
     sw.pressed = things.some((b) => overlaps(b, sw));
     if (sw.delay > 0) {
       if (sw.pressed && !wasPressed && sw.countdown === 0 && !sw.latched) sw.countdown = Math.round(sw.delay * FPS);
@@ -757,10 +772,13 @@ function updateSwitches(world: World) {
       sw.on = sw.pressed;
     }
     if (sw.on && !wasOn) world.events.push("switch");
+    const now = countdownSeconds(sw);
+    if (before !== null && now !== null && now < before) world.events.push("tick");
   }
   for (const g of world.gates) {
     const mine = world.switches.filter((sw) => sw.target === g.id);
-    const opening = mine.length > 0 && (g.needAll ? mine.every((sw) => sw.on) : mine.some((sw) => sw.on));
+    const active = mine.length > 0 && (g.needAll ? mine.every((sw) => sw.on) : mine.some((sw) => sw.on));
+    const opening = g.inverted ? !active : active;
     if (opening) {
       g.open = Math.min(1, g.open + GATE_SPEED / g.h);
       continue;
@@ -787,6 +805,11 @@ function updateSwitches(world: World) {
 function updateKey(world: World) {
   const { key } = world;
   if (key.used) return;
+  if (key.locked) {
+    if (!world.switches.some((sw) => sw.target === world.level.keyLock && sw.on)) return;
+    key.locked = false;
+    world.events.push("release");
+  }
   if (key.excludeTimer > 0 && --key.excludeTimer === 0) key.excluded = null;
 
   for (const p of active(world)) {

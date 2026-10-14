@@ -4,7 +4,7 @@ import type { GameEvent } from "./engine/world";
  * Efeitos sonoros sintetizados (Web Audio), no estilo chiptune: nada de arquivos de áudio.
  * Cada som é uma sequência de notas; `at` posiciona a nota no tempo (padrão: logo após a anterior).
  */
-export type Sfx = GameEvent | "restart" | "tick";
+export type Sfx = GameEvent | "restart";
 
 type Note = {
   /** Frequência inicial (Hz); com `to`, desliza até ela. */
@@ -31,6 +31,7 @@ export const SOUNDS: Record<Sfx, Note[]> = {
     { f: 800, d: 0.04, wave: "square", v: 0.4 },
   ],
   tick: [{ f: 1000, d: 0.04, wave: "square", v: 0.35 }],
+  release: [G5, C6, E6, G6].map((f, i) => ({ f, d: 0.05, wave: "triangle" as const, v: 0.8, at: i * 0.05 })),
   key: [A5, D6, G6].map((f, i) => ({ f, d: 0.06, wave: "square" as const, v: 0.45, at: i * 0.06 })),
   keyPass: [D6, G6].map((f, i) => ({ f, d: 0.05, wave: "square" as const, v: 0.4, at: i * 0.05 })),
   door: [C5, E5, G5, C6].map((f, i) => ({ f, d: 0.07, wave: "triangle" as const, v: 0.9, at: i * 0.07 })),
