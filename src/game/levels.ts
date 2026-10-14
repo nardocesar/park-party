@@ -171,9 +171,104 @@ const WORLD_2: LevelDef[] = [
   ),
 ];
 
+// Mundo 3 — Contra o tempo: botões temporizados/combinados e blocos que piscam
+// (SwitchComponent.m_TimerAddSecond, DelaySwitchComponent, BlinkBlockComponent — docs/re/03-timing.md).
+const WORLD_3: LevelDef[] = [
+  // 3-1: um segura o botão temporizado, o outro passa e segura o do outro lado
+  build(
+    "Revezamento",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.set(30, FLOOR, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      switches: [
+        { col: 16, row: FLOOR, target: "g1", timer: 3 },
+        { col: 24, row: FLOOR, target: "g1", timer: 3 },
+      ],
+      gates: [{ id: "g1", col: 20, row: FLOOR - 4, w: 1, h: 5 }],
+    },
+  ),
+  // 3-2: paredes que piscam fora de fase e uma ponte que pisca sobre o poço
+  build(
+    "Pisca-pisca",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(30, 32, FLOOR + 1, ROWS - 1, ".");
+      g.set(27, FLOOR, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      blinks: [
+        { col: 12, row: FLOOR - 4, w: 1, h: 5, on: 1.5, off: 1.5 },
+        { col: 18, row: FLOOR - 4, w: 1, h: 5, on: 1.5, off: 1.5, phase: 0.5 },
+        { col: 24, row: FLOOR - 4, w: 1, h: 5, on: 1.5, off: 1.5, phase: 1 },
+        { col: 30, row: FLOOR + 1, w: 3, h: 1, on: 2, off: 1.5 },
+      ],
+    },
+  ),
+  // 3-3: o portão exige os dois botões ao mesmo tempo; caixas seguram os botões
+  build(
+    "Caixas nos botões",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.set(12, FLOOR, "#");
+      g.set(20, FLOOR, "#");
+      g.set(28, FLOOR, "K");
+      g.set(38, FLOOR, "D");
+    },
+    {
+      boxes: [
+        { col: 7, row: FLOOR, w: 1, h: 1, need: 1 },
+        { col: 16, row: FLOOR, w: 1, h: 1, need: 1 },
+      ],
+      switches: [
+        { col: 11, row: FLOOR, target: "g1" },
+        { col: 19, row: FLOOR, target: "g1" },
+      ],
+      gates: [{ id: "g1", col: 24, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
+    },
+  ),
+  // 3-4: dois revezamentos com paredes que piscam no meio
+  build(
+    "Corrida",
+    54,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.set(46, FLOOR, "K");
+      g.set(50, FLOOR, "D");
+    },
+    {
+      switches: [
+        { col: 10, row: FLOOR, target: "g1", timer: 2.5 },
+        { col: 18, row: FLOOR, target: "g1", timer: 2.5 },
+        { col: 32, row: FLOOR, target: "g2", timer: 2.5 },
+        { col: 40, row: FLOOR, target: "g2", timer: 2.5 },
+      ],
+      gates: [
+        { id: "g1", col: 14, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g2", col: 36, row: FLOOR - 4, w: 1, h: 5 },
+      ],
+      blinks: [
+        { col: 24, row: FLOOR - 4, w: 1, h: 5, on: 1, off: 1 },
+        { col: 28, row: FLOOR - 4, w: 1, h: 5, on: 1, off: 1, phase: 0.5 },
+      ],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
+  { name: "Contra o tempo", levels: WORLD_3 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

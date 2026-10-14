@@ -172,4 +172,80 @@ describe("fases", () => {
       expect(w.status).toBe("cleared");
     });
   });
+
+  describe("Mundo 3 — tempo", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    type P = World["players"][number];
+
+    /** Anda até a coluna `col` (borda esquerda do jogador no tile), pulando quando trava. */
+    function mover() {
+      const last = new Map<P, number>();
+      return (p: P, col: number, f: number): PlayerInput => {
+        const target = col * TILE + (TILE - p.w) / 2;
+        const dx = target - p.x;
+        if (Math.abs(dx) < 1) return NO_INPUT;
+        const stuck = Math.abs(p.x - (last.get(p) ?? -1)) < 0.1;
+        last.set(p, p.x);
+        return { left: dx < 0, right: dx > 0, jump: stuck && f % 16 < 8 };
+      };
+    }
+    const near = (p: P, col: number) => Math.abs(p.x - (col * TILE + (TILE - p.w) / 2)) < 1;
+
+    /** Revezamento: `lead` segura o botão da esquerda, `runner` passa e segura o da direita, `lead` passa. */
+    function relay(w: World, lead: P, runner: P, left: number, right: number) {
+      const mv = mover();
+      const input = (m: Map<P, PlayerInput>) => w.players.map((p) => m.get(p) ?? NO_INPUT);
+      for (let f = 0; f < 900 && !near(lead, left); f++) step(w, input(new Map([[lead, mv(lead, left, f)]])));
+      for (let f = 0; f < 900 && !near(runner, right); f++) step(w, input(new Map([[runner, mv(runner, right, f)]])));
+      expect(near(runner, right)).toBe(true);
+      for (let f = 0; f < 900 && !near(lead, right + 2); f++) step(w, input(new Map([[lead, mv(lead, right + 2, f)]])));
+      expect(near(lead, right + 2)).toBe(true);
+    }
+
+    const finish = (w: World) => {
+      const walk = walker(w);
+      for (let f = 0; f < 4000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    };
+
+    it("3-1 tem solução: revezamento nos botões temporizados", () => {
+      const w = createWorld(parseLevel(at("3-1")), 2);
+      const [a, b] = w.players;
+      relay(w, b, a, 16, 24);
+      finish(w);
+    });
+
+    it("3-2 tem solução: esperar as paredes e a ponte piscarem", () => {
+      const w = createWorld(parseLevel(at("3-2")), 2);
+      const bridge = w.blinks[3];
+      const walk = walker(w);
+      const edge = 30 * TILE - 2;
+      // até a borda do poço (paredes que piscam: só andar contra elas até sumirem)
+      const [a, b] = w.players;
+      for (let f = 0; f < 3000 && !(b.x + b.w >= edge && a.x + a.w >= b.x - 1); f++) {
+        step(w, w.players.map((p, i) => (p.x + p.w >= edge ? NO_INPUT : { ...walk(i, f), jump: false })));
+      }
+      // espera a ponte acabar de aparecer e atravessa junto
+      for (let f = 0; f < 600 && !(bridge.visible && bridge.timer > 100); f++) step(w, [NO_INPUT, NO_INPUT]);
+      for (let f = 0; f < 70; f++) step(w, [{ ...NO_INPUT, right: true }, { ...NO_INPUT, right: true }]);
+      expect(w.resets).toBe(0);
+      expect(w.players.every((p) => p.x > 33 * TILE)).toBe(true);
+      finish(w);
+    });
+
+    it("3-3 tem solução: caixas nos dois botões abrem o portão", () => {
+      const w = createWorld(parseLevel(at("3-3")), 2);
+      finish(w);
+      expect(w.switches.every((sw) => sw.on)).toBe(true);
+    });
+
+    it("3-4 tem solução: dois revezamentos e paredes que piscam", () => {
+      const w = createWorld(parseLevel(at("3-4")), 2);
+      const [a, b] = w.players;
+      relay(w, b, a, 10, 18); // depois disso a está à frente
+      relay(w, a, b, 32, 40);
+      finish(w);
+    });
+  });
 });

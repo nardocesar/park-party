@@ -31,9 +31,34 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
     ctx.fillStyle = "#a8a29e";
     for (let y = r.y + 3; y < r.y + r.h - 1; y += 6) ctx.fillRect(r.x + 3, y, r.w - 6, 2);
   }
+  for (const b of world.blinks) {
+    if (b.visible) {
+      ctx.fillStyle = "#7c3aed";
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+    } else {
+      ctx.strokeStyle = "#a78bfa";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 2]);
+      ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1);
+      ctx.setLineDash([]);
+    }
+  }
   for (const sw of world.switches) {
-    ctx.fillStyle = sw.on ? "#16a34a" : "#dc2626";
-    ctx.fillRect(sw.x + 2, sw.y + (sw.on ? 2 : 0), sw.w - 4, sw.h - (sw.on ? 2 : 0));
+    ctx.fillStyle = sw.on ? "#16a34a" : sw.delay > 0 ? "#2563eb" : sw.timer > 0 ? "#d97706" : "#dc2626";
+    const down = sw.pressed || sw.on;
+    ctx.fillRect(sw.x + 2, sw.y + (down ? 2 : 0), sw.w - 4, sw.h - (down ? 2 : 0));
+    if (sw.timer > 0 && sw.rest > 0 && !sw.pressed) {
+      // barra do tempo restante
+      ctx.fillStyle = "#d97706";
+      ctx.fillRect(sw.x, sw.y - 4, (sw.w * sw.rest) / (sw.timer * 60), 2);
+    }
+    if (sw.delay > 0 && sw.countdown > 0) {
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(sw.x + sw.w / 2, sw.y - 6, 4, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * (1 - sw.countdown / (sw.delay * 60)));
+      ctx.stroke();
+    }
   }
   for (const l of world.lifts) {
     const need = Math.min(l.need, world.players.length);

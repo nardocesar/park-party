@@ -550,3 +550,95 @@ describe("corda entre os jogadores (DistanceConstraint)", () => {
     expect(b.onGround).toBe(true);
   });
 });
+
+describe("Mundo 3 — tempo", () => {
+  const room = (extra: object) =>
+    parseLevel({
+      name: "timed",
+      map: [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "####################",
+      ],
+      ...extra,
+    });
+
+  it("botão temporizado mantém o portão aberto por N segundos depois de solto", () => {
+    const w = createWorld(
+      room({ switches: [{ col: 6, row: 4, target: "g", timer: 2 }], gates: [{ id: "g", col: 12, row: 2, w: 1, h: 3 }] }),
+      2,
+    );
+    const a = w.players[0];
+    a.x = 6 * TILE + 1;
+    run(w, 60, [NO_INPUT, NO_INPUT]);
+    expect(w.gates[0].open).toBe(1);
+    a.x = 2 * TILE; // sai do botão
+    run(w, 60, [NO_INPUT, NO_INPUT]); // 1 s depois ainda aberto
+    expect(w.switches[0].on).toBe(true);
+    expect(w.gates[0].open).toBe(1);
+    run(w, 120, [NO_INPUT, NO_INPUT]); // passou o tempo: fecha
+    expect(w.switches[0].on).toBe(false);
+    expect(w.gates[0].open).toBe(0);
+  });
+
+  it("botão com atraso: o efeito só chega depois de N segundos e fica", () => {
+    const w = createWorld(
+      room({ switches: [{ col: 6, row: 4, target: "g", delay: 1 }], gates: [{ id: "g", col: 12, row: 2, w: 1, h: 3 }] }),
+      2,
+    );
+    const a = w.players[0];
+    a.x = 6 * TILE + 1;
+    run(w, 30, [NO_INPUT, NO_INPUT]);
+    expect(w.switches[0].on).toBe(false);
+    a.x = 2 * TILE;
+    run(w, 40, [NO_INPUT, NO_INPUT]);
+    expect(w.switches[0].on).toBe(true);
+    run(w, 300, [NO_INPUT, NO_INPUT]);
+    expect(w.gates[0].open).toBe(1);
+  });
+
+  it("portão com needAll só abre com todos os seus botões ligados", () => {
+    const w = createWorld(
+      room({
+        switches: [
+          { col: 6, row: 4, target: "g" },
+          { col: 9, row: 4, target: "g" },
+        ],
+        gates: [{ id: "g", col: 12, row: 2, w: 1, h: 3, needAll: true }],
+      }),
+      2,
+    );
+    const [a, b] = w.players;
+    a.x = 6 * TILE + 1;
+    run(w, 60, [NO_INPUT, NO_INPUT]);
+    expect(w.gates[0].open).toBe(0);
+    b.x = 9 * TILE + 1;
+    run(w, 60, [NO_INPUT, NO_INPUT]);
+    expect(w.gates[0].open).toBe(1);
+  });
+
+  it("bloco que pisca alterna sólido/vazio e não reaparece em cima de alguém", () => {
+    const w = createWorld(room({ blinks: [{ col: 10, row: 3, w: 1, h: 2, on: 1, off: 1 }] }), 2);
+    const blink = w.blinks[0];
+    expect(blink.visible).toBe(true);
+    run(w, 61, [NO_INPUT, NO_INPUT]);
+    expect(blink.visible).toBe(false);
+    // jogador entra no espaço do bloco enquanto está invisível
+    const b = w.players[1];
+    b.x = 10 * TILE + 1;
+    run(w, 70, [NO_INPUT, NO_INPUT]);
+    expect(blink.visible).toBe(false);
+    b.x = 14 * TILE;
+    run(w, 3, [NO_INPUT, NO_INPUT]);
+    expect(blink.visible).toBe(true);
+  });
+
+  it("bloco visível bloqueia a passagem", () => {
+    const w = createWorld(room({ blinks: [{ col: 10, row: 3, w: 1, h: 2, on: 100, off: 1 }] }), 2);
+    run(w, 200, [NO_INPUT, RIGHT]);
+    expect(w.players[1].x + w.players[1].w).toBe(10 * TILE);
+  });
+});

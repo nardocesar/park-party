@@ -2,6 +2,7 @@ import {
   AIR_RESISTIVITY,
   BOX_SPEED,
   COYOTE_FRAMES,
+  FPS,
   DOOR_H,
   DOOR_W,
   GRAVITY,
@@ -57,9 +58,23 @@ export type Lift = Rect & {
 type Body = Player | Box | Lift;
 type Support = "tile" | Body | null;
 
-export type Switch = Rect & { target: string; on: boolean };
+export type Switch = Rect & {
+  target: string;
+  /** Saída do botão (o que os portões enxergam). */
+  on: boolean;
+  /** Algo está em cima agora. */
+  pressed: boolean;
+  timer: number;
+  delay: number;
+  /** Frames restantes ligado depois de solto (botão temporizado). */
+  rest: number;
+  /** Frames até o efeito chegar (botão com atraso); `latched` depois que chega. */
+  countdown: number;
+  latched: boolean;
+};
+export type Blink = Rect & { on: number; off: number; visible: boolean; timer: number };
 /** `open` vai de 0 (fechado) a 1 (aberto); a parte sólida é o topo com altura h·(1−open). */
-export type Gate = Rect & { id: string; open: number };
+export type Gate = Rect & { id: string; open: number; needAll: boolean };
 
 export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean };
 export type Door = Rect & { open: boolean };
@@ -70,6 +85,7 @@ export type World = {
   boxes: Box[];
   switches: Switch[];
   gates: Gate[];
+  blinks: Blink[];
   lifts: Lift[];
   key: Key;
   door: Door;
@@ -84,8 +100,9 @@ export function createWorld(level: Level, playerCount: number): World {
     level,
     players: [],
     boxes: level.boxes.map((b, index) => ({ kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0 })),
-    switches: level.switches.map((sw) => ({ ...sw, on: false })),
+    switches: level.switches.map((sw) => ({ ...sw, on: false, pressed: false, rest: 0, countdown: 0, latched: false })),
     gates: level.gates.map((g) => ({ ...g, open: 0 })),
+    blinks: level.blinks.map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h, on: b.on, off: b.off, visible: true, timer: 0 })),
     lifts: level.lifts.map((l, index) => ({
       kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0, wait: 0,
     })),
@@ -122,8 +139,13 @@ function placeEntities(world: World) {
     Object.assign(p, { x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false });
   }
   for (const b of world.boxes) placeBox(world, b);
-  for (const sw of world.switches) sw.on = false;
+  for (const sw of world.switches) Object.assign(sw, { on: false, pressed: false, rest: 0, countdown: 0, latched: false });
   for (const g of world.gates) g.open = 0;
+  world.blinks.forEach((b, i) => {
+    const def = level.blinks[i];
+    b.visible = def.startOn;
+    b.timer = Math.max(1, Math.round(((b.visible ? def.on : def.off) - def.phase) * FPS));
+  });
   for (const l of world.lifts) Object.assign(l, { y: l.startY, weight: 0, wait: 0 });
   Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
   world.door.open = false;
@@ -156,7 +178,11 @@ function tileHit(level: Level, r: Rect): boolean {
 const active = (world: World) => world.players.filter((p) => !p.cleared);
 const bodies = (world: World): Body[] => [...active(world), ...world.boxes, ...world.lifts];
 export const gateRect = (g: Gate): Rect => ({ x: g.x, y: g.y, w: g.w, h: g.h * (1 - g.open) });
-const gateRects = (world: World) => world.gates.map(gateRect).filter((r) => r.h > 0);
+/** Sólidos estáticos além dos tiles: portões (parte fechada) e blocos que piscam visíveis. */
+const gateRects = (world: World): Rect[] => [
+  ...world.gates.map(gateRect).filter((r) => r.h > 0),
+  ...world.blinks.filter((b) => b.visible),
+];
 
 /** O que está logo abaixo do corpo: "tile", outro corpo, ou null. */
 function supportOf(world: World, body: Body): Support {
@@ -398,9 +424,24 @@ function applyRope(world: World, length: number, camBounds?: [number, number]) {
 
 function updateSwitches(world: World) {
   const things = bodies(world);
-  for (const sw of world.switches) sw.on = things.some((b) => overlaps(b, sw));
+  for (const sw of world.switches) {
+    const wasPressed = sw.pressed;
+    sw.pressed = things.some((b) => overlaps(b, sw));
+    if (sw.delay > 0) {
+      if (sw.pressed && !wasPressed && sw.countdown === 0 && !sw.latched) sw.countdown = Math.round(sw.delay * FPS);
+      if (sw.countdown > 0 && --sw.countdown === 0) sw.latched = true;
+      sw.on = sw.latched;
+    } else if (sw.timer > 0) {
+      if (sw.pressed) sw.rest = Math.round(sw.timer * FPS);
+      else if (sw.rest > 0) sw.rest--;
+      sw.on = sw.pressed || sw.rest > 0;
+    } else {
+      sw.on = sw.pressed;
+    }
+  }
   for (const g of world.gates) {
-    const opening = world.switches.some((sw) => sw.on && sw.target === g.id);
+    const mine = world.switches.filter((sw) => sw.target === g.id);
+    const opening = mine.length > 0 && (g.needAll ? mine.every((sw) => sw.on) : mine.some((sw) => sw.on));
     if (opening) {
       g.open = Math.min(1, g.open + GATE_SPEED / g.h);
       continue;
@@ -408,6 +449,19 @@ function updateSwitches(world: World) {
     // fecha sem esmagar: não cresce sobre um corpo
     const next = { ...g, open: Math.max(0, g.open - GATE_SPEED / g.h) };
     if (!things.some((b) => overlaps(b, gateRect(next)))) g.open = next.open;
+  }
+  // blocos que piscam: só reaparecem se o espaço estiver livre (BlinkBlockComponent.func_default)
+  for (const b of world.blinks) {
+    if (--b.timer > 0) continue;
+    if (b.visible) {
+      b.visible = false;
+      b.timer = Math.round(b.off * FPS);
+    } else if (!things.some((o) => overlaps(o, b))) {
+      b.visible = true;
+      b.timer = Math.round(b.on * FPS);
+    } else {
+      b.timer = 0;
+    }
   }
 }
 
