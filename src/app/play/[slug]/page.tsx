@@ -1,0 +1,41 @@
+import { notFound } from "next/navigation";
+import { connection } from "next/server";
+import { Suspense } from "react";
+import Game from "@/components/Game";
+import { getBestTime, listLevels } from "@/db/queries";
+import { MAX_PLAYERS } from "@/game/engine/constants";
+
+export default function PlayPage(props: PageProps<"/play/[slug]">) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-stone-200 p-4">
+      <Suspense fallback={<p className="text-stone-500">Carregando fase…</p>}>
+        <PlayLevel {...props} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function PlayLevel(props: PageProps<"/play/[slug]">) {
+  await connection();
+  const { slug } = await props.params;
+  const { players } = await props.searchParams;
+  const playerCount = Math.min(MAX_PLAYERS, Math.max(1, Number(players) || 2));
+
+  const levels = await listLevels();
+  const i = levels.findIndex((l) => l.slug === slug);
+  if (i < 0) notFound();
+  const level = levels[i];
+  const next = levels[i + 1];
+
+  return (
+    <Game
+      key={`${slug}-${playerCount}`}
+      levelId={level.id}
+      name={`${level.slug} · ${level.name}`}
+      def={level.data}
+      playerCount={playerCount}
+      nextHref={next ? `/play/${next.slug}?players=${playerCount}` : null}
+      bestMs={await getBestTime(level.id, playerCount)}
+    />
+  );
+}

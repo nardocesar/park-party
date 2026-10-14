@@ -106,7 +106,7 @@ const active = (world: World) => world.players.filter((p) => !p.cleared);
 
 /** O que está logo abaixo do jogador: "tile", índice de outro jogador, ou null. */
 function supportOf(world: World, p: Player): "tile" | number | null {
-  const probe = { x: p.x, y: p.y + p.h, w: p.w, h: 1 };
+  const probe = { x: p.x, y: p.y + p.h, w: p.w, h: 0.01 };
   if (tileHit(world.level, probe)) return "tile";
   for (const o of active(world)) if (o !== p && overlaps(probe, o)) return o.index;
   return null;
