@@ -2,12 +2,12 @@
 
 # Park Party
 
-**Plataforma cooperativa para 2 a 4 jogadores no mesmo teclado.**
-Peguem a chave, abram a porta e entrem juntos — ninguém passa sozinho.
+**Plataforma cooperativa de faroeste para 2 a 4 jogadores no mesmo teclado.**
+Peguem a chave, abram o saloon e entrem juntos — ninguém passa sozinho.
 
-![Quatro jogadores invertem a gravidade, andam pelo teto sobre os espinhos, pegam a chave e voltam ao chão para entrar na porta](docs/screenshots/gameplay.gif)
+![Quatro cowboys invertem a gravidade, andam pelo teto sobre os cactos, pegam a chave e voltam ao chão para entrar no saloon](docs/screenshots/gameplay.gif)
 
-<sub>Fase 8-1 · "Teto": os quatro invertem a gravidade, passam pelo teto por cima dos espinhos e voltam ao chão com a chave.</sub>
+<sub>Fase 8-1 · "Teto": os quatro invertem a gravidade, passam pelo teto por cima dos cactos e voltam ao chão com a chave.</sub>
 
 </div>
 
@@ -16,6 +16,10 @@ Peguem a chave, abram a porta e entrem juntos — ninguém passa sozinho.
 Park Party é um jogo de navegador inspirado no **PICO PARK**: cada fase é um quebra-cabeça
 que só se resolve em equipe. Um jogador sobe nos ombros do outro, todos empurram a mesma
 caixa, a corda que amarra o grupo puxa quem ficou para trás. Se um morre, todos recomeçam.
+
+O visual é pixel art de faroeste 16-bit, no espírito dos run-and-gun de fliperama dos anos 90:
+pôr do sol, cidade ao fundo, cactos, caixotes e portas de saloon. Os quatro cowboys são
+originais e cada um usa a cor do seu jogador na roupa e na setinha sobre a cabeça.
 
 - **61 fases** em **15 mundos**, cada mundo apresentando uma mecânica nova
 - **2 a 4 jogadores** em teclado compartilhado ou gamepads
@@ -26,27 +30,27 @@ caixa, a corda que amarra o grupo puxa quem ficou para trás. Se um morre, todos
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/tower.png" alt="Três jogadores empilhados em torre ao lado de uma plataforma onde o quarto segura a chave"></td>
-    <td width="50%"><img src="docs/screenshots/rope.png" alt="Quatro jogadores amarrados por uma corda pulando juntos em direção a um buraco"></td>
+    <td width="50%"><img src="docs/screenshots/tower.png" alt="Três cowboys empilhados em torre ao lado de uma plataforma de tábuas onde o quarto segura a chave"></td>
+    <td width="50%"><img src="docs/screenshots/rope.png" alt="Quatro cowboys amarrados por um laço andando juntos em direção a um buraco"></td>
   </tr>
   <tr>
     <td><b>Torre humana</b> — empilhem-se para alcançar o que ninguém alcança sozinho.</td>
     <td><b>Amarrados</b> — uma corda liga o grupo; pular fora de sincronia derruba todo mundo.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/gravity.png" alt="Dois jogadores andando no teto com gravidade invertida enquanto os outros dois ficam no chão"></td>
-    <td><img src="docs/screenshots/push.png" alt="Quatro jogadores em fila empurrando uma caixa que exige 4 pessoas"></td>
+    <td><img src="docs/screenshots/gravity.png" alt="Dois cowboys andando no teto com gravidade invertida enquanto os outros dois ficam no chão, acima de uma fileira de cactos"></td>
+    <td><img src="docs/screenshots/push.png" alt="Quatro cowboys em fila empurrando um caixote que exige 4 pessoas"></td>
   </tr>
   <tr>
     <td><b>De ponta-cabeça</b> — inverta a gravidade e ande pelo teto.</td>
-    <td><b>Força bruta</b> — a caixa marcada com 4 só anda se os quatro empurrarem.</td>
+    <td><b>Força bruta</b> — o caixote marcado com 4 só anda se os quatro empurrarem.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/rail.png" alt="Quatro jogadores sobre uma plataforma azul marcada 4/4 atravessando um vão"></td>
+    <td><img src="docs/screenshots/rail.png" alt="Quatro cowboys sobre um vagonete de mina marcado 4/4 atravessando um vão"></td>
     <td><img src="docs/screenshots/menu.png" alt="Menu de seleção de fases com mundos, fases concluídas e botões 2P, 3P e 4P"></td>
   </tr>
   <tr>
-    <td><b>Engrenagens</b> — a plataforma em trilho só parte com todos a bordo (4/4).</td>
+    <td><b>Engrenagens</b> — o vagonete só parte com todos a bordo (4/4).</td>
     <td><b>Seleção de fases</b> — escolha quantos jogam; a próxima fase abre ao concluir a anterior.</td>
   </tr>
 </table>
@@ -100,7 +104,8 @@ npm run dev              # http://localhost:3000
 ## Como é feito
 
 - **Next.js 16** (App Router, Server Components) + **React 19** + **Tailwind 4**
-- **Canvas 2D** com resolução interna de 320×180, escalada em pixel art
+- **Canvas 2D** com resolução interna de 320×180, escalada em pixel art; sprites em grades
+  de texto (`src/game/render/sprites.ts`), mapa e fundo desenhados uma vez por fase
 - **Motor próprio** em TypeScript, em passo fixo (`src/game/engine/`): colisão por tiles e
   AABB, jogadores que carregam uns aos outros, corda, gravidade invertida, portais, escala…
 - **Postgres + Drizzle** para fases, progresso e recordes
@@ -119,4 +124,4 @@ ou asset do PICO PARK foi copiado.
 
 ---
 
-<sub>Projeto de fã, sem fins comerciais. Não é afiliado à TECOPARK nem ao PICO PARK.</sub>
+<sub>Projeto de fã, sem fins comerciais. Não é afiliado à TECOPARK, ao PICO PARK nem à Konami.</sub>

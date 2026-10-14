@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #1d1118;
+  --foreground: #f6e3c4;
 }
 
 @theme inline {
@@ -10,13 +10,14 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-western: var(--font-rye);
+  /* paleta do pôr do sol (igual ao jogo) */
+  --color-dusk: #1d1118;
+  --color-plank: #3d2219;
+  --color-plank-edge: #5a3214;
+  --color-sand: #f6e3c4;
+  --color-dust: #c9a98a;
+  --color-gold: #ffd06a;
 }
 
 body {
