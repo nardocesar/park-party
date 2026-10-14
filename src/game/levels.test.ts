@@ -526,3 +526,19 @@ describe("fases", () => {
     });
   });
 });
+
+describe("fases com 8 jogadores", () => {
+  it.each(LEVELS.map((l) => [l.slug, l] as const))("%s: os 8 nascem sem se sobrepor e assentam sem morrer", (_, def) => {
+    const level = parseLevel(def);
+    const w = createWorld(level, 8);
+    const solidUnder = (x: number, y: number) => isSolidAt(level, Math.floor(x / TILE), Math.floor(y / TILE));
+    for (const p of w.players) {
+      for (const [x, y] of [[p.x, p.y], [p.x + p.w - 1, p.y], [p.x, p.y + p.h - 1], [p.x + p.w - 1, p.y + p.h - 1]]) {
+        expect(solidUnder(x, y), `J${p.index + 1} dentro de um bloco`).toBe(false);
+      }
+    }
+    for (let f = 0; f < 90; f++) step(w, w.players.map(() => NO_INPUT));
+    expect(w.resets).toBe(0);
+    expect(w.players.every((p) => p.onGround)).toBe(true);
+  });
+});

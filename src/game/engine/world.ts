@@ -111,10 +111,17 @@ export type Switch = Rect & {
 };
 export type Blink = Rect & { on: number; off: number; visible: boolean; timer: number };
 /** `open` vai de 0 (fechado) a 1 (aberto); a parte sólida é o topo com altura h·(1−open). */
-export type Gate = Rect & { id: string; open: number; needAll: boolean };
+export type Gate = Rect & { id: string; open: number; needAll: boolean; inverted: boolean };
 
-export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean };
+/** `locked`: presa na jaula até o botão de `level.keyLock` ligar. */
+export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean; locked: boolean };
 export type Door = Rect & { open: boolean };
+
+/** O que aconteceu no último quadro, para o som (e outros efeitos) reagirem. */
+export type GameEvent =
+  | "jump" | "flip" | "spring" | "warp" | "crumble" | "switch"
+  | "key" | "keyPass" | "door" | "enter" | "clear" | "death"
+  | "tick" | "release";
 
 export type World = {
   level: Level;
@@ -134,6 +141,8 @@ export type World = {
   status: "playing" | "cleared";
   frame: number;
   resets: number;
+  /** Eventos do último `step` (a lista é recriada a cada quadro). */
+  events: GameEvent[];
 };
 
 export function createWorld(level: Level, playerCount: number): World {
@@ -144,7 +153,7 @@ export function createWorld(level: Level, playerCount: number): World {
       kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0, color: b.color,
     })),
     switches: level.switches.map((sw) => ({ ...sw, on: false, pressed: false, rest: 0, countdown: 0, latched: false })),
-    gates: level.gates.map((g) => ({ ...g, open: 0 })),
+    gates: level.gates.map((g) => ({ ...g, open: g.inverted ? 1 : 0 })),
     falls: level.falls.map((f, index) => ({ kind: "fall", index, x: f.x, y: f.y, w: f.w, h: f.h, vy: 0, touched: false, timer: 0 })),
     thorns: level.thorns.map((t) => ({ ...t, x0: t.x, y0: t.y, t: 0, way: 1 })),
     rails: level.rails.map((r, index) => ({
@@ -155,12 +164,13 @@ export function createWorld(level: Level, playerCount: number): World {
     lifts: level.lifts.map((l, index) => ({
       kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0, wait: 0,
     })),
-    key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false },
+    key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false, locked: false },
     door: { x: level.door.x, y: level.door.y, w: DOOR_W, h: DOOR_H, open: false },
     cameraX: 0,
     status: "playing",
     frame: 0,
     resets: 0,
+    events: [],
   };
   for (let i = 0; i < playerCount; i++) {
     world.players.push({
@@ -182,10 +192,10 @@ export function resetWorld(world: World) {
 function placeEntities(world: World) {
   const { level } = world;
   for (const p of world.players) {
-    const spawn = level.spawns[p.index] ?? {
-      x: level.spawns[level.spawns.length - 1].x + (p.index - level.spawns.length + 1) * TILE,
-      y: level.spawns[level.spawns.length - 1].y,
-    };
+    // com mais jogadores que spawns (5–8), os extras nascem na cabeça dos primeiros, em camadas
+    const n = level.spawns.length;
+    const base = level.spawns[p.index % n];
+    const spawn = { x: base.x, y: base.y - Math.floor(p.index / n) * PLAYER_SIZE };
     Object.assign(p, {
       x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false,
       gravDir: 1, downHeld: false, warpCooldown: 0, scale: 1,
@@ -193,7 +203,7 @@ function placeEntities(world: World) {
   }
   for (const b of world.boxes) placeBox(world, b);
   for (const sw of world.switches) Object.assign(sw, { on: false, pressed: false, rest: 0, countdown: 0, latched: false });
-  for (const g of world.gates) g.open = 0;
+  for (const g of world.gates) g.open = g.inverted ? 1 : 0;
   world.blinks.forEach((b, i) => {
     const def = level.blinks[i];
     b.visible = def.startOn;
@@ -204,7 +214,9 @@ function placeEntities(world: World) {
   for (const t of world.thorns) Object.assign(t, { x: t.x0, y: t.y0, t: 0, way: 1 });
   world.rails.forEach((r, i) => Object.assign(r, { ...level.rails[i].path[0], s: 0, weight: 0, wait: 0, forward: true }));
   for (const p of world.pushers) Object.assign(p, { x: p.x0, offset: 0, state: "idle", timer: Math.round(MOVEWALL_IDLE * FPS) });
-  Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
+  Object.assign(world.key, {
+    x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false, locked: level.keyLock !== null,
+  });
   world.door.open = false;
   world.status = "playing";
   updateCamera(world);
@@ -313,7 +325,9 @@ function countPushers(box: Box, dir: 1 | -1, ps: Player[], inputs: PlayerInput[]
 }
 
 export function step(world: World, inputs: PlayerInput[]) {
+  world.events = [];
   if (world.status !== "playing") return;
+  const emit = (e: GameEvent) => world.events.push(e);
   world.frame++;
   const ps = active(world);
   const support = new Map<Body, Support>();
@@ -372,6 +386,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     if (world.level.flipGravity && input.down && !p.downHeld && grounded) {
       p.gravDir = p.gravDir > 0 ? -1 : 1;
       p.vy = 0;
+      emit("flip");
       p.coyote = 0;
     }
     p.downHeld = input.down ?? false;
@@ -381,6 +396,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     if (input.jump && !p.jumpHeld && p.coyote > 0) {
       p.vy = JUMP_VELO * gd * p.scale;
       p.coyote = 0;
+      emit("jump");
     }
     p.jumpHeld = input.jump;
     const g = (input.jump && p.vy * gd < 0 ? GRAVITY_WEAK : GRAVITY) * p.scale;
@@ -390,6 +406,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     const feet = { x: p.x, y: p.y + p.h, w: p.w, h: EPS };
     const spring = gd > 0 && world.level.springs.find((sp) => powered(sp.target) && overlaps(feet, sp));
     if (spring) {
+      if (p.vy !== spring.vy) emit("spring");
       p.vy = spring.vy;
       if (spring.vx !== 0) p.vx = spring.vx;
       p.coyote = 0;
@@ -466,6 +483,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     crushed ||= pushOut(world, p, p.offset - before, 0, new Set());
   }
   if (crushed) {
+    emit("death");
     resetWorld(world);
     return;
   }
@@ -474,6 +492,7 @@ export function step(world: World, inputs: PlayerInput[]) {
   for (const f of world.falls) {
     if (!f.touched && bodies(world).some((b) => support.get(b) === f)) {
       f.touched = true;
+      emit("crumble");
       f.timer = Math.round(world.level.falls[f.index].wait * FPS);
     }
     const y0 = f.y;
@@ -536,6 +555,7 @@ export function step(world: World, inputs: PlayerInput[]) {
   const outOfMap = (p: Player) => p.y > world.level.height + TILE * 2 || p.y < -TILE * 2;
   const tooSmall = applyScaleSwitches(world);
   if (tooSmall || ps.some((p) => outOfMap(p) || deadly.some((d) => overlaps(p, d)))) {
+    emit("death");
     resetWorld(world);
     return;
   }
@@ -716,16 +736,31 @@ function updateWarps(world: World) {
     const toucher = ps.find((p) => p.warpCooldown === 0 && overlaps(p, wp));
     if (!toucher) continue;
     const group = wp.all ? ps : [toucher];
+    world.events.push("warp");
+    // lado a lado em fileiras de 4 (com 8, a segunda fileira nasce na cabeça da primeira)
     group.forEach((p, i) => {
-      Object.assign(p, { x: wp.to.x + (TILE - p.w) / 2 + i * TILE, y: wp.to.y + TILE - p.h, vx: 0, vy: 0, warpCooldown: 30 });
+      const x = wp.to.x + (TILE - p.w) / 2 + (i % 4) * TILE;
+      Object.assign(p, { x, y: wp.to.y + TILE - p.h - Math.floor(i / 4) * p.h, vx: 0, vy: 0, warpCooldown: 30 });
     });
   }
+}
+
+/**
+ * Segundos que faltam na contagem do botão (para mostrar o número grande), ou null sem contagem:
+ * botão com tempo depois de solto, ou botão com atraso antes de disparar.
+ */
+export function countdownSeconds(sw: Switch): number | null {
+  if (sw.delay > 0 && sw.countdown > 0) return Math.ceil(sw.countdown / FPS);
+  if (sw.timer > 0 && !sw.pressed && sw.rest > 0) return Math.ceil(sw.rest / FPS);
+  return null;
 }
 
 function updateSwitches(world: World) {
   const things = bodies(world);
   for (const sw of world.switches) {
     const wasPressed = sw.pressed;
+    const wasOn = sw.on;
+    const before = countdownSeconds(sw);
     sw.pressed = things.some((b) => overlaps(b, sw));
     if (sw.delay > 0) {
       if (sw.pressed && !wasPressed && sw.countdown === 0 && !sw.latched) sw.countdown = Math.round(sw.delay * FPS);
@@ -738,10 +773,14 @@ function updateSwitches(world: World) {
     } else {
       sw.on = sw.pressed;
     }
+    if (sw.on && !wasOn) world.events.push("switch");
+    const now = countdownSeconds(sw);
+    if (before !== null && now !== null && now < before) world.events.push("tick");
   }
   for (const g of world.gates) {
     const mine = world.switches.filter((sw) => sw.target === g.id);
-    const opening = mine.length > 0 && (g.needAll ? mine.every((sw) => sw.on) : mine.some((sw) => sw.on));
+    const active = mine.length > 0 && (g.needAll ? mine.every((sw) => sw.on) : mine.some((sw) => sw.on));
+    const opening = g.inverted ? !active : active;
     if (opening) {
       g.open = Math.min(1, g.open + GATE_SPEED / g.h);
       continue;
@@ -768,6 +807,11 @@ function updateSwitches(world: World) {
 function updateKey(world: World) {
   const { key } = world;
   if (key.used) return;
+  if (key.locked) {
+    if (!world.switches.some((sw) => sw.target === world.level.keyLock && sw.on)) return;
+    key.locked = false;
+    world.events.push("release");
+  }
   if (key.excludeTimer > 0 && --key.excludeTimer === 0) key.excluded = null;
 
   for (const p of active(world)) {
@@ -776,6 +820,7 @@ function updateKey(world: World) {
       key.excluded = key.holder;
       key.excludeTimer = KEY_EXCLUDE_FRAMES;
     }
+    world.events.push(key.holder === null ? "key" : "keyPass");
     key.holder = p.index;
     break;
   }
@@ -799,11 +844,18 @@ function updateDoor(world: World) {
     door.open = true;
     key.used = true;
     key.holder = null;
+    world.events.push("door");
   }
   if (!door.open) return;
   for (const p of active(world)) {
     const cx = p.x + p.w / 2;
-    if (cx > door.x && cx < door.x + door.w && overlaps(p, door)) p.cleared = true;
+    if (cx > door.x && cx < door.x + door.w && overlaps(p, door)) {
+      p.cleared = true;
+      world.events.push("enter");
+    }
   }
-  if (world.players.every((p) => p.cleared)) world.status = "cleared";
+  if (world.players.every((p) => p.cleared)) {
+    world.status = "cleared";
+    world.events.push("clear");
+  }
 }

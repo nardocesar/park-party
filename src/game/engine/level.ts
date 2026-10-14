@@ -23,8 +23,11 @@ export type SwitchDef = {
   scale?: number;
   dieSmall?: boolean;
 };
-/** Portão: bloco sólido que encolhe para cima quando aberto. `needAll`: exige todos os seus botões. */
-export type GateDef = { id: string; col: number; row: number; w: number; h: number; needAll?: boolean };
+/**
+ * Portão: bloco sólido que encolhe para cima quando aberto. `needAll`: exige todos os seus botões.
+ * `inverted`: o contrário, uma ponte que só existe (sólida) enquanto o botão está ligado.
+ */
+export type GateDef = { id: string; col: number; row: number; w: number; h: number; needAll?: boolean; inverted?: boolean };
 /** Bloco que pisca (BlinkBlockComponent): `on`/`off` em segundos; `phase` adianta o ciclo. */
 export type BlinkDef = { col: number; row: number; w: number; h: number; on: number; off: number; startOn?: boolean; phase?: number };
 /** Chão que cai (FallBoxComponent): cai `wait` s depois de pisado (padrão FALL_WAIT). */
@@ -94,6 +97,8 @@ export type LevelDef = {
   blackout?: { bright: number; dark: number };
   /** Corda que liga os jogadores em sequência (1–2–3…); comprimento em tiles. */
   rope?: { length: number };
+  /** Chave trancada numa jaula até um botão com este alvo ligar (fica liberada de vez). */
+  keyLock?: string;
 };
 
 export type Vec = { x: number; y: number };
@@ -113,7 +118,7 @@ export type Level = {
   switches: {
     x: number; y: number; w: number; h: number; target: string; timer: number; delay: number; scale: number; dieSmall: boolean;
   }[];
-  gates: { id: string; x: number; y: number; w: number; h: number; needAll: boolean }[];
+  gates: { id: string; x: number; y: number; w: number; h: number; needAll: boolean; inverted: boolean }[];
   blinks: { x: number; y: number; w: number; h: number; on: number; off: number; startOn: boolean; phase: number }[];
   falls: { x: number; y: number; w: number; h: number; wait: number }[];
   thorns: { x: number; y: number; w: number; h: number; dir: ThornDir; dx: number; dy: number; speed: number }[];
@@ -127,6 +132,7 @@ export type Level = {
   lifts: { x: number; y: number; w: number; h: number; travel: number; need: number }[];
   /** Comprimento da corda em px, ou null sem corda. */
   rope: number | null;
+  keyLock: string | null;
 };
 
 export function parseLevel(def: LevelDef): Level {
@@ -179,6 +185,7 @@ export function parseLevel(def: LevelDef): Level {
     })),
     gates: (def.gates ?? []).map((g) => ({
       id: g.id, x: g.col * TILE, y: g.row * TILE, w: g.w * TILE, h: g.h * TILE, needAll: g.needAll ?? false,
+      inverted: g.inverted ?? false,
     })),
     falls: (def.falls ?? []).map((f) => ({
       x: f.col * TILE, y: f.row * TILE, w: f.w * TILE, h: f.h * TILE, wait: f.wait ?? FALL_WAIT,
@@ -211,6 +218,7 @@ export function parseLevel(def: LevelDef): Level {
       on: b.on, off: b.off, startOn: b.startOn ?? true, phase: b.phase ?? 0,
     })),
     rope: def.rope ? def.rope.length * TILE : null,
+    keyLock: def.keyLock ?? null,
     lifts: (def.lifts ?? []).map((l) => ({
       x: l.col * TILE, y: l.row * TILE, w: l.w * TILE, h: TILE, travel: l.dy * TILE, need: l.need,
     })),

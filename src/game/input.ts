@@ -2,7 +2,10 @@ import { NO_INPUT, type PlayerInput } from "./engine/world";
 
 type KeyMap = { left: string; right: string; jump: string; down: string };
 
-/** Teclado compartilhado: até 4 jogadores. O gamepad N soma com o jogador N. */
+/**
+ * Teclado compartilhado: até 4 jogadores. Até 4 jogadores, o controle N soma com o jogador N;
+ * com mais de 4, os controles 1–4 viram os jogadores 5–8 (um teclado não aguenta 8 pessoas).
+ */
 export const KEYMAPS: KeyMap[] = [
   { left: "KeyA", right: "KeyD", jump: "KeyW", down: "KeyS" },
   { left: "ArrowLeft", right: "ArrowRight", jump: "ArrowUp", down: "ArrowDown" },
@@ -43,15 +46,28 @@ function readGamepad(index: number): PlayerInput {
   return { left: x < -0.4 || pressed(14), right: x > 0.4 || pressed(15), jump: pressed(0), down: y > 0.6 || pressed(13) };
 }
 
+/** Qual controle (0–3) comanda o jogador `i`, ou null. */
+const padFor = (i: number, playerCount: number) => (playerCount > KEYMAPS.length ? (i >= KEYMAPS.length ? i - KEYMAPS.length : null) : i);
+
 export function readInputs(down: Set<string>, playerCount: number): PlayerInput[] {
   return Array.from({ length: playerCount }, (_, i) => {
     const m = KEYMAPS[i];
-    const pad = readGamepad(i);
+    const p = padFor(i, playerCount);
+    const pad = p === null ? NO_INPUT : readGamepad(p);
+    const key = (code: string | undefined) => code !== undefined && down.has(code);
     return {
-      left: down.has(m.left) || pad.left,
-      right: down.has(m.right) || pad.right,
-      jump: down.has(m.jump) || pad.jump,
-      down: down.has(m.down) || (pad.down ?? false),
+      left: key(m?.left) || pad.left,
+      right: key(m?.right) || pad.right,
+      jump: key(m?.jump) || pad.jump,
+      down: key(m?.down) || (pad.down ?? false),
     };
   });
+}
+
+/** Legenda dos controles do jogador `i` numa partida de `playerCount`. */
+export function inputLabel(i: number, playerCount: number) {
+  const p = padFor(i, playerCount);
+  const keys = KEY_LABELS[i];
+  if (keys && p !== null) return `${keys} ou controle ${p + 1}`;
+  return keys ?? `controle ${(p ?? 0) + 1}`;
 }
