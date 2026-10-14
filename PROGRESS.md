@@ -40,7 +40,7 @@ e não são extraídas nem copiadas. Cada mundo reimplementa uma mecânica a par
 | 2 | Corda (`DistanceConstraintComponent`) | verificado | 02-rope |
 | 3 | Botão com tempo / atraso (`SwitchTimer`, `DelaySwitch`) + blocos que piscam (`BlinkBlock`) | verificado | 03-timing |
 | 4 | Chão que cai (`FallBox`) + espinhos (`Thorn`) | verificado | 04-fall-thorn |
-| 5 | Plataformas em trilho (`LinePathLift`, `MoveWall`, `UpDownLift`) | todo | |
+| 5 | Plataformas em trilho (`LinePathLift`, `UpDownLift`) + paredes que empurram (`MoveWall`) | verificado | 05-rails |
 | 6 | Vento (`Wind`) | todo | |
 | 7 | Trampolim e botão de pulo (`JumpStand`, `JumpSwitch`) | todo | |
 | 8 | Gravidade invertida (`PlayerComponent.reverseGravity`) | todo | |

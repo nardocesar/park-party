@@ -310,4 +310,81 @@ describe("fases", () => {
       finish(w);
     });
   });
+
+  describe("Mundo 5 — trilhos e paredes", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    type P = World["players"][number];
+    const finish = (w: World) => {
+      const walk = walker(w);
+      for (let f = 0; f < 4000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    };
+    /** Leva cada jogador até o x alvo (sem pular) e para. */
+    const goTo = (w: World, targets: number[], max = 900) => {
+      for (let f = 0; f < max && w.players.some((p, i) => Math.abs(p.x - targets[i]) > 1); f++) {
+        step(w, w.players.map((p: P, i) => {
+          const dx = targets[i] - p.x;
+          return Math.abs(dx) <= 1 ? NO_INPUT : { ...NO_INPUT, left: dx < 0, right: dx > 0 };
+        }));
+      }
+    };
+    const rideToEnd = (w: World, max = 2000) => {
+      const r = w.rails[0];
+      for (let f = 0; f < max && !(r.weight === 0 && r.s === 0 && f > 10) && r.s < railEnd(w); f++) step(w, [NO_INPUT, NO_INPUT]);
+    };
+    const railEnd = (w: World) => {
+      const path = w.level.rails[0].path;
+      let t = 0;
+      for (let i = 1; i < path.length; i++) t += Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+      return t;
+    };
+
+    it("5-1 tem solução: todos no trilho para cruzar o poço", () => {
+      const w = createWorld(parseLevel(at("5-1")), 2);
+      goTo(w, [8 * TILE + 2, 9 * TILE + 14]);
+      rideToEnd(w);
+      expect(w.rails[0].s).toBe(railEnd(w));
+      finish(w);
+    });
+
+    it("5-2 tem solução: subir na plataforma automática junto", () => {
+      const w = createWorld(parseLevel(at("5-2")), 2);
+      const r = w.rails[0];
+      goTo(w, [10 * TILE, 11 * TILE]);
+      // espera a plataforma chegar embaixo e parar, e entram
+      for (let f = 0; f < 900 && !(r.s === 0 && r.wait > 60); f++) step(w, [NO_INPUT, NO_INPUT]);
+      goTo(w, [13 * TILE + 2, 14 * TILE + 14], 80);
+      for (let f = 0; f < 900 && !(r.s === railEnd(w) && r.wait > 60); f++) step(w, [NO_INPUT, NO_INPUT]);
+      expect(w.resets).toBe(0);
+      goTo(w, [18 * TILE, 20 * TILE], 80);
+      expect(w.players.every((p) => p.y + p.h === (8 - 3) * TILE)).toBe(true);
+      finish(w);
+    });
+
+    it("5-3 tem solução: passar pelos pistões quando recolhem", () => {
+      const w = createWorld(parseLevel(at("5-3")), 2);
+      for (const [i, piston] of w.pushers.entries()) {
+        const pit = piston.x0 - 2 * TILE; // vala com espinho antes do pistão
+        goTo(w, [pit - 3 * TILE, pit - 2 * TILE]);
+        for (let f = 0; f < 900 && !(piston.state === "idle" && piston.timer > 80); f++) step(w, [NO_INPUT, NO_INPUT]);
+        const walk = walker(w);
+        const past = piston.x0 + 2 * TILE;
+        for (let f = 0; f < 300 && !w.players.every((p) => p.x > past); f++) {
+          step(w, w.players.map((p, j) => (p.x > past ? NO_INPUT : walk(j, f))));
+        }
+        expect(w.resets, `pistão ${i}`).toBe(0);
+      }
+      finish(w);
+    });
+
+    it("5-4 tem solução: trilho em L sem pular sob os espinhos", () => {
+      const w = createWorld(parseLevel(at("5-4")), 2);
+      goTo(w, [7 * TILE + 2, 8 * TILE + 14]);
+      rideToEnd(w, 4000);
+      expect(w.resets).toBe(0);
+      expect(w.rails[0].s).toBe(railEnd(w));
+      finish(w);
+    });
+  });
 });

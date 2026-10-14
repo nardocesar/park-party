@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, PLAYER_SIZE, TILE, VIEW_W } from "./constants";
+import { FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, MOVEWALL_IDLE, PLAYER_SIZE, TILE, VIEW_W } from "./constants";
 import { parseLevel } from "./level";
 import { createWorld, NO_INPUT, step, type PlayerInput } from "./world";
 
@@ -700,5 +700,93 @@ describe("Mundo 4 — chão que cai e espinhos", () => {
     }
     expect(Math.max(...xs)).toBeCloseTo(16 * TILE, 0);
     expect(Math.min(...xs)).toBeCloseTo(12 * TILE, 0);
+  });
+});
+
+describe("Mundo 5 — trilhos e paredes que empurram", () => {
+  const pit = (extra: object) =>
+    parseLevel({
+      name: "w5",
+      map: [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "#####.........######",
+        "#####.........######",
+        "#####.........######",
+      ],
+      ...extra,
+    });
+
+  it("trilho com need 2: parado com um, anda com dois e leva junto; volta quando o peso sai", () => {
+    const w = createWorld(pit({ rails: [{ path: [[5, 5], [10, 5]], w: 4, need: 2 }] }), 2);
+    const rail = w.rails[0];
+    const [a, b] = w.players;
+    a.x = 6 * TILE;
+    a.y = 5 * TILE - a.h;
+    run(w, 60, [NO_INPUT, NO_INPUT]);
+    expect(rail.x).toBe(5 * TILE);
+    b.x = 8 * TILE;
+    b.y = 5 * TILE - b.h;
+    run(w, 200, [NO_INPUT, NO_INPUT]);
+    expect(rail.x).toBe(10 * TILE);
+    expect(a.x).toBeCloseTo(11 * TILE, 5);
+    expect(a.y + a.h).toBe(rail.y);
+    // os dois descem para a direita: o trilho volta
+    run(w, 200, [RIGHT, RIGHT]);
+    run(w, 300, [NO_INPUT, NO_INPUT]);
+    expect(rail.x).toBe(5 * TILE);
+  });
+
+  it("trilho com need 0 vai e volta sozinho, esperando nas pontas", () => {
+    const w = createWorld(pit({ rails: [{ path: [[5, 5], [5, 2]], w: 3, need: 0, speed: 1, wait: 0.5 }] }), 1);
+    const rail = w.rails[0];
+    const ys: number[] = [];
+    for (let f = 0; f < 300; f++) {
+      step(w, [NO_INPUT]);
+      ys.push(rail.y);
+    }
+    expect(Math.min(...ys)).toBe(2 * TILE);
+    expect(Math.max(...ys)).toBe(5 * TILE);
+  });
+
+  const corridor = (extra: object) =>
+    parseLevel({
+      name: "wall",
+      map: [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1................#",
+        "####################",
+      ],
+      ...extra,
+    });
+
+  it("parede que empurra: espera, avança empurrando o jogador e volta", () => {
+    const w = createWorld(corridor({ pushers: [{ col: 4, row: 2, h: 4, dx: 3 }] }), 1);
+    const wall = w.pushers[0];
+    const p = w.players[0];
+    p.x = 5 * TILE;
+    run(w, Math.round(MOVEWALL_IDLE * 60) - 2, [NO_INPUT]);
+    expect(wall.offset).toBe(0);
+    run(w, 80, [NO_INPUT]);
+    expect(wall.offset).toBe(3 * TILE);
+    expect(p.x).toBeGreaterThanOrEqual(wall.x + wall.w - 0.001);
+    run(w, 160, [NO_INPUT]); // espera 1,5 s e volta a 0,75 px/frame
+    expect(wall.offset).toBe(0);
+    expect(w.resets).toBe(0);
+  });
+
+  it("parede que empurra esmaga quem fica preso contra a parede (reinicia)", () => {
+    const w = createWorld(corridor({ pushers: [{ col: 15, row: 2, h: 4, dx: 3 }] }), 1);
+    const p = w.players[0];
+    p.x = 18 * TILE - p.w; // encostado na parede direita
+    run(w, 300, [NO_INPUT]);
+    expect(w.resets).toBeGreaterThan(0);
   });
 });

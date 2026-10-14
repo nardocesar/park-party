@@ -341,11 +341,88 @@ const WORLD_4: LevelDef[] = [
   ),
 ];
 
+// Mundo 5 — Engrenagens: trilhos e paredes que empurram
+// (LinePathLift, UpDownLift, MoveWall — docs/re/05-rails.md).
+const ALL = 99; // trilho que exige todos os jogadores
+
+const WORLD_5: LevelDef[] = [
+  // 5-1: o trilho só cruza o poço com todos em cima
+  build(
+    "Trilho",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(8, 17, FLOOR + 1, ROWS - 1, ".");
+      g.set(24, FLOOR, "K");
+      g.set(34, FLOOR, "D");
+    },
+    { rails: [{ path: [[8, FLOOR + 1], [15, FLOOR + 1]], w: 3, need: ALL }] },
+  ),
+  // 5-2: paredão alto demais; a plataforma sobe e desce sozinha ao lado
+  build(
+    "Sobe e desce",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(13, 15, FLOOR + 1, ROWS - 1, ".");
+      g.fill(16, 38, FLOOR - 3, FLOOR);
+      g.set(24, FLOOR - 4, "K");
+      g.set(35, FLOOR - 4, "D");
+    },
+    { rails: [{ path: [[13, FLOOR + 1], [13, FLOOR - 3]], w: 3, need: 0, wait: 1.5 }] },
+  ),
+  // 5-3: pistões que empurram de volta para valas com espinho; passar quando recolhem
+  build(
+    "Empurrão",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      for (const c of [10, 22]) g.set(c, FLOOR + 1, ".");
+      g.set(31, FLOOR, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      thorns: [
+        { col: 10, row: FLOOR + 1, w: 1, h: 1 },
+        { col: 22, row: FLOOR + 1, w: 1, h: 1 },
+      ],
+      pushers: [
+        { col: 12, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 24, row: FLOOR, w: 1, h: 1, dx: -2 },
+      ],
+    },
+  ),
+  // 5-4: trilho em L sobre espinhos, com espinhos no teto do trecho alto
+  build(
+    "Linha de montagem",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(7, 28, FLOOR + 1, ROWS - 1, ".");
+      g.fill(15, 22, 0, 2);
+      g.set(34, FLOOR, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      rails: [{ path: [[7, FLOOR + 1], [13, FLOOR + 1], [13, FLOOR - 3], [26, FLOOR - 3], [26, FLOOR + 1]], w: 3, need: ALL }],
+      thorns: [
+        { col: 7, row: FLOOR + 1, w: 22, h: 1 },
+        { col: 15, row: 3, w: 8, h: 1, dir: "down" },
+      ],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
   { name: "Contra o tempo", levels: WORLD_3 },
   { name: "Chão traiçoeiro", levels: WORLD_4 },
+  { name: "Engrenagens", levels: WORLD_5 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

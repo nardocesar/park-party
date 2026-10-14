@@ -45,3 +45,14 @@ export const THORN_RECTS_UP = [
   { x: 2, y: TILE - 4, w: 12, h: 3 },
   { x: 6, y: TILE - 9, w: 4, h: 4 },
 ];
+
+// Observado (docs/re/05-rails.md), convertido ×0,5 (célula 32 → 16 px):
+// UpDownLift SPEED_DEFAULT 1 → 0,5 px/frame; MoveWall MOVE_SPEED 2, RETURN_SPEED 1,5,
+// IDLE_TIME/WAIT_TIME/RETURN_START_TIME 1,5 s, largura 18 → 8 px.
+export const RAIL_SPEED = 0.5;
+export const RAIL_H = 8;
+export const MOVEWALL_SPEED = 1;
+export const MOVEWALL_RETURN_SPEED = 0.75;
+export const MOVEWALL_IDLE = 1.5;
+export const MOVEWALL_WAIT = 1.5;
+export const MOVEWALL_W = 8;

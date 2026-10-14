@@ -1,4 +1,4 @@
-import { DOOR_H, DOOR_W, FALL_WAIT, KEY_SIZE, PLAYER_SIZE, SWITCH_H, TILE } from "./constants";
+import { DOOR_H, DOOR_W, FALL_WAIT, KEY_SIZE, PLAYER_SIZE, RAIL_SPEED, SWITCH_H, TILE } from "./constants";
 
 /**
  * Fase em ASCII:
@@ -33,6 +33,21 @@ export type ThornDef = {
   dy?: number;
   speed?: number;
 };
+/**
+ * Plataforma em trilho (LinePathLift / UpDownLift): percorre `path` (tiles, canto superior esquerdo).
+ * `need` > 0: anda quando há esse peso em cima e volta quando sai (`returns`); `need` < 0 é relativo a
+ * todos os jogadores (−1 = todos menos um); `need` = 0: vai e volta sozinha, esperando `wait` s nas pontas.
+ */
+export type RailDef = {
+  path: [number, number][];
+  w: number;
+  need: number;
+  speed?: number;
+  returns?: boolean;
+  wait?: number;
+};
+/** Parede que empurra (MoveWallComponent): espera, avança `dx` tiles, espera e volta. `w` em tiles (padrão: fina). */
+export type PusherDef = { col: number; row: number; h: number; dx: number; w?: number };
 /** Elevador com peso: desce `dy` tiles (negativo sobe) quando `need` jogadores estão em cima. */
 export type LiftDef = { col: number; row: number; w: number; dy: number; need: number };
 export type LevelDef = {
@@ -45,6 +60,8 @@ export type LevelDef = {
   blinks?: BlinkDef[];
   falls?: FallDef[];
   thorns?: ThornDef[];
+  rails?: RailDef[];
+  pushers?: PusherDef[];
   /** Corda que liga os jogadores em sequência (1–2–3…); comprimento em tiles. */
   rope?: { length: number };
 };
@@ -68,6 +85,8 @@ export type Level = {
   blinks: { x: number; y: number; w: number; h: number; on: number; off: number; startOn: boolean; phase: number }[];
   falls: { x: number; y: number; w: number; h: number; wait: number }[];
   thorns: { x: number; y: number; w: number; h: number; dir: ThornDir; dx: number; dy: number; speed: number }[];
+  rails: { path: { x: number; y: number }[]; w: number; need: number; speed: number; returns: boolean; wait: number }[];
+  pushers: { x: number; y: number; w: number | null; h: number; dx: number }[];
   lifts: { x: number; y: number; w: number; h: number; travel: number; need: number }[];
   /** Comprimento da corda em px, ou null sem corda. */
   rope: number | null;
@@ -128,6 +147,13 @@ export function parseLevel(def: LevelDef): Level {
     thorns: (def.thorns ?? []).map((t) => ({
       x: t.col * TILE, y: t.row * TILE, w: t.w * TILE, h: t.h * TILE, dir: t.dir ?? "up",
       dx: (t.dx ?? 0) * TILE, dy: (t.dy ?? 0) * TILE, speed: t.speed ?? 0,
+    })),
+    rails: (def.rails ?? []).map((r) => ({
+      path: r.path.map(([c, row]) => ({ x: c * TILE, y: row * TILE })),
+      w: r.w * TILE, need: r.need, speed: r.speed ?? RAIL_SPEED, returns: r.returns ?? true, wait: r.wait ?? 0,
+    })),
+    pushers: (def.pushers ?? []).map((p) => ({
+      x: p.col * TILE, y: p.row * TILE, w: p.w ? p.w * TILE : null, h: p.h * TILE, dx: p.dx * TILE,
     })),
     blinks: (def.blinks ?? []).map((b) => ({
       x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE,

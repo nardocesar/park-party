@@ -15,6 +15,12 @@ import {
   KEY_SIZE,
   LIFT_SPEED,
   LIFT_WAIT_FRAMES,
+  MOVEWALL_IDLE,
+  MOVEWALL_RETURN_SPEED,
+  MOVEWALL_SPEED,
+  MOVEWALL_W,
+  MOVEWALL_WAIT,
+  RAIL_H,
   PLAYER_SIZE,
   ROPE_K,
   ROPE_RESULT_Y_MAX,
@@ -69,8 +75,13 @@ export type Thorn = Rect & {
   way: 1 | -1;
 };
 
-/** Tudo que é sólido e se move: jogadores, caixas, elevadores e chãos que caem. */
-type Body = Player | Box | Lift | Fall;
+/** Plataforma em trilho: `s` é a distância percorrida no caminho. */
+export type Rail = Rect & { kind: "rail"; index: number; s: number; weight: number; wait: number; forward: boolean };
+/** Parede que empurra: `offset` em px a partir da posição inicial `x0`. */
+export type Pusher = Rect & { x0: number; offset: number; state: "idle" | "move" | "wait" | "return"; timer: number };
+
+/** Tudo que é sólido e se move: jogadores, caixas, elevadores, chãos que caem e trilhos. */
+type Body = Player | Box | Lift | Fall | Rail;
 type Support = "tile" | Body | null;
 
 export type Switch = Rect & {
@@ -103,6 +114,8 @@ export type World = {
   blinks: Blink[];
   falls: Fall[];
   thorns: Thorn[];
+  rails: Rail[];
+  pushers: Pusher[];
   lifts: Lift[];
   key: Key;
   door: Door;
@@ -121,6 +134,10 @@ export function createWorld(level: Level, playerCount: number): World {
     gates: level.gates.map((g) => ({ ...g, open: 0 })),
     falls: level.falls.map((f, index) => ({ kind: "fall", index, x: f.x, y: f.y, w: f.w, h: f.h, vy: 0, touched: false, timer: 0 })),
     thorns: level.thorns.map((t) => ({ ...t, x0: t.x, y0: t.y, t: 0, way: 1 })),
+    rails: level.rails.map((r, index) => ({
+      kind: "rail", index, x: r.path[0].x, y: r.path[0].y, w: r.w, h: RAIL_H, s: 0, weight: 0, wait: 0, forward: true,
+    })),
+    pushers: level.pushers.map((p) => ({ x: p.x, y: p.y, w: p.w ?? MOVEWALL_W, h: p.h, x0: p.x, offset: 0, state: "idle", timer: 0 })),
     blinks: level.blinks.map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h, on: b.on, off: b.off, visible: true, timer: 0 })),
     lifts: level.lifts.map((l, index) => ({
       kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0, wait: 0,
@@ -168,6 +185,8 @@ function placeEntities(world: World) {
   for (const l of world.lifts) Object.assign(l, { y: l.startY, weight: 0, wait: 0 });
   world.falls.forEach((f, i) => Object.assign(f, { x: level.falls[i].x, y: level.falls[i].y, vy: 0, touched: false, timer: 0 }));
   for (const t of world.thorns) Object.assign(t, { x: t.x0, y: t.y0, t: 0, way: 1 });
+  world.rails.forEach((r, i) => Object.assign(r, { ...level.rails[i].path[0], s: 0, weight: 0, wait: 0, forward: true }));
+  for (const p of world.pushers) Object.assign(p, { x: p.x0, offset: 0, state: "idle", timer: Math.round(MOVEWALL_IDLE * FPS) });
   Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
   world.door.open = false;
   world.status = "playing";
@@ -197,12 +216,13 @@ function tileHit(level: Level, r: Rect): boolean {
 }
 
 const active = (world: World) => world.players.filter((p) => !p.cleared);
-const bodies = (world: World): Body[] => [...active(world), ...world.boxes, ...world.lifts, ...world.falls];
+const bodies = (world: World): Body[] => [...active(world), ...world.boxes, ...world.lifts, ...world.falls, ...world.rails];
 export const gateRect = (g: Gate): Rect => ({ x: g.x, y: g.y, w: g.w, h: g.h * (1 - g.open) });
-/** Sólidos estáticos além dos tiles: portões (parte fechada) e blocos que piscam visíveis. */
+/** Sólidos sem física além dos tiles: portões (parte fechada), blocos que piscam visíveis e paredes que empurram. */
 const gateRects = (world: World): Rect[] => [
   ...world.gates.map(gateRect).filter((r) => r.h > 0),
   ...world.blinks.filter((b) => b.visible),
+  ...world.pushers,
 ];
 
 /** O que está logo abaixo do corpo: "tile", outro corpo, ou null. */
@@ -217,7 +237,7 @@ function supportOf(world: World, body: Body): Support {
  * Move um eixo em subpassos de no máximo 4 px e encosta no primeiro obstáculo.
  * `ignore` são corpos atravessáveis neste movimento (quem está em cima de mim).
  */
-function moveAxis(world: World, body: Body, d: number, axis: "x" | "y", ignore: Set<Body>, bounds?: [number, number]) {
+function moveAxis(world: World, body: Body, d: number, axis: "x" | "y", ignore: Set<object>, bounds?: [number, number]) {
   let hit = false;
   const steps = Math.ceil(Math.abs(d) / 4);
   const size = axis === "x" ? body.w : body.h;
@@ -233,7 +253,7 @@ function moveAxis(world: World, body: Body, d: number, axis: "x" | "y", ignore: 
       hit = true;
     }
     for (const o of [...bodies(world), ...gateRects(world)]) {
-      if (o === body || ignore.has(o as Body) || !overlaps(body, o)) continue;
+      if (o === body || ignore.has(o) || !overlaps(body, o)) continue;
       body[axis] = delta > 0 ? o[axis] - size : o[axis] + (axis === "x" ? o.w : o.h);
       hit = true;
     }
@@ -279,6 +299,23 @@ export function step(world: World, inputs: PlayerInput[]) {
   const support = new Map<Body, Support>();
   for (const b of bodies(world)) support.set(b, supportOf(world, b));
   const ridersOf = (body: Body) => new Set(bodies(world).filter((o) => support.get(o) === body));
+  /** Quem está em cima do corpo, direta ou indiretamente (empilhado). */
+  const stackOf = (base: Body): Body[] => {
+    const stack = new Set<Body>([base]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const b of bodies(world)) {
+        const s = support.get(b);
+        if (!stack.has(b) && s && s !== "tile" && stack.has(s)) {
+          stack.add(b);
+          grew = true;
+        }
+      }
+    }
+    stack.delete(base);
+    return [...stack];
+  };
   const displacement = new Map<Body, { dx: number; dy: number }>();
 
   // 1. Controle e gravidade dos jogadores
@@ -306,19 +343,7 @@ export function step(world: World, inputs: PlayerInput[]) {
 
   // 2. Elevadores: o peso é quem está em cima, direta ou indiretamente (empilhado)
   for (const l of world.lifts) {
-    const stack = new Set<Body>([l]);
-    let grew = true;
-    while (grew) {
-      grew = false;
-      for (const b of bodies(world)) {
-        const s = support.get(b);
-        if (!stack.has(b) && s && s !== "tile" && stack.has(s)) {
-          stack.add(b);
-          grew = true;
-        }
-      }
-    }
-    l.weight = [...stack].filter((b) => b.kind === "player").length;
+    l.weight = stackOf(l).filter((b) => b.kind === "player").length;
     const loaded = l.weight >= Math.min(l.need, world.players.length);
     if (loaded) l.wait = LIFT_WAIT_FRAMES;
     else if (l.wait > 0) l.wait--;
@@ -326,6 +351,64 @@ export function step(world: World, inputs: PlayerInput[]) {
     const y0 = l.y;
     l.y += Math.max(-LIFT_SPEED, Math.min(LIFT_SPEED, target - l.y));
     displacement.set(l, { dx: 0, dy: l.y - y0 });
+  }
+
+  // 2a. Trilhos (LinePathLift/UpDownLift) e paredes que empurram (MoveWall)
+  let crushed = false;
+  for (const r of world.rails) {
+    const def = world.level.rails[r.index];
+    r.weight = stackOf(r).filter((b) => b.kind === "player").length;
+    const total = pathLength(def.path);
+    let target = r.s;
+    if (def.need === 0) {
+      if (r.wait > 0) r.wait--;
+      else target = r.forward ? total : 0;
+    } else {
+      const need = def.need < 0 ? world.players.length + def.need : Math.min(def.need, world.players.length);
+      target = r.weight >= need ? total : def.returns ? 0 : r.s;
+    }
+    const before = r.s;
+    r.s += Math.max(-def.speed, Math.min(def.speed, target - r.s));
+    if (def.need === 0 && r.s !== before && (r.s === 0 || r.s === total)) {
+      r.forward = r.s === 0;
+      r.wait = Math.round(def.wait * FPS);
+    }
+    const pos = pointAt(def.path, r.s);
+    const dx = pos.x - r.x;
+    const dy = pos.y - r.y;
+    r.x = pos.x;
+    r.y = pos.y;
+    displacement.set(r, { dx, dy });
+    crushed ||= pushOut(world, r, dx, dy, ridersOf(r));
+  }
+  for (const p of world.pushers) {
+    const def = world.level.pushers[world.pushers.indexOf(p)];
+    const dir = Math.sign(def.dx);
+    const before = p.offset;
+    if (p.timer > 0) p.timer--;
+    else if (p.state === "idle") p.state = "move";
+    else if (p.state === "move") {
+      p.offset += dir * MOVEWALL_SPEED;
+      if (Math.abs(p.offset) >= Math.abs(def.dx)) {
+        p.offset = def.dx;
+        p.state = "wait";
+        p.timer = Math.round(MOVEWALL_WAIT * FPS);
+      }
+    } else if (p.state === "wait") p.state = "return";
+    else {
+      p.offset -= dir * MOVEWALL_RETURN_SPEED;
+      if (p.offset * dir <= 0) {
+        p.offset = 0;
+        p.state = "idle";
+        p.timer = Math.round(MOVEWALL_IDLE * FPS);
+      }
+    }
+    p.x = p.x0 + p.offset;
+    crushed ||= pushOut(world, p, p.offset - before, 0, new Set());
+  }
+  if (crushed) {
+    resetWorld(world);
+    return;
   }
 
   // 2b. Chãos que caem (FallBoxComponent): pisados por cima, esperam e caem até pousar
@@ -435,6 +518,39 @@ export function thornRects(t: Thorn): Rect[] {
     }
   }
   return out;
+}
+
+function pathLength(path: { x: number; y: number }[]) {
+  let total = 0;
+  for (let i = 1; i < path.length; i++) total += Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+  return total;
+}
+
+function pointAt(path: { x: number; y: number }[], s: number) {
+  for (let i = 1; i < path.length; i++) {
+    const seg = Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+    if (s <= seg || i === path.length - 1) {
+      const t = seg === 0 ? 0 : Math.min(1, s / seg);
+      return { x: path[i - 1].x + (path[i].x - path[i - 1].x) * t, y: path[i - 1].y + (path[i].y - path[i - 1].y) * t };
+    }
+    s -= seg;
+  }
+  return { ...path[0] };
+}
+
+/**
+ * Sólido cinemático (trilho, parede) acabou de se mover: empurra para fora quem ficou sobreposto, no
+ * sentido do movimento. Quem não consegue sair (preso contra algo) é esmagado: retorna true se for jogador.
+ */
+function pushOut(world: World, mover: Rect, dx: number, dy: number, ignore: Set<Body>): boolean {
+  let crushed = false;
+  for (const b of bodies(world)) {
+    if (b === mover || ignore.has(b) || (b.kind !== "player" && b.kind !== "box") || !overlaps(b, mover)) continue;
+    if (dx !== 0) moveAxis(world, b, dx > 0 ? mover.x + mover.w - b.x : mover.x - (b.x + b.w), "x", new Set([mover]));
+    if (dy !== 0) moveAxis(world, b, dy > 0 ? mover.y + mover.h - b.y : mover.y - (b.y + b.h), "y", new Set([mover]));
+    if (overlaps(b, mover) && b.kind === "player") crushed = true;
+  }
+  return crushed;
 }
 
 function moveThorns(world: World) {

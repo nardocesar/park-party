@@ -60,6 +60,40 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
       ctx.stroke();
     }
   }
+  for (const [i, r] of world.rails.entries()) {
+    const def = world.level.rails[i];
+    // guia do caminho (pela borda superior central)
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    def.path.forEach((pt, j) => (j === 0 ? ctx.moveTo : ctx.lineTo).call(ctx, pt.x + r.w / 2, pt.y + r.h / 2));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#2563eb";
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    if (def.need !== 0) {
+      const need = def.need < 0 ? world.players.length + def.need : Math.min(def.need, world.players.length);
+      ctx.fillStyle = "#eff6ff";
+      ctx.font = "bold 7px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`${Math.min(r.weight, need)}/${need}`, r.x + r.w / 2, r.y + r.h / 2 + 0.5);
+    }
+  }
+  for (const [i, p] of world.pushers.entries()) {
+    const dir = Math.sign(world.level.pushers[i].dx);
+    ctx.fillStyle = "#57534e";
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.fillStyle = "#fbbf24";
+    const cy = p.y + p.h / 2;
+    const tip = dir > 0 ? p.x + p.w : p.x;
+    ctx.beginPath();
+    ctx.moveTo(tip + dir * 4, cy);
+    ctx.lineTo(tip, cy - 3);
+    ctx.lineTo(tip, cy + 3);
+    ctx.fill();
+  }
   for (const l of world.lifts) {
     const need = Math.min(l.need, world.players.length);
     ctx.fillStyle = "#0e7490";
