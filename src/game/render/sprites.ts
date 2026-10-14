@@ -5,8 +5,8 @@
  */
 export type Sprite = { rows: string[]; pal: Record<string, string> };
 
-export const PLAYER_COLORS = ["#f97316", "#38bdf8", "#f472b6", "#4ade80"];
-const PLAYER_SHADES = ["#c2410c", "#0284c7", "#db2777", "#16a34a"];
+export const PLAYER_COLORS = ["#f97316", "#38bdf8", "#f472b6", "#4ade80", "#a78bfa", "#facc15", "#ef4444", "#e5e7eb"];
+const PLAYER_SHADES = ["#c2410c", "#0284c7", "#db2777", "#16a34a", "#7c3aed", "#ca8a04", "#b91c1c", "#9ca3af"];
 
 const BODY: Record<string, string> = {
   k: "#21130c", // contorno
@@ -91,6 +91,78 @@ const looks: { pal: Record<string, string>; rows: string[] }[] = [
       "kcxcxcxcxcxcCk",
       "kccccccccccCCk",
       "kCCCCCCCCCCCCk",
+    ],
+  },
+  {
+    // J5 · O Pregador: chapéu preto de copa reta e colarinho branco
+    pal: { h: "#2a2a2e", H: "#4a4a52" },
+    rows: [
+      "..............",
+      "....kkkkkk....",
+      "...khhhhhhk...",
+      ".kkkBBBBBBkkk.",
+      "khhhhhhhhhhhhk",
+      ".kkkkkkkkkkkk.",
+      "..ksssssswsk..",
+      "..ksssssseSk..",
+      "..kSssssssSk..",
+      "..kwwkkkkwwk..",
+      ".kccwwkkwwcck.",
+      "kscccccccccCsk",
+      BELT,
+    ],
+  },
+  {
+    // J6 · A Xerife: cabelo comprido e estrela no peito
+    pal: { h: "#c9a36a", H: "#e0bc7a", r: "#7a3e12", x: "#ffd23f" },
+    rows: [
+      ...HAT,
+      ".krrrrrrrrrrk.",
+      ".krsssssswrk..",
+      ".krsssssserk..",
+      ".krSsssssSrk..",
+      ".krrsssssrrk..",
+      ".kcccxcccccck.",
+      "kscccccccccCsk",
+      BELT,
+    ],
+  },
+  {
+    // J7 · O Apostador: chapéu-coco, bigode fino e colete sobre camisa branca
+    pal: { h: "#3c2a20", H: "#5a4030", m: "#3a2210" },
+    rows: [
+      "..............",
+      ".....kkkk.....",
+      "....khhHhk....",
+      "...kBBBBBBk...",
+      "..khhhhhhhhk..",
+      "..kkkkkkkkkk..",
+      "..ksssssswsk..",
+      "..ksssssseSk..",
+      "..ksmmmmmmsk..",
+      "..kSssssssSk..",
+      ".kcwwcccwwcck.",
+      "kscccwwwcccCsk",
+      BELT,
+    ],
+  },
+  {
+    // J8 · O Garimpeiro: chapéu remendado e barba branca
+    pal: { h: "#7a5a3a", H: "#9a7a52", d: "#f0f0f0", q: "#a8743a" },
+    rows: [
+      "....kkkkkk....",
+      "...khhHhhhk...",
+      "...khhhhhqk...",
+      ".kkkBBBBBBkkk.",
+      "khhhhhhhhhhhhk",
+      ".kkkkkkkkkkkk.",
+      "..ksssssswsk..",
+      "..ksssssseSk..",
+      "..kdddssdddk..",
+      "..kddddddddk..",
+      ".kcdddddddcck.",
+      "kscccccccccCsk",
+      BELT,
     ],
   },
 ];

@@ -192,10 +192,10 @@ export function resetWorld(world: World) {
 function placeEntities(world: World) {
   const { level } = world;
   for (const p of world.players) {
-    const spawn = level.spawns[p.index] ?? {
-      x: level.spawns[level.spawns.length - 1].x + (p.index - level.spawns.length + 1) * TILE,
-      y: level.spawns[level.spawns.length - 1].y,
-    };
+    // com mais jogadores que spawns (5–8), os extras nascem na cabeça dos primeiros, em camadas
+    const n = level.spawns.length;
+    const base = level.spawns[p.index % n];
+    const spawn = { x: base.x, y: base.y - Math.floor(p.index / n) * PLAYER_SIZE };
     Object.assign(p, {
       x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false,
       gravDir: 1, downHeld: false, warpCooldown: 0, scale: 1,
@@ -737,8 +737,10 @@ function updateWarps(world: World) {
     if (!toucher) continue;
     const group = wp.all ? ps : [toucher];
     world.events.push("warp");
+    // lado a lado em fileiras de 4 (com 8, a segunda fileira nasce na cabeça da primeira)
     group.forEach((p, i) => {
-      Object.assign(p, { x: wp.to.x + (TILE - p.w) / 2 + i * TILE, y: wp.to.y + TILE - p.h, vx: 0, vy: 0, warpCooldown: 30 });
+      const x = wp.to.x + (TILE - p.w) / 2 + (i % 4) * TILE;
+      Object.assign(p, { x, y: wp.to.y + TILE - p.h - Math.floor(i / 4) * p.h, vx: 0, vy: 0, warpCooldown: 30 });
     });
   }
 }

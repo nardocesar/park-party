@@ -8,7 +8,7 @@ import { createAudio, type Audio } from "@/game/audio";
 import { FPS, VIEW_H, VIEW_W } from "@/game/engine/constants";
 import { parseLevel, type LevelDef } from "@/game/engine/level";
 import { createWorld, resetWorld, step, type World } from "@/game/engine/world";
-import { createKeyboard, KEY_LABELS, readInputs } from "@/game/input";
+import { createKeyboard, inputLabel, readInputs } from "@/game/input";
 import { PLAYER_COLORS, render } from "@/game/render";
 
 const SCALE = 3;
@@ -177,7 +177,7 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
         {Array.from({ length: playerCount }, (_, i) => (
           <li key={i} className="flex items-center gap-1">
             <span className="inline-block h-3 w-3 rounded-sm" style={{ background: PLAYER_COLORS[i] }} />
-            J{i + 1}: {KEY_LABELS[i]} (ou gamepad {i + 1})
+            J{i + 1}: {inputLabel(i, playerCount)}
           </li>
         ))}
         <li>R reinicia · M som · Esc menu</li>
