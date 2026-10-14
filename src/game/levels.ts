@@ -790,48 +790,61 @@ const WORLD_9: LevelDef[] = [
       ],
     },
   ),
-  // 9-3: um segura o botão temporizado para o outro chegar ao portal; do outro lado, o inverso
+  // 9-3 (difícil): revezamento de 1,2 s em que o segundo botão fica do outro lado do portal; sala
+  // selada com ponte que cai até o segundo portal; esmagadores pela chave e portal de todos até a porta.
   build(
     "Ida e volta",
-    44,
+    62,
     ROWS,
     (g) => {
       spawns(g);
       sealedWall(g, 22);
-      g.set(32, FLOOR, "K");
-      g.set(40, FLOOR, "D");
+      sealedWall(g, 40);
+      sealedWall(g, 54);
+      g.fill(29, 35, FLOOR + 1, ROWS - 1, ".");
+      g.set(46, FLOOR, "K");
+      g.set(58, FLOOR, "D");
     },
     {
       switches: [
-        { col: 9, row: FLOOR, target: "g1", timer: 2.5 },
-        { col: 26, row: FLOOR, target: "g1", timer: 2.5 },
+        { col: 9, row: FLOOR, target: "g1", timer: 1.2 },
+        { col: 26, row: FLOOR, target: "g1", timer: 1.2 },
       ],
       gates: [{ id: "g1", col: 14, row: FLOOR - 4, w: 1, h: 5 }],
-      warps: [{ col: 18, row: FLOOR, w: 1, h: 1, to: [24, FLOOR] }],
+      falls: fallBridge(29, 35),
+      thorns: [{ col: 49, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1.25 }],
+      warps: [
+        { col: 18, row: FLOOR, w: 1, h: 1, to: [24, FLOOR] },
+        { col: 38, row: FLOOR, w: 1, h: 1, to: [42, FLOOR] },
+        { col: 52, row: FLOOR, w: 1, h: 1, to: [56, FLOOR], all: true },
+      ],
     },
   ),
-  // 9-4: labirinto de portais — o portal flutuante leva aos espinhos: não pular perto dele
+  // 9-4 (difícil): labirinto de cinco salas; portais-armadilha flutuantes perto de degraus (pular cedo
+  // leva aos espinhos), valas pela chave e o portal de todos no fim.
   build(
     "Labirinto",
-    52,
+    72,
     ROWS,
     (g) => {
       spawns(g);
-      sealedWall(g, 10);
-      sealedWall(g, 20);
-      sealedWall(g, 30);
-      sealedWall(g, 40);
-      g.set(17, FLOOR, "#");
-      g.set(34, FLOOR, "K");
-      g.set(46, FLOOR, "D");
+      for (const c of [12, 26, 40, 54]) sealedWall(g, c);
+      g.set(20, FLOOR, "#");
+      for (const c of [31, 34]) g.set(c, FLOOR + 1, ".");
+      g.set(37, FLOOR, "K");
+      g.set(48, FLOOR, "#");
+      g.set(66, FLOOR, "D");
     },
     {
-      thorns: [{ col: 21, row: FLOOR, w: 8, h: 1 }],
+      thorns: [31, 34].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
       warps: [
-        { col: 8, row: FLOOR, w: 1, h: 1, to: [12, FLOOR] },
-        { col: 14, row: FLOOR - 2, w: 1, h: 1, to: [24, FLOOR] },
-        { col: 18, row: FLOOR, w: 1, h: 1, to: [32, FLOOR] },
-        { col: 37, row: FLOOR, w: 1, h: 1, to: [42, FLOOR], all: true },
+        { col: 9, row: FLOOR, w: 1, h: 1, to: [14, FLOOR] },
+        { col: 16, row: FLOOR - 2, w: 1, h: 1, to: [31, FLOOR] },
+        { col: 23, row: FLOOR - 2, w: 1, h: 1, to: [31, FLOOR] },
+        { col: 25, row: FLOOR, w: 1, h: 1, to: [28, FLOOR] },
+        { col: 39, row: FLOOR, w: 1, h: 1, to: [42, FLOOR] },
+        { col: 45, row: FLOOR - 2, w: 1, h: 1, to: [31, FLOOR] },
+        { col: 52, row: FLOOR, w: 1, h: 1, to: [57, FLOOR], all: true },
       ],
     },
   ),

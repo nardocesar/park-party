@@ -398,26 +398,7 @@ describe("fases", () => {
       finish(w);
     });
 
-    it("9-3 tem solução: revezamento até o portal", () => {
-      const w = createWorld(parseLevel(at("9-3")), 2);
-      const [a, b] = w.players;
-      drive(w, (q) => (q === b ? toward(q, 9 * TILE + 1) : NO_INPUT), () => at_(b, 9 * TILE + 1), 600);
-      drive(w, (q) => (q === a ? toward(q, 26 * TILE + 1, q.onGround && q.x > 7 * TILE && q.x < 10 * TILE) : NO_INPUT), () => at_(a, 26 * TILE + 1), 900);
-      expect(at_(a, 26 * TILE + 1)).toBe(true);
-      drive(w, (q) => (q === b ? toward(q, 28 * TILE) : NO_INPUT), () => b.x > 27 * TILE, 900);
-      finish(w);
-    });
 
-    it("9-4 tem solução: não pular sob o portal-armadilha", () => {
-      const w = createWorld(parseLevel(at("9-4")), 2);
-      for (const p of [w.players[1], w.players[0]]) {
-        drive(w, (q) => (q === p ? toward(q, 13 * TILE) : NO_INPUT), () => p.x > 11 * TILE && p.onGround && at_(p, 13 * TILE), 900);
-        // não pula sob o portal flutuante; pula o degrau da coluna 17 já depois dele
-        drive(w, (q) => (q === p ? toward(q, 18 * TILE + 1, q.onGround && q.x > 16 * TILE - 4) : NO_INPUT), () => p.x > 31 * TILE, 600);
-        expect(w.resets).toBe(0);
-      }
-      finish(w);
-    });
   });
 
   describe("Mundo 10 — cores", () => {

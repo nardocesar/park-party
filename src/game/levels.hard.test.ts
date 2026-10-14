@@ -280,6 +280,64 @@ describe("fases difíceis", () => {
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });
+
+  /** `p` anda até `col` sem pular (passando por baixo de portais-armadilha). */
+  const walkOnly = (w: ReturnType<typeof createWorld2>, p: (typeof w.players)[number], col: number) => {
+    const s = steer();
+    return drive(w, (q) => (q === p ? s(q, mid(col), { unstick: false }) : NO_INPUT), () => Math.abs(p.x + p.w / 2 - mid(col)) <= 1 && p.onGround, 900);
+  };
+  /** `p` anda para a direita e pula uma vez quando a borda direita passa de `jumpAtX` (px). */
+  const jumpAt = (w: ReturnType<typeof createWorld2>, p: (typeof w.players)[number], jumpAtX: number, untilX: number) => {
+    let jumped = false;
+    return drive(
+      w,
+      (q) => {
+        if (q !== p) return NO_INPUT;
+        const jump = !jumped && q.onGround && q.x + q.w >= jumpAtX;
+        if (jump) jumped = true;
+        return { ...NO_INPUT, right: true, jump: jump || (!q.onGround && q.vy < 0) };
+      },
+      () => p.x > untilX && p.onGround,
+      900,
+    );
+  };
+
+  it("9-3: revezamento pelo portal, ponte que cai, esmagador e portal de todos", () => {
+    const w = createWorld2("9-3");
+    const [a, b] = w.players;
+    const s = steer();
+    // b segura o botão de baixo; a passa o portão e o portal e segura o botão do outro lado
+    drive(w, (q) => (q === b ? s(q, mid(9)) : NO_INPUT), () => Math.abs(b.x + b.w / 2 - mid(9)) <= 1, 900);
+    drive(w, (q) => (q === a ? s(q, mid(18)) : NO_INPUT), () => a.x > 23 * TILE, 900);
+    walkOnly(w, a, 26);
+    expect(w.switches[1].on).toBe(true);
+    drive(w, (q) => (q === b ? s(q, mid(18)) : NO_INPUT), () => b.x > 23 * TILE, 900);
+    expect(w.resets).toBe(0);
+    // ponte que cai colados (b atrás de a)
+    goTo(w, [[a, mid(28)], [b, mid(27)]], 900, { unstick: false });
+    for (let f = 0; f < 60 && b.x + b.w < a.x - 0.5; f++) step(w, [NO_INPUT, { ...NO_INPUT, right: true }]);
+    drive(w, () => ({ ...NO_INPUT, right: true }), () => w.players.every((p) => p.x > 36 * TILE), 300);
+    expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("9-4: labirinto sem pular sob as armadilhas", () => {
+    const w = createWorld2("9-4");
+    const [a, b] = w.players;
+    /** `p` anda para a direita sem pular até passar de `x` (px). */
+    const walkPast = (p: (typeof w.players)[number], x: number) =>
+      drive(w, (q) => (q === p ? { ...NO_INPUT, right: true } : NO_INPUT), () => p.x > x && p.onGround, 900);
+    for (const p of [b, a]) {
+      walkPast(p, 13 * TILE); // portal da sala 1
+      walkOnly(w, p, 18);
+      jumpAt(w, p, 19.4 * TILE, 21 * TILE); // pula o degrau longe das armadilhas
+      walkPast(p, 27 * TILE); // portal para a sala 3
+      expect(w.resets).toBe(0);
+    }
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
 });
 
 const FLOOR = 8;
