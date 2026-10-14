@@ -60,6 +60,45 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
       ctx.stroke();
     }
   }
+  // vento: faixas que andam na direção do sopro (só quando ligado)
+  for (const wd of world.level.winds) {
+    const on = wd.target === null || world.switches.some((sw) => sw.target === wd.target && sw.on);
+    ctx.fillStyle = on ? "rgba(56, 189, 248, 0.12)" : "rgba(148, 163, 184, 0.08)";
+    ctx.fillRect(wd.x, wd.y, wd.w, wd.h);
+    if (!on) continue;
+    ctx.strokeStyle = "rgba(14, 165, 233, 0.45)";
+    ctx.lineWidth = 1;
+    const t = world.frame;
+    for (let i = 0; i < (wd.w * wd.h) / 160; i++) {
+      const seed = (i * 97) % 89;
+      const len = 6;
+      const x = wd.x + ((seed * 13 + t * wd.fx * 1.5) % wd.w + wd.w) % wd.w;
+      const y = wd.y + ((seed * 7 + t * wd.fy * 1.5) % wd.h + wd.h) % wd.h;
+      const dx = wd.fx === 0 ? 0 : Math.sign(wd.fx) * len;
+      const dy = wd.fy === 0 ? 0 : Math.sign(wd.fy) * len;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + dx, y + dy);
+      ctx.stroke();
+    }
+  }
+  // trampolins: base, mola e plataforma (apagados quando o botão está desligado)
+  for (const sp of world.level.springs) {
+    const on = sp.target === null || world.switches.some((sw) => sw.target === sp.target && sw.on);
+    ctx.fillStyle = "#3f3a36";
+    ctx.fillRect(sp.x, sp.y + sp.h - 4, sp.w, 4);
+    ctx.strokeStyle = on ? "#16a34a" : "#a8a29e";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let x = sp.x + 3; x < sp.x + sp.w - 3; x += 6) {
+      ctx.moveTo(x, sp.y + sp.h - 4);
+      ctx.lineTo(x + 3, sp.y + 4);
+      ctx.lineTo(x + 6, sp.y + sp.h - 4);
+    }
+    ctx.stroke();
+    ctx.fillStyle = on ? "#22c55e" : "#d6d3d1";
+    ctx.fillRect(sp.x, sp.y, sp.w, 3);
+  }
   for (const [i, r] of world.rails.entries()) {
     const def = world.level.rails[i];
     // guia do caminho (pela borda superior central)

@@ -387,4 +387,123 @@ describe("fases", () => {
       finish(w);
     });
   });
+
+  describe("Mundos 6 e 7 — vento e molas", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    type P = World["players"][number];
+    const finish = (w: World) => {
+      const walk = walker(w);
+      for (let f = 0; f < 4000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    };
+    /** Comanda cada jogador por um tempo: direção (-1, 0, 1) e pulo, até `done` ou `max` frames. */
+    const drive = (w: World, inputs: (p: P, i: number) => PlayerInput, done: () => boolean, max = 900) => {
+      for (let f = 0; f < max && !done(); f++) step(w, w.players.map((p, i) => inputs(p, i)));
+    };
+    const lastX = new Map<P, number>();
+    /** Vai até x; se travar (degrau, trampolim), pula. */
+    const toward = (p: P, x: number): PlayerInput => {
+      if (Math.abs(p.x - x) <= 1) return NO_INPUT;
+      const stuck = p.onGround && Math.abs(p.x - (lastX.get(p) ?? NaN)) < 0.1;
+      lastX.set(p, p.x);
+      return { ...NO_INPUT, left: p.x > x, right: p.x < x, jump: stuck || (!p.onGround && p.vy < 0) };
+    };
+    const onTop = (p: P, row: number) => p.onGround && Math.abs(p.y + p.h - row * TILE) < 0.01;
+
+    it("6-1 tem solução: corrente de ar até o paredão", () => {
+      const w = createWorld(parseLevel(at("6-1")), 2);
+      for (const i of [1, 0]) {
+        const p = w.players[i];
+        drive(w, (q) => (q === p ? toward(q, 12 * TILE) : NO_INPUT), () => p.y < 3 * TILE, 900);
+        drive(w, (q) => (q === p ? toward(q, 16 * TILE + i * TILE) : NO_INPUT), () => onTop(p, 4), 300);
+        expect(onTop(p, 4)).toBe(true);
+      }
+      finish(w);
+    });
+
+    it("6-2 tem solução: andar contra o vento sem parar", () => {
+      finish(createWorld(parseLevel(at("6-2")), 2));
+    });
+
+    it("6-3 tem solução: revezamento no ventilador", () => {
+      const w = createWorld(parseLevel(at("6-3")), 2);
+      const [a, b] = w.players;
+      // a segura o botão de baixo; b sobe e vai para o botão de cima
+      drive(w, (q) => (q === a ? toward(q, 7 * TILE + 1) : toward(q, 12 * TILE)), () => Math.abs(a.x - (7 * TILE + 1)) <= 1 && b.y < 2 * TILE, 900);
+      drive(w, (q) => (q === a ? NO_INPUT : toward(q, 18 * TILE + 1)), () => onTop(b, 3) && Math.abs(b.x - (18 * TILE + 1)) <= 1, 600);
+      expect(w.switches[1].on).toBe(true);
+      // a sobe com o ventilador ligado pelo botão de cima
+      drive(w, (q) => (q === a ? toward(q, 12 * TILE) : NO_INPUT), () => a.y < 2 * TILE, 900);
+      drive(w, (q) => (q === a ? toward(q, 16 * TILE) : NO_INPUT), () => onTop(a, 3), 300);
+      expect(onTop(a, 3)).toBe(true);
+      finish(w);
+    });
+
+    it("6-4 tem solução: subir juntos parados e deixar o vento lateral levar", () => {
+      const w = createWorld(parseLevel(at("6-4")), 2);
+      const spots = [9 * TILE + 1, 10 * TILE + 1];
+      const there = () => w.players.every((p, i) => Math.abs(p.x - spots[i]) <= 1);
+      drive(w, (q, i) => toward(q, spots[i]), there, 900);
+      drive(w, (q, i) => ({ ...toward(q, spots[i]), jump: false }), () => w.players.every((p) => p.y < 4 * TILE), 300);
+      drive(w, () => ({ ...NO_INPUT, right: true }), () => w.players.every((p) => onTop(p, 4)), 900);
+      expect(w.resets).toBe(0);
+      expect(w.players.every((p) => onTop(p, 4))).toBe(true);
+      finish(w);
+    });
+
+    it("7-1 tem solução: trampolim até o platô", () => {
+      const w = createWorld(parseLevel(at("7-1")), 2);
+      for (const i of [1, 0]) {
+        const p = w.players[i];
+        drive(w, (q) => (q === p ? toward(q, 11 * TILE + 1) : NO_INPUT), () => p.vy < -1, 900);
+        drive(w, (q) => (q === p ? { ...NO_INPUT, right: true, jump: q.vy < 0 } : NO_INPUT), () => onTop(p, 5), 200);
+        expect(onTop(p, 5)).toBe(true);
+      }
+      finish(w);
+    });
+
+    it("7-2 tem solução: revezamento no trampolim com botão", () => {
+      const w = createWorld(parseLevel(at("7-2")), 2);
+      const [a, b] = w.players;
+      drive(w, (q) => (q === a ? toward(q, 7 * TILE + 1) : toward(q, 11 * TILE + 1)), () => b.vy < -1 && Math.abs(a.x - (7 * TILE + 1)) <= 1, 900);
+      drive(w, (q) => (q === b ? { ...NO_INPUT, right: true, jump: q.vy < 0 } : NO_INPUT), () => onTop(b, 5), 200);
+      drive(w, (q) => (q === b ? toward(q, 16 * TILE + 1) : NO_INPUT), () => Math.abs(b.x - (16 * TILE + 1)) <= 1, 300);
+      expect(w.switches[1].on).toBe(true);
+      drive(w, (q) => (q === a ? toward(q, 11 * TILE + 1) : NO_INPUT), () => a.vy < -1, 300);
+      drive(w, (q) => (q === a ? { ...NO_INPUT, right: true, jump: q.vy < 0 } : NO_INPUT), () => onTop(a, 5), 200);
+      expect(onTop(a, 5)).toBe(true);
+      finish(w);
+    });
+
+    it("7-3 tem solução: salto diagonal sem segurar direção", () => {
+      const w = createWorld(parseLevel(at("7-3")), 2);
+      for (const i of [1, 0]) {
+        const p = w.players[i];
+        drive(w, (q) => (q === p ? toward(q, 9 * TILE + 1) : NO_INPUT), () => p.vy < -1, 900);
+        drive(w, () => NO_INPUT, () => p.onGround && p.x > 15 * TILE, 200);
+        expect(w.resets).toBe(0);
+        drive(w, (q) => (q === p ? toward(q, 18 * TILE + i * TILE) : NO_INPUT), () => Math.abs(p.x - (18 * TILE + i * TILE)) <= 1, 300);
+      }
+      finish(w);
+    });
+
+    it("7-4 tem solução: torre de molas com botões em dois níveis", () => {
+      const w = createWorld(parseLevel(at("7-4")), 2);
+      const [a, b] = w.players;
+      const bounce = (p: P, target: number, row: number) => {
+        drive(w, (q) => (q === p ? toward(q, target) : NO_INPUT), () => p.vy < -1, 900);
+        drive(w, (q) => (q === p ? { ...NO_INPUT, right: true, jump: q.vy < 0 } : NO_INPUT), () => onTop(p, row), 200);
+        expect(onTop(p, row)).toBe(true);
+      };
+      bounce(b, 11 * TILE + 1, 7);
+      bounce(a, 11 * TILE + 1, 7);
+      // a segura o botão do meio; b sobe pela segunda mola
+      drive(w, (q) => (q === a ? toward(q, 16 * TILE + 1) : q === b ? toward(q, 19 * TILE) : NO_INPUT), () => Math.abs(a.x - (16 * TILE + 1)) <= 1 && Math.abs(b.x - 19 * TILE) <= 1, 600);
+      bounce(b, 21 * TILE + 1, 3);
+      drive(w, (q) => (q === b ? toward(q, 28 * TILE + 1) : NO_INPUT), () => Math.abs(b.x - (28 * TILE + 1)) <= 1, 300);
+      bounce(a, 21 * TILE + 1, 3);
+      finish(w);
+    });
+  });
 });

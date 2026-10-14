@@ -223,6 +223,7 @@ const gateRects = (world: World): Rect[] => [
   ...world.gates.map(gateRect).filter((r) => r.h > 0),
   ...world.blinks.filter((b) => b.visible),
   ...world.pushers,
+  ...world.level.springs,
 ];
 
 /** O que está logo abaixo do corpo: "tile", outro corpo, ou null. */
@@ -318,6 +319,21 @@ export function step(world: World, inputs: PlayerInput[]) {
   };
   const displacement = new Map<Body, { dx: number; dy: number }>();
 
+  // vento e trampolins acionados por botão: "ligado" se não tem alvo ou se um botão do alvo está ligado
+  const powered = (target: string | null) => target === null || world.switches.some((sw) => sw.target === target && sw.on);
+  const windOf = (p: Player) => {
+    let fx = 0;
+    let fy = 0;
+    for (const wd of world.level.winds) {
+      if (powered(wd.target) && overlaps(p, wd)) {
+        fx += wd.fx;
+        fy = Math.min(fy, wd.fy);
+      }
+    }
+    return { fx, fy };
+  };
+  const wind = new Map<Player, { fx: number; fy: number }>();
+
   // 1. Controle e gravidade dos jogadores
   for (const p of ps) {
     const input = inputs[p.index] ?? NO_INPUT;
@@ -339,6 +355,19 @@ export function step(world: World, inputs: PlayerInput[]) {
     p.jumpHeld = input.jump;
     const g = input.jump && p.vy < 0 ? GRAVITY_WEAK : GRAVITY;
     p.vy = Math.min(GRAVITY_MAX, p.vy + g);
+
+    // trampolim (JumpStandComponent.notifyJump): quem está em cima recebe a velocidade de lançamento
+    const feet = { x: p.x, y: p.y + p.h, w: p.w, h: EPS };
+    const spring = world.level.springs.find((sp) => powered(sp.target) && overlaps(feet, sp));
+    if (spring) {
+      p.vy = spring.vy;
+      if (spring.vx !== 0) p.vx = spring.vx;
+      p.coyote = 0;
+    }
+    // vento (WindComponent.OnCollided): velocidade externa enquanto estiver na área
+    const wv = windOf(p);
+    wind.set(p, wv);
+    if (wv.fy < 0) p.vy = Math.min(p.vy, wv.fy);
   }
 
   // 2. Elevadores: o peso é quem está em cima, direta ou indiretamente (empilhado)
@@ -460,7 +489,7 @@ export function step(world: World, inputs: PlayerInput[]) {
       moveAxis(world, p, carry.dx, "x", riders, camBounds);
       if (carry.dy !== 0) moveAxis(world, p, carry.dy, "y", carry.dy < 0 ? riders : new Set([s as Body]));
     }
-    moveAxis(world, p, p.vx, "x", riders, camBounds);
+    moveAxis(world, p, p.vx + (wind.get(p)?.fx ?? 0), "x", riders, camBounds);
     const { hit } = moveAxis(world, p, p.vy, "y", p.vy < 0 ? riders : new Set());
     if (hit) p.vy = 0;
     p.onGround = supportOf(world, p) !== null;

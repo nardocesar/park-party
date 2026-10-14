@@ -417,12 +417,163 @@ const WORLD_5: LevelDef[] = [
   ),
 ];
 
+// Mundo 6 — Ventania: vento lateral e correntes para cima (WindComponent — docs/re/06-wind-spring.md).
+const WORLD_6: LevelDef[] = [
+  // 6-1: a corrente de ar leva ao alto do paredão
+  build(
+    "Corrente de ar",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(14, 38, FLOOR - 4, FLOOR);
+      g.set(24, FLOOR - 5, "K");
+      g.set(34, FLOOR - 5, "D");
+    },
+    { winds: [{ col: 11, row: 1, w: 3, h: FLOOR, fy: -1.25 }] },
+  ),
+  // 6-2: vento contrário empurra para a vala com espinho — parar é cair
+  build(
+    "Contra o vento",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.set(8, FLOOR + 1, ".");
+      g.set(16, FLOOR, "#");
+      g.set(22, FLOOR, "#");
+      g.set(25, FLOOR, "K");
+      g.set(38, FLOOR, "D");
+    },
+    {
+      thorns: [{ col: 8, row: FLOOR + 1, w: 1, h: 1 }],
+      winds: [{ col: 10, row: 0, w: 22, h: FLOOR + 1, fx: -0.9 }],
+    },
+  ),
+  // 6-3: o ventilador liga com o botão de baixo ou com o de cima — revezamento
+  build(
+    "Ventilador",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(14, 38, FLOOR - 5, FLOOR);
+      g.set(28, FLOOR - 6, "K");
+      g.set(35, FLOOR - 6, "D");
+    },
+    {
+      winds: [{ col: 11, row: 0, w: 3, h: FLOOR + 1, fy: -1.25, target: "fan" }],
+      switches: [
+        { col: 7, row: FLOOR, target: "fan" },
+        { col: 18, row: FLOOR - 6, target: "fan" },
+      ],
+    },
+  ),
+  // 6-4: a corrente sobe até a faixa de vento lateral, que atravessa o campo de espinhos
+  build(
+    "Tempestade",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(9, 31, FLOOR + 1, ROWS - 1, ".");
+      g.fill(32, 42, FLOOR - 4, FLOOR);
+      g.set(36, FLOOR - 5, "K");
+      g.set(40, FLOOR - 5, "D");
+    },
+    {
+      thorns: [{ col: 9, row: FLOOR + 1, w: 23, h: 1 }],
+      winds: [
+        { col: 9, row: 2, w: 2, h: FLOOR - 1, fy: -1.25 },
+        { col: 9, row: 1, w: 23, h: 3, fx: 1, fy: -0.4 },
+      ],
+    },
+  ),
+];
+
+// Mundo 7 — Molas: trampolins (JumpStandComponent — docs/re/06-wind-spring.md).
+const WORLD_7: LevelDef[] = [
+  // 7-1: o trampolim leva ao platô
+  build(
+    "Trampolim",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(13, 38, FLOOR - 3, FLOOR);
+      g.set(24, FLOOR - 4, "K");
+      g.set(34, FLOOR - 4, "D");
+    },
+    { springs: [{ col: 11, row: FLOOR, w: 1, vy: -9 }] },
+  ),
+  // 7-2: o trampolim só funciona com um botão pressionado — embaixo ou em cima
+  build(
+    "Mola com botão",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(13, 38, FLOOR - 3, FLOOR);
+      g.set(26, FLOOR - 4, "K");
+      g.set(34, FLOOR - 4, "D");
+    },
+    {
+      springs: [{ col: 11, row: FLOOR, w: 1, vy: -9, target: "s" }],
+      switches: [
+        { col: 7, row: FLOOR, target: "s" },
+        { col: 16, row: FLOOR - 4, target: "s" },
+      ],
+    },
+  ),
+  // 7-3: trampolim diagonal sobre o campo de espinhos
+  build(
+    "Salto longo",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(11, 13, FLOOR + 1, ROWS - 1, ".");
+      g.set(22, FLOOR, "K");
+      g.set(34, FLOOR, "D");
+    },
+    {
+      thorns: [{ col: 11, row: FLOOR + 1, w: 3, h: 1 }],
+      springs: [{ col: 9, row: FLOOR, w: 1, vy: -7, vx: 4.5 }],
+    },
+  ),
+  // 7-4: dois trampolins em níveis diferentes; o de cima depende de botão no meio ou no topo
+  build(
+    "Torre de molas",
+    40,
+    ROWS + 2,
+    (g) => {
+      spawns(g);
+      g.fill(13, 38, FLOOR - 1, FLOOR);
+      g.fill(24, 38, FLOOR - 5, FLOOR);
+      g.set(32, FLOOR - 6, "K");
+      g.set(36, FLOOR - 6, "D");
+    },
+    {
+      springs: [
+        { col: 11, row: FLOOR, w: 1, vy: -7.5 },
+        { col: 21, row: FLOOR - 2, w: 1, vy: -9, target: "top" },
+      ],
+      switches: [
+        { col: 16, row: FLOOR - 2, target: "top" },
+        { col: 28, row: FLOOR - 6, target: "top" },
+      ],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
   { name: "Contra o tempo", levels: WORLD_3 },
   { name: "Chão traiçoeiro", levels: WORLD_4 },
   { name: "Engrenagens", levels: WORLD_5 },
+  { name: "Ventania", levels: WORLD_6 },
+  { name: "Molas", levels: WORLD_7 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

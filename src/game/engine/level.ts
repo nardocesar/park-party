@@ -48,6 +48,16 @@ export type RailDef = {
 };
 /** Parede que empurra (MoveWallComponent): espera, avança `dx` tiles, espera e volta. `w` em tiles (padrão: fina). */
 export type PusherDef = { col: number; row: number; h: number; dx: number; w?: number };
+/**
+ * Vento (WindComponent): quem está na área recebe a velocidade (`fx`, `fy`) em px/frame; `fy` < 0 é
+ * corrente para cima (sobe a |fy|). Com `target`, só sopra quando algum botão desse alvo está ligado.
+ */
+export type WindDef = { col: number; row: number; w: number; h: number; fx?: number; fy?: number; target?: string };
+/**
+ * Trampolim (JumpStandComponent): bloco de 1 tile que lança quem pisa com (`vx`, `vy`) px/frame.
+ * Com `target`, só lança quando algum botão desse alvo está ligado.
+ */
+export type SpringDef = { col: number; row: number; w: number; vy: number; vx?: number; target?: string };
 /** Elevador com peso: desce `dy` tiles (negativo sobe) quando `need` jogadores estão em cima. */
 export type LiftDef = { col: number; row: number; w: number; dy: number; need: number };
 export type LevelDef = {
@@ -62,6 +72,8 @@ export type LevelDef = {
   thorns?: ThornDef[];
   rails?: RailDef[];
   pushers?: PusherDef[];
+  winds?: WindDef[];
+  springs?: SpringDef[];
   /** Corda que liga os jogadores em sequência (1–2–3…); comprimento em tiles. */
   rope?: { length: number };
 };
@@ -87,6 +99,8 @@ export type Level = {
   thorns: { x: number; y: number; w: number; h: number; dir: ThornDir; dx: number; dy: number; speed: number }[];
   rails: { path: { x: number; y: number }[]; w: number; need: number; speed: number; returns: boolean; wait: number }[];
   pushers: { x: number; y: number; w: number | null; h: number; dx: number }[];
+  winds: { x: number; y: number; w: number; h: number; fx: number; fy: number; target: string | null }[];
+  springs: { x: number; y: number; w: number; h: number; vx: number; vy: number; target: string | null }[];
   lifts: { x: number; y: number; w: number; h: number; travel: number; need: number }[];
   /** Comprimento da corda em px, ou null sem corda. */
   rope: number | null;
@@ -154,6 +168,12 @@ export function parseLevel(def: LevelDef): Level {
     })),
     pushers: (def.pushers ?? []).map((p) => ({
       x: p.col * TILE, y: p.row * TILE, w: p.w ? p.w * TILE : null, h: p.h * TILE, dx: p.dx * TILE,
+    })),
+    winds: (def.winds ?? []).map((wd) => ({
+      x: wd.col * TILE, y: wd.row * TILE, w: wd.w * TILE, h: wd.h * TILE, fx: wd.fx ?? 0, fy: wd.fy ?? 0, target: wd.target ?? null,
+    })),
+    springs: (def.springs ?? []).map((sp) => ({
+      x: sp.col * TILE, y: sp.row * TILE, w: sp.w * TILE, h: TILE, vx: sp.vx ?? 0, vy: sp.vy, target: sp.target ?? null,
     })),
     blinks: (def.blinks ?? []).map((b) => ({
       x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE,

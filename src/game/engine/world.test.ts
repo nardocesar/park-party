@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, MOVEWALL_IDLE, PLAYER_SIZE, TILE, VIEW_W } from "./constants";
+import { FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, MOVEWALL_IDLE, PLAYER_SIZE, TILE, VIEW_W, WALK_SPEED } from "./constants";
 import { parseLevel } from "./level";
 import { createWorld, NO_INPUT, step, type PlayerInput } from "./world";
 
@@ -788,5 +788,76 @@ describe("Mundo 5 — trilhos e paredes que empurram", () => {
     p.x = 18 * TILE - p.w; // encostado na parede direita
     run(w, 300, [NO_INPUT]);
     expect(w.resets).toBeGreaterThan(0);
+  });
+});
+
+describe("Mundos 6 e 7 — vento e trampolim", () => {
+  const open = (extra: object) =>
+    parseLevel({
+      name: "w67",
+      map: [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "####################",
+      ],
+      ...extra,
+    });
+
+  it("vento horizontal empurra quem está na área e freia quem anda contra", () => {
+    const w = createWorld(open({ winds: [{ col: 6, row: 0, w: 8, h: 7, fx: -1 }] }), 1);
+    const p = w.players[0];
+    p.x = 10 * TILE;
+    run(w, 30, [NO_INPUT]);
+    expect(p.x).toBeLessThan(10 * TILE - 20);
+    const x0 = (p.x = 8 * TILE);
+    run(w, 30, [RIGHT]);
+    expect(p.x - x0).toBeGreaterThan(5);
+    expect(p.x - x0).toBeLessThan(30 * WALK_SPEED * 0.6);
+  });
+
+  it("corrente de ar para cima levanta quem entra", () => {
+    const w = createWorld(open({ winds: [{ col: 8, row: 1, w: 2, h: 6, fy: -1.5 }] }), 1);
+    const p = w.players[0];
+    p.x = 8 * TILE + 1;
+    run(w, 40, [NO_INPUT]);
+    expect(p.y).toBeLessThan(5 * TILE);
+  });
+
+  it("trampolim lança para cima quem pisa", () => {
+    const w = createWorld(open({ springs: [{ col: 8, row: 6, w: 1, vy: -8 }] }), 1);
+    const p = w.players[0];
+    p.x = 8 * TILE + 1;
+    p.y = 6 * TILE - p.h - 4;
+    let minY = p.y;
+    for (let f = 0; f < 60; f++) {
+      step(w, [NO_INPUT]);
+      minY = Math.min(minY, p.y);
+    }
+    expect(6 * TILE - (minY + p.h)).toBeGreaterThan(40);
+  });
+
+  it("trampolim ligado a botão só lança com o botão pressionado", () => {
+    const w = createWorld(
+      open({ springs: [{ col: 8, row: 6, w: 1, vy: -8, target: "s" }], switches: [{ col: 3, row: 6, target: "s" }] }),
+      2,
+    );
+    const [a, b] = w.players;
+    b.x = 8 * TILE + 1;
+    b.y = 6 * TILE - b.h;
+    a.x = 12 * TILE;
+    run(w, 30, [NO_INPUT, NO_INPUT]);
+    expect(b.y + b.h).toBe(6 * TILE); // sem botão, é só um bloco
+    a.x = 3 * TILE + 1;
+    let minY = b.y;
+    for (let f = 0; f < 60; f++) {
+      step(w, [NO_INPUT, NO_INPUT]);
+      minY = Math.min(minY, b.y);
+    }
+    expect(minY).toBeLessThan(6 * TILE - b.h - 30);
   });
 });
