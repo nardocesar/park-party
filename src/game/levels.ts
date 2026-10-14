@@ -889,17 +889,19 @@ const WORLD_10: LevelDef[] = [
       switches: [{ col: 20, row: FLOOR - 3, target: "s" }],
     },
   ),
-  // 10-3: cada caixa colorida segura um dos botões do portão
+  // 10-3: cada caixa no seu botão; depois ponte que cai, esmagador e a chave no alto
   build(
     "Cada um no seu botão",
-    44,
+    54,
     ROWS,
     (g) => {
       spawns(g);
       g.set(12, FLOOR, "#");
       g.set(20, FLOOR, "#");
-      g.set(30, FLOOR, "K");
-      g.set(38, FLOOR, "D");
+      g.fill(28, 34, FLOOR + 1, ROWS - 1, ".");
+      g.fill(42, 44, FLOOR - 1, FLOOR - 1);
+      g.set(43, FLOOR - 2, "K");
+      g.set(50, FLOOR, "D");
     },
     {
       boxes: [
@@ -911,30 +913,36 @@ const WORLD_10: LevelDef[] = [
         { col: 19, row: FLOOR, target: "g1" },
       ],
       gates: [{ id: "g1", col: 25, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
+      falls: fallBridge(28, 34),
+      thorns: [{ col: 38, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1 }],
     },
   ),
-  // 10-4: ponte da cor certa e depois as caixas pequenas nos botões
+  // 10-4: ponte da cor certa, caixas nos botões e a caixa azul que lança o laranja ao paredão
   build(
     "Arco-íris",
-    56,
+    70,
     ROWS + 1,
     (g) => {
       spawns(g);
       g.fill(14, 14, FLOOR + 1, FLOOR + 2, ".");
       g.set(28, FLOOR, "#");
       g.set(36, FLOOR, "#");
-      g.set(45, FLOOR, "K");
-      g.set(51, FLOOR, "D");
+      g.fill(46, 68, FLOOR - 2, FLOOR);
+      g.set(56, FLOOR - 3, "K");
+      g.set(65, FLOOR - 3, "D");
     },
     {
       boxes: [
         { col: 9, row: FLOOR - 1, w: 1, h: 2, need: 1, color: 1 },
         { col: 22, row: FLOOR, w: 1, h: 1, need: 1, color: 0 },
         { col: 31, row: FLOOR, w: 1, h: 1, need: 1, color: 1 },
+        { col: 45, row: FLOOR, w: 1, h: 1, need: 1, color: 1 },
       ],
+      springs: [{ col: 44, row: FLOOR, w: 1, vy: -9, target: "s" }],
       switches: [
         { col: 27, row: FLOOR, target: "g1" },
         { col: 35, row: FLOOR, target: "g1" },
+        { col: 50, row: FLOOR - 3, target: "s" },
       ],
       gates: [{ id: "g1", col: 40, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
     },
@@ -972,40 +980,54 @@ const WORLD_11: LevelDef[] = [
     },
     { blackout: { bright: 1.5, dark: 2 }, falls: fallBridge(10, 18) },
   ),
-  // 11-3: amarrados e no escuro
+  // 11-3: amarrados no escuro — paredão, rapel pela chave, esmagador, valas e outro paredão
   build(
     "Corda no escuro",
-    44,
-    ROWS,
+    60,
+    DEEP,
     (g) => {
       spawns(g);
-      g.fill(12, 12, FLOOR + 1, ROWS - 1, ".");
-      g.fill(20, 20, FLOOR + 1, ROWS - 1, ".");
-      g.set(26, FLOOR, "#");
-      g.fill(31, 31, FLOOR + 1, ROWS - 1, ".");
-      g.set(28, FLOOR, "K");
-      g.set(39, FLOOR, "D");
-    },
-    { ...ROPE, blackout: { bright: 2, dark: 2 } },
-  ),
-  // 11-4: esmagadores e valas, com mais escuro que claro
-  build(
-    "Breu",
-    46,
-    ROWS,
-    (g) => {
-      spawns(g);
-      for (const c of [9, 30]) g.set(c, FLOOR + 1, ".");
-      g.set(36, FLOOR, "K");
-      g.set(42, FLOOR, "D");
+      g.fill(13, 14, FLOOR, FLOOR);
+      g.fill(15, 22, FLOOR - 2, FLOOR);
+      g.fill(29, 29, FLOOR + 1, DEEP - 1, ".");
+      g.set(29, DEEP - 2, "K");
+      for (const c of [36, 39]) g.set(c, FLOOR + 1, ".");
+      g.fill(43, 44, FLOOR, FLOOR);
+      g.fill(45, 52, FLOOR - 2, FLOOR);
+      g.set(56, FLOOR, "D");
     },
     {
+      ...ROPE,
       blackout: { bright: 1.5, dark: 2.5 },
       thorns: [
-        { col: 9, row: FLOOR + 1, w: 1, h: 1 },
-        { col: 30, row: FLOOR + 1, w: 1, h: 1 },
-        { col: 15, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1 },
-        { col: 22, row: FLOOR - 3, w: 2, h: 1, dir: "down", dy: 3, speed: 0.8 },
+        ...[36, 39].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 33, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1 },
+      ],
+    },
+  ),
+  // 11-4: no breu — valas e esmagadores, ponte que pisca, ponte que cai e mais esmagadores
+  build(
+    "Breu",
+    68,
+    ROWS,
+    (g) => {
+      spawns(g);
+      for (const c of [9, 16, 40]) g.set(c, FLOOR + 1, ".");
+      g.fill(25, 31, FLOOR + 1, ROWS - 1, ".");
+      g.fill(46, 52, FLOOR + 1, ROWS - 1, ".");
+      g.set(56, FLOOR, "K");
+      g.set(64, FLOOR, "D");
+    },
+    {
+      blackout: { bright: 1.2, dark: 2.8 },
+      blinks: [{ col: 25, row: FLOOR + 1, w: 7, h: 1, on: 2.5, off: 1.5 }],
+      falls: fallBridge(46, 52),
+      thorns: [
+        ...[9, 16, 40].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 12, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+        { col: 20, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 0.9 },
+        { col: 36, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.5 },
+        { col: 59, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 1 },
       ],
     },
   ),
@@ -1047,44 +1069,55 @@ const WORLD_12: LevelDef[] = [
       ],
     },
   ),
-  // 12-3: túnel com espinhos no teto — só passa quem encolheu abaixo da metade (sem chegar ao mínimo)
+  // 12-3: encolher na medida, túnel de espinhos, crescer para o platô e outro túnel lá em cima
   build(
     "Na medida",
-    44,
+    60,
     ROWS,
     (g) => {
       spawns(g);
-      tunnel(g, 18, 23);
-      g.set(32, FLOOR, "K");
-      g.set(40, FLOOR, "D");
+      tunnel(g, 14, 19);
+      g.fill(31, 58, FLOOR - 2, FLOOR);
+      g.fill(40, 45, 0, FLOOR - 4);
+      g.set(50, FLOOR - 3, "K");
+      g.set(55, FLOOR - 3, "D");
     },
     {
-      thorns: [{ col: 18, row: FLOOR, w: 6, h: 1, dir: "down" }],
+      thorns: [
+        { col: 14, row: FLOOR, w: 6, h: 1, dir: "down" },
+        { col: 40, row: FLOOR - 3, w: 6, h: 1, dir: "down" },
+      ],
       switches: [
-        { col: 13, row: FLOOR, target: "", scale: -0.006, dieSmall: true },
+        { col: 10, row: FLOOR, target: "", scale: -0.006, dieSmall: true },
         { col: 26, row: FLOOR, target: "", scale: 0.02 },
+        { col: 36, row: FLOOR - 3, target: "", scale: -0.006, dieSmall: true },
       ],
     },
   ),
-  // 12-4: crescer, encolher no túnel de espinhos e crescer de novo para o muro final
+  // 12-4: crescer, encolher no túnel, crescer para o muro e encolher de novo para o último túnel
   build(
     "Tamanho certo",
-    56,
+    72,
     ROWS,
     (g) => {
       spawns(g);
-      g.fill(13, 54, FLOOR - 2, FLOOR);
+      g.fill(13, 70, FLOOR - 2, FLOOR);
       g.fill(28, 33, 0, FLOOR - 4);
-      g.fill(44, 54, FLOOR - 5, FLOOR - 3);
+      g.fill(44, 70, FLOOR - 5, FLOOR - 3);
+      g.fill(54, 59, 0, FLOOR - 7);
       g.set(37, FLOOR - 3, "K");
-      g.set(50, FLOOR - 6, "D");
+      g.set(66, FLOOR - 6, "D");
     },
     {
-      thorns: [{ col: 28, row: FLOOR - 3, w: 6, h: 1, dir: "down" }],
+      thorns: [
+        { col: 28, row: FLOOR - 3, w: 6, h: 1, dir: "down" },
+        { col: 54, row: FLOOR - 6, w: 6, h: 1, dir: "down" },
+      ],
       switches: [
         { col: 9, row: FLOOR, target: "", scale: 0.015 },
         { col: 22, row: FLOOR - 3, target: "", scale: -0.006, dieSmall: true },
         { col: 41, row: FLOOR - 3, target: "", scale: 0.015 },
+        { col: 50, row: FLOOR - 6, target: "", scale: -0.006, dieSmall: true },
       ],
     },
   ),

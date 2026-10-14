@@ -338,6 +338,170 @@ describe("fases difíceis", () => {
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });
+
+  it("10-3: caixas nos botões, ponte que cai, esmagador e torre pela chave", () => {
+    const w = createWorld2("10-3");
+    const [a, b] = w.players;
+    // o azul vai primeiro (pula a caixa laranja), empurra a sua até o botão e para antes do portão
+    solo(w, [1], () => b.x > 23 * TILE - 2 && b.onGround);
+    solo(w, [0], () => a.x > 22 * TILE - 2 && a.onGround);
+    waitFor(w, () => w.gates[0].open === 1, 200);
+    expect(w.gates[0].open).toBe(1);
+    // ponte que cai colados (o laranja atrás do azul)
+    goTo(w, [[b, mid(27)], [a, mid(26)]], 900, { unstick: false });
+    for (let f = 0; f < 60 && a.x + a.w < b.x - 0.5; f++) step(w, [{ ...NO_INPUT, right: true }, NO_INPUT]);
+    drive(w, () => ({ ...NO_INPUT, right: true }), () => w.players.every((p) => p.x > 35 * TILE), 300);
+    expect(w.resets).toBe(0);
+    // esmagador: passam juntos logo depois de ele bater no chão
+    goTo(w, [[b, mid(36)], [a, mid(35)]]);
+    const crusher = w.thorns[0];
+    waitFor(w, () => crusher.y === crusher.y0 + 3 * TILE);
+    drive(w, () => ({ ...NO_INPUT, right: true }), () => w.players.every((p) => p.x > 40 * TILE), 200);
+    expect(w.resets).toBe(0);
+    // torre: o da frente para antes da plataforma suspensa e o outro sobe pela cabeça dele
+    const [front, back] = a.x > b.x ? [a, b] : [b, a];
+    goTo(w, [[front, 42 * TILE - 8], [back, mid(40)]], 900, { unstick: false });
+    climbOn(w, back, front);
+    jumpOnto(w, back, FLOOR - 1);
+    goTo(w, [[back, mid(43)]]);
+    expect(w.key.holder).toBe(back.index);
+    expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("10-4: ponte azul, caixas nos botões e a caixa que lança o laranja ao paredão", () => {
+    const w = createWorld2("10-4");
+    const [a, b] = w.players;
+    const box = w.boxes[3];
+    solo(w, [1], () => w.boxes[0].y === 9 * TILE);
+    expect(w.boxes[0].y).toBe(9 * TILE);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 41 * TILE), 4000);
+    expect(w.players.every((p) => p.x > 41 * TILE)).toBe(true);
+    // o laranja sobe na caixa azul; o azul para antes da mola
+    goTo(w, [[b, mid(42)]], 900, { unstick: false });
+    goTo(w, [[a, mid(43)]], 900, { unstick: false });
+    jumpOnto(w, a, FLOOR);
+    goTo(w, [[a, 45 * TILE + 1 + a.w / 2]], 300);
+    expect(a.y + a.h).toBe(box.y);
+    // o azul pula; no ápice da caixa, o laranja salta para o paredão
+    waitFor(w, () => false, 2);
+    step(w, [NO_INPUT, { ...NO_INPUT, jump: true }]);
+    waitFor(w, () => box.vy >= -0.5, 30);
+    drive(w, (q) => (q === a ? { ...NO_INPUT, right: true, jump: true } : NO_INPUT), () => a.onGround && a.y + a.h === (FLOOR - 2) * TILE, 120);
+    expect(a.y + a.h).toBe((FLOOR - 2) * TILE);
+    // o laranja liga a mola e o azul sobe por ela
+    goTo(w, [[a, mid(50)]], 300);
+    expect(w.switches[2].on).toBe(true);
+    goTo(w, [[b, mid(44)]], 600);
+    drive(w, (q) => (q === b ? { ...NO_INPUT, right: true, jump: q.vy < 0 } : NO_INPUT), () => b.onGround && b.y + b.h === (FLOOR - 2) * TILE, 200);
+    expect(b.y + b.h).toBe((FLOOR - 2) * TILE);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("11-3: paredão, rapel, esmagador, valas e paredão — amarrados no escuro", () => {
+    const w = createWorld2("11-3");
+    const [a, b] = w.players;
+    expect(stackHoist(w, b, a, 15, FLOOR - 2)).toBe(true);
+    goTo(w, [[a, mid(27)], [b, mid(26)]], 900, { unstick: false });
+    expect(rapel(w, a, b, 29, FLOOR + 1)).toBe(true);
+    expect(w.key.holder).toBe(0);
+    expect(w.resets).toBe(0);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 41 * TILE && p.onGround), 2000);
+    expect(w.resets).toBe(0);
+    const [front, back] = a.x > b.x ? [a, b] : [b, a];
+    expect(stackHoist(w, front, back, 45, FLOOR - 2)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("11-4: esmagadores, ponte que pisca, ponte que cai e mais esmagadores no breu", () => {
+    const w = createWorld2("11-4");
+    const [a, b] = w.players;
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 22 * TILE && p.onGround), 3000);
+    expect(w.resets).toBe(0);
+    const [front, back] = a.x > b.x ? [a, b] : [b, a];
+    goTo(w, [[front, mid(24)], [back, mid(23)]], 900, { unstick: false });
+    crossBlinkBridge(w, 0, 100, 100);
+    expect(w.resets).toBe(0);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 42 * TILE && p.onGround), 1500);
+    expect(w.resets).toBe(0);
+    tightBridge(w, 46);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  type P = ReturnType<typeof createWorld2>["players"][number];
+  /** Só `p` anda (sem pular) até o centro dele ficar em `cx` (px). */
+  const walkTo = (w: ReturnType<typeof createWorld2>, p: P, cx: number) =>
+    drive(w, (q) => (q !== p || Math.abs(q.x + q.w / 2 - cx) <= 1 ? NO_INPUT : { ...NO_INPUT, left: q.x + q.w / 2 > cx, right: q.x + q.w / 2 < cx }), () => Math.abs(p.x + p.w / 2 - cx) <= 1 && p.onGround);
+  /** Encolhe no botão (centro na borda direita dele, para sair rápido) até abaixo da metade. */
+  const shrink = (w: ReturnType<typeof createWorld2>, p: P, switchCol: number) => {
+    walkTo(w, p, (switchCol + 1) * TILE);
+    waitFor(w, () => p.scale <= 0.47);
+  };
+  /** Cresce no botão e pula para a plataforma com os pés na linha `row`. */
+  const growAndClimb = (w: ReturnType<typeof createWorld2>, p: P, switchCol: number, row: number) => {
+    walkTo(w, p, mid(switchCol));
+    waitFor(w, () => p.scale >= 2.3);
+    jumpOnto(w, p, row);
+    expect(p.y + p.h).toBeCloseTo(row * TILE, 5);
+  };
+  /** Todos andam juntos até os centros `targets` (na ordem dos jogadores). */
+  const together = (w: ReturnType<typeof createWorld2>, targets: number[]) =>
+    drive(
+      w,
+      (q, i) => (Math.abs(q.x + q.w / 2 - targets[i]) <= 1 ? NO_INPUT : { ...NO_INPUT, left: q.x + q.w / 2 > targets[i], right: q.x + q.w / 2 < targets[i] }),
+      () => w.players.every((q, i) => Math.abs(q.x + q.w / 2 - targets[i]) <= 1),
+      1500,
+    );
+
+  it("12-3: encolher, túnel, crescer para o platô, encolher e outro túnel", () => {
+    const w = createWorld2("12-3");
+    const [a, b] = w.players;
+    shrink(w, b, 10);
+    walkTo(w, b, mid(12));
+    shrink(w, a, 10);
+    together(w, [mid(21), mid(22)]);
+    expect(w.resets).toBe(0);
+    for (const [i, p] of [b, a].entries()) {
+      growAndClimb(w, p, 26, FLOOR - 2);
+      walkTo(w, p, mid(33 - i));
+    }
+    shrink(w, b, 36);
+    walkTo(w, b, mid(38));
+    shrink(w, a, 36);
+    together(w, [mid(47), mid(48)]);
+    expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("12-4: crescer, encolher, crescer para o muro e encolher para o último túnel", () => {
+    const w = createWorld2("12-4");
+    const [a, b] = w.players;
+    for (const [i, p] of [b, a].entries()) {
+      growAndClimb(w, p, 9, FLOOR - 2);
+      walkTo(w, p, mid(19 - i * 3));
+    }
+    shrink(w, b, 22);
+    walkTo(w, b, mid(26));
+    shrink(w, a, 22);
+    together(w, [mid(36), mid(38)]);
+    expect(w.resets).toBe(0);
+    for (const [i, p] of [b, a].entries()) {
+      growAndClimb(w, p, 41, FLOOR - 5);
+      walkTo(w, p, mid(47 - i * 2));
+    }
+    shrink(w, b, 50);
+    walkTo(w, b, mid(52));
+    shrink(w, a, 50);
+    together(w, [mid(61), mid(62)]);
+    expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
 });
 
 const FLOOR = 8;

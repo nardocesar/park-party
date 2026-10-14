@@ -459,25 +459,6 @@ describe("fases", () => {
       finish(w);
     });
 
-    it("10-3 tem solução: cada caixa no seu botão (sem pular perto do portão)", () => {
-      const w = createWorld(parseLevel(at("10-3")), 2);
-      const [a, b] = w.players;
-      // o azul vai primeiro (pula a caixa laranja), empurra a sua até o botão e para antes do portão
-      solo(w, 1, () => b.x > 23 * TILE - 2 && b.onGround);
-      // o laranja empurra a sua até o botão e para atrás do azul
-      solo(w, 0, () => a.x > 22 * TILE - 2 && a.onGround);
-      drive(w, () => NO_INPUT, () => w.gates[0].open === 1, 200);
-      expect(w.switches.every((sw) => sw.on)).toBe(true);
-      expect(w.gates[0].open).toBe(1);
-      finish(w);
-    });
-
-    it("10-4 tem solução: ponte azul e caixas nos botões", () => {
-      const w = createWorld(parseLevel(at("10-4")), 2);
-      solo(w, 1, () => w.boxes[0].y === 9 * TILE);
-      expect(w.boxes[0].y).toBe(9 * TILE);
-      finish(w);
-    });
   });
 
   describe("Mundos 11 e 12 — apagão e tamanho", () => {
@@ -511,8 +492,6 @@ describe("fases", () => {
       finish(w);
     });
 
-    it("11-3 tem solução: corda no escuro", () => finish(createWorld(parseLevel(at("11-3")), 2)));
-    it("11-4 tem solução: esmagadores no breu", () => finish(createWorld(parseLevel(at("11-4")), 2)));
 
     const growAndClimb = (w: World, p: P, switchCol: number, row: number, target = 2.3) => {
       walkTo(w, p, mid(switchCol));
@@ -542,53 +521,6 @@ describe("fases", () => {
         waitFor(w, () => p.scale <= 1.05);
         walkTo(w, p, mid(34 - i * 2));
         expect(p.x).toBeGreaterThan(31 * TILE);
-      }
-      finish(w);
-    });
-
-    it("12-3 tem solução: encolher na medida e crescer de volta (os dois por etapa)", () => {
-      const w = createWorld(parseLevel(at("12-3")), 2);
-      const order = [w.players[1], w.players[0]];
-      for (const [i, p] of order.entries()) {
-        walkTo(w, p, 14 * TILE); // centro na borda direita do botão: sai rápido depois de encolher
-        waitFor(w, () => p.scale <= 0.47);
-        walkTo(w, p, mid(17 - i)); // espera ao lado da entrada do túnel
-      }
-      for (const [i, p] of order.entries()) {
-        walkTo(w, p, mid(26));
-        waitFor(w, () => p.scale >= 1);
-        walkTo(w, p, mid(30 - i * 2));
-        expect(w.resets).toBe(0);
-      }
-      finish(w);
-    });
-
-    it("12-4 tem solução: crescer, encolher, atravessar juntos e crescer para o muro", () => {
-      const w = createWorld(parseLevel(at("12-4")), 2);
-      const [a, b] = w.players;
-      for (const [i, p] of [b, a].entries()) {
-        growAndClimb(w, p, 9, 6);
-        walkTo(w, p, mid(19 - i * 3));
-      }
-      // cada um encolhe na borda do botão e espera antes do túnel
-      walkTo(w, b, 23 * TILE);
-      waitFor(w, () => b.scale <= 0.47);
-      walkTo(w, b, mid(26));
-      walkTo(w, a, 23 * TILE);
-      waitFor(w, () => a.scale <= 0.47);
-      // atravessam juntos (a câmera acompanha os dois)
-      const targets = [mid(36), mid(38)];
-      drive(
-        w,
-        (q, i) => (Math.abs(q.x + q.w / 2 - targets[i]) <= 1 ? NO_INPUT : { ...NO_INPUT, left: q.x + q.w / 2 > targets[i], right: q.x + q.w / 2 < targets[i] }),
-        () => w.players.every((q, i) => Math.abs(q.x + q.w / 2 - targets[i]) <= 1),
-        1500,
-      );
-      expect(w.resets).toBe(0);
-      // o da frente cresce e sobe primeiro, depois o outro
-      for (const [i, p] of [b, a].entries()) {
-        growAndClimb(w, p, 41, 3);
-        walkTo(w, p, mid(49 - i * 2));
       }
       finish(w);
     });
