@@ -30,12 +30,9 @@ Status: `todo` | `investigando` | `implementado` | `verificado` | `bloqueado`
 
 ## Desconhecidos abertos
 
-- `unk_32ca01d6…`: valores FP do jogador/objetos no Quantum. Em andamento:
-  Ghidra 12.1.4 instalado (`~/tools`, decompilador arm64 compilado das fontes),
-  fatia arm64 em `~/tools/re-targets/`, REA com `REA_GHIDRA_STARTUP_TIMEOUT_MS=7200000`.
-  Caminho: string `PhotonQuantumCode.dll` → Il2CppCodeGenModule → `methodPointers[rid-1]`
-  → `.cctor` (rids: PlayerComponent 4161, QPlayerDefine 6853, PushBox 4444,
-  Key 3056, WeightedLift 5876, Gate 2510, Switch 5338).
+- `unk_b931977a…` (REA): multiplicador de caminhada, gravidade e pulo efetivos. O código
+  lê esses valores de um asset de configuração do Unity, não do binário. As constantes de
+  código já foram lidas: `docs/re/01-player-constants.md`. Próxima sonda: medir no jogo rodando.
 
 ## Notas operacionais
 
