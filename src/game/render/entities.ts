@@ -101,7 +101,8 @@ export function drawSwitches(ctx: CanvasRenderingContext2D, world: World) {
     px(ctx, sw.x + 2, sw.y + down, sw.w - 4, Math.max(1, sw.h - 2 - down), color);
     px(ctx, sw.x + 3, sw.y + down, sw.w - 6, 1, "rgba(255,255,255,0.45)");
     const seconds = countdownSeconds(sw);
-    if (seconds !== null) drawCountdown(ctx, seconds, sw.x + sw.w / 2, sw.y - 4, color);
+    // acima de quem estiver no botão (jogador + chapéu + setinha)
+    if (seconds !== null) drawCountdown(ctx, seconds, sw.x + sw.w / 2, sw.y - 24, color);
   }
 }
 

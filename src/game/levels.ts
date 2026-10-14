@@ -1501,6 +1501,134 @@ const WORLD_15: LevelDef[] = [
   ),
 ];
 
+/** Ponte invertida (só sólida com o botão ligado) sobre um vão aberto no chão, de `c0` a `c1`. */
+const bridgeGap = (g: Grid, c0: number, c1: number, row = FLOOR + 1) => g.fill(c0, c1, row, ROWS - 1, ".");
+
+// Mundo 16 — Corrida do ouro: fases longas no ritmo do PICO PARK 2, com chave enjaulada,
+// botões com contagem e pontes que só existem enquanto alguém segura o botão.
+const WORLD_16: LevelDef[] = [
+  // 16-1: morro com o botão que solta a chave; chave flutuando no vale (torre); escadaria e
+  // ponte com contagem de 1,5 s (curta demais para atravessar sozinho) e botão do outro lado
+  build(
+    "Cidade-fantasma",
+    64,
+    ROWS,
+    (g) => {
+      spawns(g);
+      // morro: degraus de 1 tile até o platô (topo na linha 5)
+      g.fill(10, 10, FLOOR, FLOOR);
+      g.fill(11, 11, FLOOR - 1, FLOOR);
+      g.fill(12, 12, FLOOR - 2, FLOOR);
+      g.fill(13, 18, FLOOR - 3, FLOOR);
+      g.fill(19, 19, FLOOR - 2, FLOOR);
+      g.fill(20, 20, FLOOR - 1, FLOOR);
+      g.fill(21, 21, FLOOR, FLOOR);
+      // chave flutuando no meio do vale
+      g.set(25, FLOOR - 3, "K");
+      // escadaria até o platô alto (topo na linha 4)
+      for (let i = 0; i < 4; i++) g.fill(31 + i, 31 + i, FLOOR - i, FLOOR);
+      g.fill(35, 42, FLOOR - 4, FLOOR);
+      // vão sem fundo e o patamar da porta
+      bridgeGap(g, 43, 52, FLOOR - 4);
+      g.fill(53, 62, FLOOR - 4, FLOOR);
+      g.set(58, FLOOR - 5, "D");
+    },
+    {
+      keyLock: "cage",
+      switches: [
+        { col: 16, row: FLOOR - 4, target: "cage" },
+        { col: 40, row: FLOOR - 5, target: "bridge", timer: 1.5 },
+        { col: 54, row: FLOOR - 5, target: "bridge", timer: 1.5 },
+      ],
+      gates: [{ id: "bridge", col: 43, row: FLOOR - 4, w: 10, h: 1, inverted: true }],
+    },
+  ),
+  // 16-2: revezamento na ponte (dois botões de 2,5 s), torre até a plataforma do botão da
+  // jaula, e o caixote de todos vira degrau para o patamar da porta
+  build(
+    "Desfiladeiro",
+    64,
+    ROWS,
+    (g) => {
+      spawns(g);
+      bridgeGap(g, 12, 19);
+      g.fill(33, 35, FLOOR - 1, FLOOR - 1);
+      g.set(38, FLOOR, "K");
+      g.fill(48, 62, FLOOR - 1, FLOOR);
+      g.set(58, FLOOR - 2, "D");
+    },
+    {
+      keyLock: "cage",
+      switches: [
+        { col: 10, row: FLOOR, target: "b1", timer: 1 },
+        { col: 21, row: FLOOR, target: "b1", timer: 1 },
+        { col: 34, row: FLOOR - 2, target: "cage" },
+      ],
+      gates: [{ id: "b1", col: 12, row: FLOOR + 1, w: 8, h: 1, inverted: true }],
+      boxes: [{ col: 42, row: FLOOR, w: 1, h: 1, need: ALL }],
+    },
+  ),
+  // 16-3 (difícil): amarrados — o caixote de todos fica em cima do botão para segurar a ponte;
+  // paredão com corda; botão da jaula, chave e porta lá em cima
+  build(
+    "Laço no cânion",
+    48,
+    ROWS,
+    (g) => {
+      spawns(g);
+      bridgeGap(g, 14, 19);
+      g.fill(24, 25, FLOOR, FLOOR);
+      g.fill(26, 46, FLOOR - 2, FLOOR);
+      g.set(35, FLOOR - 3, "K");
+      g.set(42, FLOOR - 3, "D");
+    },
+    {
+      ...ROPE,
+      keyLock: "cage",
+      boxes: [{ col: 8, row: FLOOR, w: 1, h: 1, need: ALL }],
+      switches: [
+        { col: 11, row: FLOOR, target: "b" },
+        { col: 31, row: FLOOR - 3, target: "cage" },
+      ],
+      gates: [{ id: "b", col: 14, row: FLOOR + 1, w: 6, h: 1, inverted: true }],
+    },
+  ),
+  // 16-4 (difícil): a corrida inteira — revezamento na ponte, vagonete de todos, torre até o
+  // botão com atraso que solta a chave, escadaria e a ponte com contagem até a porta
+  build(
+    "Corrida do ouro",
+    86,
+    ROWS,
+    (g) => {
+      spawns(g);
+      bridgeGap(g, 10, 17);
+      g.fill(24, 35, FLOOR + 1, ROWS - 1, ".");
+      g.fill(44, 46, FLOOR - 1, FLOOR - 1);
+      g.set(50, FLOOR, "K");
+      for (let i = 0; i < 4; i++) g.fill(54 + i, 54 + i, FLOOR - i, FLOOR);
+      g.fill(58, 64, FLOOR - 4, FLOOR);
+      bridgeGap(g, 65, 74, FLOOR - 4);
+      g.fill(75, 84, FLOOR - 4, FLOOR);
+      g.set(80, FLOOR - 5, "D");
+    },
+    {
+      keyLock: "cage",
+      switches: [
+        { col: 8, row: FLOOR, target: "b1", timer: 1 },
+        { col: 19, row: FLOOR, target: "b1", timer: 1 },
+        { col: 45, row: FLOOR - 2, target: "cage", delay: 3 },
+        { col: 62, row: FLOOR - 5, target: "b2", timer: 1.5 },
+        { col: 76, row: FLOOR - 5, target: "b2", timer: 1.5 },
+      ],
+      gates: [
+        { id: "b1", col: 10, row: FLOOR + 1, w: 8, h: 1, inverted: true },
+        { id: "b2", col: 65, row: FLOOR - 4, w: 10, h: 1, inverted: true },
+      ],
+      rails: [{ path: [[24, FLOOR + 1], [33, FLOOR + 1]], w: 3, need: ALL }],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
@@ -1517,6 +1645,7 @@ export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Mistura", levels: WORLD_13 },
   { name: "Desafio", levels: WORLD_14 },
   { name: "Grande final", levels: WORLD_15 },
+  { name: "Corrida do ouro", levels: WORLD_16 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */
