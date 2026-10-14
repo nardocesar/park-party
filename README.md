@@ -2,126 +2,128 @@
 
 <h1><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-park-party-dark.png"><img src="docs/readme/title-park-party-light.png" alt="Park Party" height="90"></picture></h1>
 
-**Plataforma cooperativa de faroeste para 2 a 4 jogadores no mesmo teclado.**
-Peguem a chave, abram o saloon e entrem juntos — ninguém passa sozinho.
+**A Wild West co-op platformer for 2 to 4 players on one keyboard.**
+Grab the key, open the saloon and walk in together — nobody makes it alone.
 
-![Quatro cowboys invertem a gravidade, andam pelo teto sobre os cactos, pegam a chave e voltam ao chão para entrar no saloon](docs/screenshots/gameplay.gif)
+![Four cowboys flip gravity, walk along the ceiling over the cacti, grab the key and drop back down to enter the saloon](docs/screenshots/gameplay.gif)
 
-<sub>Fase 8-1 · "Teto": os quatro invertem a gravidade, passam pelo teto por cima dos cactos e voltam ao chão com a chave.</sub>
+<sub>Level 8-1 · "Ceiling": all four flip gravity, cross the ceiling above the cacti and come back down with the key.</sub>
 
 </div>
 
 ---
 
-Park Party é um jogo de navegador inspirado no **PICO PARK**: cada fase é um quebra-cabeça
-que só se resolve em equipe. Um jogador sobe nos ombros do outro, todos empurram a mesma
-caixa, a corda que amarra o grupo puxa quem ficou para trás. Se um morre, todos recomeçam.
+Park Party is a browser game inspired by **PICO PARK**: every level is a puzzle that can only
+be solved as a team. One player climbs on another's shoulders, everyone pushes the same crate,
+the rope tying the group together drags whoever falls behind. If one dies, everyone restarts.
 
-O visual é pixel art de faroeste 16-bit, no espírito dos run-and-gun de fliperama dos anos 90:
-pôr do sol, cidade ao fundo, cactos, caixotes e portas de saloon. Os quatro cowboys são
-originais e cada um usa a cor do seu jogador na roupa e na setinha sobre a cabeça.
+The art is 16-bit Wild West pixel art, in the spirit of 90s arcade run-and-guns: a sunset,
+a town on the horizon, cacti, crates and saloon doors. The four cowboys are original
+characters, and each one wears their player's color on their clothes and on the little arrow
+above their head.
 
-- **61 fases** em **15 mundos**, cada mundo apresentando uma mecânica nova
-- **2 a 4 jogadores** em teclado compartilhado ou gamepads
-- O que é "de todos" (caixas pesadas, plataformas, portais) **escala com o tamanho do grupo**
-- Progresso, desbloqueio de fases e **recordes por número de jogadores** salvos no Postgres
+- **61 levels** across **15 worlds**, each world introducing a new mechanic
+- **2 to 4 players** on a shared keyboard or gamepads
+- Everything that needs "everyone" (heavy crates, platforms, portals) **scales with the group size**
+- Progress, level unlocks and **best times per player count** saved in Postgres
+- The in-game text is in Brazilian Portuguese
 
-<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-mecanicas-dark.png"><img src="docs/readme/title-mecanicas-light.png" alt="Mecânicas" height="40"></picture></h2>
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-mechanics-dark.png"><img src="docs/readme/title-mechanics-light.png" alt="Mechanics" height="40"></picture></h2>
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/tower.png" alt="Três cowboys empilhados em torre ao lado de uma plataforma de tábuas onde o quarto segura a chave"></td>
-    <td width="50%"><img src="docs/screenshots/rope.png" alt="Quatro cowboys amarrados por um laço andando juntos em direção a um buraco"></td>
+    <td width="50%"><img src="docs/screenshots/tower.png" alt="Three cowboys stacked in a tower next to a wooden platform where the fourth one holds the key"></td>
+    <td width="50%"><img src="docs/screenshots/rope.png" alt="Four cowboys tied together by a lasso walking toward a gap"></td>
   </tr>
   <tr>
-    <td><b>Torre humana</b> — empilhem-se para alcançar o que ninguém alcança sozinho.</td>
-    <td><b>Amarrados</b> — uma corda liga o grupo; pular fora de sincronia derruba todo mundo.</td>
+    <td><b>Human tower</b> — stack up to reach what nobody can reach alone.</td>
+    <td><b>Tied together</b> — a rope links the group; jump out of sync and everyone falls.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/gravity.png" alt="Dois cowboys andando no teto com gravidade invertida enquanto os outros dois ficam no chão, acima de uma fileira de cactos"></td>
-    <td><img src="docs/screenshots/push.png" alt="Quatro cowboys em fila empurrando um caixote que exige 4 pessoas"></td>
+    <td><img src="docs/screenshots/gravity.png" alt="Two cowboys walking on the ceiling with flipped gravity while the other two stay on the ground, above a row of cacti"></td>
+    <td><img src="docs/screenshots/push.png" alt="Four cowboys in a line pushing a crate that needs 4 people"></td>
   </tr>
   <tr>
-    <td><b>De ponta-cabeça</b> — inverta a gravidade e ande pelo teto.</td>
-    <td><b>Força bruta</b> — o caixote marcado com 4 só anda se os quatro empurrarem.</td>
+    <td><b>Upside down</b> — flip gravity and walk on the ceiling.</td>
+    <td><b>Brute force</b> — the crate marked 4 only moves if all four push it.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/rail.png" alt="Quatro cowboys sobre um vagonete de mina marcado 4/4 atravessando um vão"></td>
-    <td><img src="docs/screenshots/menu.png" alt="Menu de seleção de fases com mundos, fases concluídas e botões 2P, 3P e 4P"></td>
+    <td><img src="docs/screenshots/rail.png" alt="Four cowboys on a mine cart marked 4/4 crossing a gap"></td>
+    <td><img src="docs/screenshots/menu.png" alt="Level select menu with worlds, cleared levels and 2P, 3P and 4P buttons"></td>
   </tr>
   <tr>
-    <td><b>Engrenagens</b> — o vagonete só parte com todos a bordo (4/4).</td>
-    <td><b>Seleção de fases</b> — escolha quantos jogam; a próxima fase abre ao concluir a anterior.</td>
+    <td><b>Gears</b> — the mine cart only leaves with everyone on board (4/4).</td>
+    <td><b>Level select</b> — pick how many are playing; the next level unlocks when you clear the previous one.</td>
   </tr>
 </table>
 
-<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-mundos-dark.png"><img src="docs/readme/title-mundos-light.png" alt="Os 15 mundos" height="32"></picture></h3>
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-worlds-dark.png"><img src="docs/readme/title-worlds-light.png" alt="The 15 worlds" height="32"></picture></h3>
 
-| | Mundo | Mecânica |
+| | World | Mechanic |
 |---|---|---|
-| 1 | Primeiros passos | Empilhar, chave, caixa, botão e portão, elevador |
-| 2 | Amarrados | Corda ligando os jogadores |
-| 3 | Contra o tempo | Botões com timer e blocos que piscam |
-| 4 | Chão traiçoeiro | Chão que cai e espinhos |
-| 5 | Engrenagens | Plataformas em trilho e paredes que empurram |
-| 6 | Ventania | Vento |
-| 7 | Molas | Trampolins |
-| 8 | De ponta-cabeça | Gravidade invertida |
-| 9 | Portais | Teletransporte |
-| 10 | Cores | Caixas de cor |
-| 11 | Apagão | A luz apaga periodicamente |
-| 12 | Tamanho | Encolher e crescer |
-| 13–15 | Mistura · Desafio · Grande final | Tudo junto, terminando na fase 15-4 "Park Party" |
+| 1 | First steps | Stacking, key, crate, button and gate, elevator |
+| 2 | Tied together | A rope linking the players |
+| 3 | Against the clock | Timed buttons and blinking blocks |
+| 4 | Treacherous ground | Falling floors and spikes |
+| 5 | Gears | Rail platforms and pushing walls |
+| 6 | Gale | Wind |
+| 7 | Springs | Trampolines |
+| 8 | Upside down | Flipped gravity |
+| 9 | Portals | Teleporting |
+| 10 | Colors | Colored crates |
+| 11 | Blackout | The lights go out periodically |
+| 12 | Size | Shrinking and growing |
+| 13–15 | Mix · Challenge · Grand finale | Everything at once, ending with level 15-4 "Park Party" |
 
-As fases 3 e 4 de cada mundo são as difíceis: encadeiam vários trechos e misturam a
-mecânica do mundo com as anteriores.
+Levels 3 and 4 of each world are the hard ones: they chain several sections together and mix
+the world's mechanic with the earlier ones.
 
-<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-controles-dark.png"><img src="docs/readme/title-controles-light.png" alt="Controles" height="40"></picture></h2>
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-controls-dark.png"><img src="docs/readme/title-controls-light.png" alt="Controls" height="40"></picture></h2>
 
-| Jogador | Andar | Pular | Ação (gravidade, etc.) |
+| Player | Move | Jump | Action (gravity, etc.) |
 |---|---|---|---|
-| 🟧 J1 | `A` `D` | `W` | `S` |
-| 🟦 J2 | `←` `→` | `↑` | `↓` |
-| 🩷 J3 | `J` `L` | `I` | `K` |
-| 🟩 J4 | `Num 4` `Num 6` | `Num 8` | `Num 5` |
+| 🟧 P1 | `A` `D` | `W` | `S` |
+| 🟦 P2 | `←` `→` | `↑` | `↓` |
+| 🩷 P3 | `J` `L` | `I` | `K` |
+| 🟩 P4 | `Num 4` `Num 6` | `Num 8` | `Num 5` |
 
-Gamepads funcionam também: o gamepad N controla o jogador N. `R` reinicia a fase, `Esc`
-volta ao menu e `Enter` vai para a próxima fase depois de concluir.
+Gamepads work too: gamepad N controls player N. `R` restarts the level, `Esc` goes back to the
+menu and `Enter` moves on to the next level once you clear one.
 
-<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-rodando-dark.png"><img src="docs/readme/title-rodando-light.png" alt="Rodando localmente" height="40"></picture></h2>
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-running-locally-dark.png"><img src="docs/readme/title-running-locally-light.png" alt="Running locally" height="40"></picture></h2>
 
-Requisitos: Node 20.9+ e Docker (para o Postgres).
+Requirements: Node 20.9+ and Docker (for Postgres).
 
 ```bash
 npm install
-cp .env.example .env     # DATABASE_URL do Postgres local (porta 5434)
-npm run db:up            # sobe o Postgres via docker compose
-npm run db:migrate       # cria as tabelas
-npm run db:seed          # grava as 61 fases no banco
+cp .env.example .env     # local Postgres DATABASE_URL (port 5434)
+npm run db:up            # starts Postgres with docker compose
+npm run db:migrate       # creates the tables
+npm run db:seed          # writes the 61 levels to the database
 npm run dev              # http://localhost:3000
 ```
 
-<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-como-e-feito-dark.png"><img src="docs/readme/title-como-e-feito-light.png" alt="Como é feito" height="40"></picture></h2>
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-how-its-made-dark.png"><img src="docs/readme/title-how-its-made-light.png" alt="How it's made" height="40"></picture></h2>
 
 - **Next.js 16** (App Router, Server Components) + **React 19** + **Tailwind 4**
-- **Canvas 2D** com resolução interna de 320×180, escalada em pixel art; sprites em grades
-  de texto (`src/game/render/sprites.ts`), mapa e fundo desenhados uma vez por fase
-- **Motor próprio** em TypeScript, em passo fixo (`src/game/engine/`): colisão por tiles e
-  AABB, jogadores que carregam uns aos outros, corda, gravidade invertida, portais, escala…
-- **Postgres + Drizzle** para fases, progresso e recordes
-- **Vitest + Playwright**: cada fase tem um teste em que um bot a resolve com 2 jogadores,
-  então nenhuma fase impossível vai para o jogo
+- **Canvas 2D** at an internal resolution of 320×180, scaled up as pixel art; sprites are text
+  grids (`src/game/render/sprites.ts`), and the map and background are drawn once per level
+- **Custom fixed-step engine** in TypeScript (`src/game/engine/`): tile and AABB collision,
+  players carrying each other, rope, flipped gravity, portals, scaling…
+- **Postgres + Drizzle** for levels, progress and best times
+- **Vitest + Playwright**: every level has a test where a bot solves it with 2 players, so no
+  impossible level ever ships
 
 ```bash
-npm test             # unidade + todas as fases resolvidas por bot
-npm run test:e2e     # navegador: menu, teclado e reinício
+npm test             # unit tests + every level solved by a bot
+npm run test:e2e     # browser: menu, keyboard and restart
 npm run typecheck && npm run lint
 ```
 
-As mecânicas foram reimplementadas a partir do estudo do comportamento do jogo original
-(anotações em [`docs/re/`](docs/re/)). **Todas as fases são originais**: nenhuma fase, arte
-ou asset do PICO PARK foi copiado.
+The mechanics were reimplemented from studying how the original game behaves (notes in
+[`docs/re/`](docs/re/), in Portuguese). **Every level is original**: no level, art or asset from
+PICO PARK was copied.
 
 ---
 
-<sub>Projeto de fã, sem fins comerciais. Não é afiliado à TECOPARK, ao PICO PARK nem à Konami.</sub>
+<sub>Fan project, non-commercial. Not affiliated with TECOPARK, PICO PARK or Konami.</sub>
