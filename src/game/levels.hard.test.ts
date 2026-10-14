@@ -502,6 +502,235 @@ describe("fases difíceis", () => {
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });
+
+  /** [o da frente, o de trás] pela posição x. */
+  const byFront = (w: ReturnType<typeof createWorld2>) => {
+    const [a, b] = w.players;
+    return a.x > b.x ? [a, b] : [b, a];
+  };
+
+  it("13-1: ponte de caixa de todos, revezamento, caixas nos botões e elevador de todos", () => {
+    const w = createWorld2("13-1");
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 16 * TILE && p.onGround), 3000);
+    expect(w.boxes[0].y).toBe(9 * TILE);
+    const [front, back] = byFront(w);
+    expect(relay(w, front, back, 20, 26)).toBe(true);
+    expect(w.resets).toBe(0);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 49 * TILE && p.onGround), 4000);
+    expect(w.resets).toBe(0);
+    const [f2, b2] = byFront(w);
+    goTo(w, [[f2, mid(57)], [b2, mid(56)]], 900, { unstick: false });
+    waitFor(w, () => w.lifts[0].y === (FLOOR - 4) * TILE);
+    expect(w.lifts[0].y).toBe((FLOOR - 4) * TILE);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("13-2: vento contrário, pistões, ponte que cai e esmagador", () => {
+    const w = createWorld2("13-2");
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 28 * TILE && p.onGround), 3000);
+    expect(w.resets).toBe(0);
+    expect(passPiston(w, 0, 31, 38)).toBe(true);
+    expect(passPiston(w, 1, 39, 46)).toBe(true);
+    expect(w.resets).toBe(0);
+    tightBridge(w, 48);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("13-3: trampolins, portal de todos e esmagadores", () => {
+    const w = createWorld2("13-3");
+    for (const col of [8, 15, 22, 29]) {
+      const [front, back] = byFront(w);
+      bounce(w, front, col);
+      expect(w.resets).toBe(0);
+      bounce(w, back, col);
+      expect(w.resets).toBe(0);
+    }
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("13-4: oito inversões no apagão", () => {
+    const w = createWorld2("13-4");
+    for (const col of [8, 17, 27, 37, 47, 57, 67, 77]) {
+      expect(goFlip(w, [col - 1, col], [true, true])).toBe(true);
+      expect(w.resets).toBe(0);
+    }
+    expect(w.key.holder).not.toBeNull();
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("14-1: revezamento pelo portal, ponte que pisca, revezamento de 0,9 s e portal de todos", () => {
+    const w = createWorld2("14-1");
+    const [a, b] = w.players;
+    const s = steer();
+    drive(w, (q) => (q === b ? s(q, mid(9)) : NO_INPUT), () => Math.abs(b.x + b.w / 2 - mid(9)) <= 1, 900);
+    drive(w, (q) => (q === a ? s(q, mid(18)) : NO_INPUT), () => a.x > 23 * TILE, 900);
+    walkOnly(w, a, 26);
+    expect(w.switches[1].on).toBe(true);
+    drive(w, (q) => (q === b ? s(q, mid(18)) : NO_INPUT), () => b.x > 23 * TILE, 900);
+    expect(w.resets).toBe(0);
+    goTo(w, [[a, mid(29)], [b, mid(28)]], 900, { unstick: false });
+    crossBlinkBridge(w, 0, 50, 60);
+    expect(w.resets).toBe(0);
+    const [front, back] = byFront(w);
+    expect(relay(w, front, back, 37, 43)).toBe(true);
+    expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("14-2: caixas coloridas, pistões, torre pela chave e ponte que cai", () => {
+    const w = createWorld2("14-2");
+    const [a, b] = w.players;
+    solo(w, [1], () => b.x > 23 * TILE - 2 && b.onGround);
+    solo(w, [0], () => a.x > 22 * TILE - 2 && a.onGround);
+    waitFor(w, () => w.gates[0].open === 1, 200);
+    expect(w.gates[0].open).toBe(1);
+    expect(passPiston(w, 0, 27, 34)).toBe(true);
+    expect(passPiston(w, 1, 35, 42)).toBe(true);
+    expect(w.resets).toBe(0);
+    const [front, back] = byFront(w);
+    goTo(w, [[front, 48 * TILE - 8], [back, mid(46)]], 900, { unstick: false });
+    climbOn(w, back, front);
+    jumpOnto(w, back, FLOOR - 1);
+    goTo(w, [[back, mid(49)]]);
+    expect(w.key.holder).toBe(back.index);
+    goTo(w, [[back, mid(53)]], 600, { unstick: false });
+    goTo(w, [[front, mid(52)]], 600, { unstick: false });
+    tightBridge(w, 55);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("14-3: trilho de todos, pistões e elevador de todos no escuro", () => {
+    const w = createWorld2("14-3");
+    expect(rideRail(w, 0, [7, 8])).toBe(true);
+    goTo(w, [[w.players[1], mid(31)], [w.players[0], mid(30)]], 600, { unstick: false });
+    expect(w.resets).toBe(0);
+    expect(passPiston(w, 0, 34, 41)).toBe(true);
+    expect(passPiston(w, 1, 42, 49)).toBe(true);
+    goTo(w, [[w.players[0], mid(52)], [w.players[1], mid(53)]], 900, { unstick: false });
+    waitFor(w, () => w.lifts[0].y === (FLOOR - 4) * TILE, 900);
+    expect(w.lifts[0].y).toBe((FLOOR - 4) * TILE);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("14-4: encolher, crescer para o platô e voltar ao normal sob as armadilhas", () => {
+    const w = createWorld2("14-4");
+    const [a, b] = w.players;
+    shrink(w, b, 10);
+    walkTo(w, b, mid(12));
+    shrink(w, a, 10);
+    together(w, [mid(21), mid(22)]);
+    expect(w.resets).toBe(0);
+    for (const [i, p] of [b, a].entries()) {
+      growAndClimb(w, p, 26, FLOOR - 2);
+      walkTo(w, p, mid(33 - i));
+    }
+    for (const [i, p] of [b, a].entries()) {
+      walkTo(w, p, mid(36));
+      waitFor(w, () => p.scale <= 1);
+      walkTo(w, p, mid(38 - i));
+    }
+    together(w, [mid(53), mid(54)]);
+    expect(w.players.every((p) => p.x > 50 * TILE)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("15-1: maratona — caixa de todos, revezamento, ponte que pisca, pistões e elevador de todos", () => {
+    const w = createWorld2("15-1");
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 16 * TILE && p.onGround), 3000);
+    expect(w.boxes[0].y).toBe(9 * TILE);
+    const [front, back] = byFront(w);
+    expect(relay(w, front, back, 20, 26)).toBe(true);
+    const [f2, b2] = byFront(w);
+    goTo(w, [[f2, mid(31)], [b2, mid(30)]], 900, { unstick: false });
+    crossBlinkBridge(w, 0, 50, 60);
+    expect(w.resets).toBe(0);
+    expect(passPiston(w, 0, 37, 44)).toBe(true);
+    expect(passPiston(w, 1, 45, 52)).toBe(true);
+    expect(w.resets).toBe(0);
+    const [f3, b3] = byFront(w);
+    goTo(w, [[f3, mid(57)], [b3, mid(56)]], 900, { unstick: false });
+    waitFor(w, () => w.lifts[0].y === (FLOOR - 4) * TILE, 900);
+    expect(w.lifts[0].y).toBe((FLOOR - 4) * TILE);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("15-2: trampolins, vento contrário e revezamento no ventilador", () => {
+    const w = createWorld2("15-2");
+    for (const col of [8, 15, 22, 29]) {
+      const [front, back] = byFront(w);
+      bounce(w, front, col);
+      expect(w.resets).toBe(0);
+      bounce(w, back, col);
+      expect(w.resets).toBe(0);
+    }
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 55 * TILE && p.onGround), 3000);
+    expect(w.resets).toBe(0);
+    const [front, back] = byFront(w);
+    const s = steer();
+    drive(w, (q) => (q === back ? s(q, mid(57)) : q === front ? s(q, mid(61), { unstick: false }) : NO_INPUT), () => front.y < 2 * TILE, 900);
+    drive(w, (q) => (q === front ? s(q, mid(67), { unstick: false }) : NO_INPUT), () => onRow(front, 3) && Math.abs(front.x + front.w / 2 - mid(67)) <= 1, 600);
+    expect(w.switches[1].on).toBe(true);
+    drive(w, (q) => (q === back ? s(q, mid(61), { unstick: false }) : NO_INPUT), () => back.y < 2 * TILE, 900);
+    drive(w, (q) => (q === back ? s(q, mid(65), { unstick: false }) : NO_INPUT), () => onRow(back, 3), 300);
+    expect(onRow(back, 3)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("15-3: revezamento, esmagadores, ponte que pisca e ponte que cai no escuro", () => {
+    const w = createWorld2("15-3");
+    const [front, back] = byFront(w);
+    expect(relay(w, front, back, 9, 15)).toBe(true);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 36 * TILE && p.onGround), 3000);
+    expect(w.resets).toBe(0);
+    const [f2, b2] = byFront(w);
+    goTo(w, [[f2, mid(38)], [b2, mid(37)]], 900, { unstick: false });
+    crossBlinkBridge(w, 0, 100, 100);
+    expect(w.resets).toBe(0);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 56 * TILE && p.onGround), 1500);
+    expect(w.resets).toBe(0);
+    tightBridge(w, 60);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("15-4: Park Party — a festa inteira", () => {
+    const w = createWorld2("15-4");
+    const [a, b] = w.players;
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 16 * TILE && p.onGround), 3000);
+    expect(w.boxes[0].y).toBe(9 * TILE);
+    const [front, back] = byFront(w);
+    expect(relay(w, front, back, 19, 25)).toBe(true);
+    expect(w.resets).toBe(0);
+    // cores: o azul vai primeiro (pula a caixa laranja); depois o laranja
+    goTo(w, [[b, mid(27)], [a, mid(26)]], 900, { unstick: false });
+    solo(w, [1], () => b.x > 45 * TILE - 2 && b.onGround);
+    solo(w, [0], () => a.x > 44 * TILE - 2 && a.onGround);
+    waitFor(w, () => w.gates[1].open === 1, 200);
+    expect(w.gates[1].open).toBe(1);
+    expect(passPiston(w, 0, 49, 56)).toBe(true);
+    expect(passPiston(w, 1, 57, 64)).toBe(true);
+    expect(w.resets).toBe(0);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 71 * TILE), 900);
+    tightBridge(w, 76);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 91 * TILE && p.onGround), 1500);
+    expect(w.resets).toBe(0);
+    const [f3, b3] = byFront(w);
+    goTo(w, [[f3, mid(95)], [b3, mid(94)]], 900, { unstick: false });
+    waitFor(w, () => w.lifts[0].y === (FLOOR - 4) * TILE, 900);
+    expect(w.lifts[0].y).toBe((FLOOR - 4) * TILE);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
 });
 
 const FLOOR = 8;

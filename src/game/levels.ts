@@ -1123,6 +1123,384 @@ const WORLD_12: LevelDef[] = [
   ),
 ];
 
+// Mundo 13 — Mistura: as mecânicas dos mundos anteriores combinadas; o que é "de todos" escala com 2 a 4.
+const WORLD_13: LevelDef[] = [
+  // 13-1: ponte de caixa de todos, revezamento de 1 s, caixas nos botões e elevador de todos
+  build(
+    "Tudo junto",
+    66,
+    ROWS + 1,
+    (g) => {
+      spawns(g);
+      g.fill(13, 14, FLOOR + 1, FLOOR + 2, ".");
+      g.set(37, FLOOR, "#");
+      g.set(44, FLOOR, "#");
+      g.set(52, FLOOR, "K");
+      g.fill(56, 58, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(59, 64, FLOOR - 4, FLOOR + 2);
+      g.set(62, FLOOR - 5, "D");
+    },
+    {
+      boxes: [
+        { col: 8, row: FLOOR - 1, w: 2, h: 2, need: ALL },
+        { col: 32, row: FLOOR, w: 1, h: 1, need: 1 },
+        { col: 40, row: FLOOR, w: 1, h: 1, need: 1 },
+      ],
+      switches: [
+        { col: 20, row: FLOOR, target: "g1", timer: 1 },
+        { col: 26, row: FLOOR, target: "g1", timer: 1 },
+        { col: 36, row: FLOOR, target: "g2" },
+        { col: 43, row: FLOOR, target: "g2" },
+      ],
+      gates: [
+        { id: "g1", col: 23, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g2", col: 48, row: FLOOR - 4, w: 1, h: 5, needAll: true },
+      ],
+      lifts: [{ col: 56, row: FLOOR + 1, w: 3, dy: -5, need: ALL }],
+    },
+  ),
+  // 13-2: vento contrário sobre valas, dois pistões, ponte que cai e esmagador
+  build(
+    "Contra tudo",
+    70,
+    ROWS,
+    (g) => {
+      spawns(g);
+      for (const c of [12, 19, 26, 34, 42]) g.set(c, FLOOR + 1, ".");
+      g.fill(48, 54, FLOOR + 1, ROWS - 1, ".");
+      g.set(58, FLOOR, "K");
+      g.set(66, FLOOR, "D");
+    },
+    {
+      winds: [{ col: 9, row: 0, w: 21, h: FLOOR + 1, fx: -1.05 }],
+      thorns: [
+        ...[12, 19, 26, 34, 42].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 62, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+      ],
+      pushers: [
+        { col: 36, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 44, row: FLOOR, w: 1, h: 1, dx: -2 },
+      ],
+      falls: fallBridge(48, 54),
+    },
+  ),
+  // 13-3: trampolins sobre espinhos, portal de todos através do muro e esmagadores
+  build(
+    "Saltos e portais",
+    66,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(9, 33, FLOOR + 1, ROWS - 1, ".");
+      g.fill(6, 8, FLOOR, ROWS - 1);
+      for (const c of [13, 20, 27]) g.fill(c, c + 2, FLOOR, ROWS - 1);
+      sealedWall(g, 41);
+      g.set(52, FLOOR, "K");
+      g.set(61, FLOOR, "D");
+    },
+    {
+      thorns: [
+        { col: 9, row: FLOOR + 1, w: 25, h: 1 },
+        { col: 48, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1 },
+        { col: 56, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+      ],
+      springs: [8, 15, 22, 29].map((col) => ({ col, row: FLOOR - 1, w: 1, vy: -7, vx: 4.5 })),
+      warps: [{ col: 38, row: FLOOR, w: 1, h: 1, to: [44, FLOOR], all: true }],
+    },
+  ),
+  // 13-4: zigue-zague de ponta-cabeça no apagão
+  build(
+    "Avesso no escuro",
+    86,
+    ROWS,
+    (g) => {
+      ceiling(g, 86);
+      spawns(g);
+      for (const c of [10, 30, 50, 70]) g.fill(c, c + 5, FLOOR + 1, ROWS - 1, ".");
+      g.set(48, 2, "K");
+      g.set(81, FLOOR, "D");
+    },
+    {
+      ...FLIP,
+      blackout: { bright: 1.5, dark: 2.5 },
+      thorns: [
+        ...[10, 30, 50, 70].map((col) => ({ col, row: FLOOR + 1, w: 6, h: 1 })),
+        ...[20, 40, 60].map((col) => ({ col, row: 2, w: 6, h: 1, dir: "down" as const })),
+      ],
+    },
+  ),
+];
+
+// Mundo 14 — Desafio: combinações mais longas, com menos folga.
+const WORLD_14: LevelDef[] = [
+  // 14-1: revezamento através do portal, ponte que pisca, revezamento de 0,9 s e portal de todos
+  build(
+    "Relógio de portais",
+    74,
+    ROWS,
+    (g) => {
+      spawns(g);
+      sealedWall(g, 22);
+      g.fill(30, 32, FLOOR + 1, ROWS - 1, ".");
+      sealedWall(g, 48);
+      g.set(58, FLOOR, "K");
+      g.set(70, FLOOR, "D");
+    },
+    {
+      switches: [
+        { col: 9, row: FLOOR, target: "g1", timer: 1.2 },
+        { col: 26, row: FLOOR, target: "g1", timer: 1.2 },
+        { col: 37, row: FLOOR, target: "g2", timer: 0.9 },
+        { col: 43, row: FLOOR, target: "g2", timer: 0.9 },
+      ],
+      gates: [
+        { id: "g1", col: 14, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g2", col: 40, row: FLOOR - 4, w: 1, h: 5 },
+      ],
+      blinks: [{ col: 30, row: FLOOR + 1, w: 3, h: 1, on: 1.2, off: 1.5 }],
+      thorns: [{ col: 54, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1.25 }],
+      warps: [
+        { col: 18, row: FLOOR, w: 1, h: 1, to: [24, FLOOR] },
+        { col: 46, row: FLOOR, w: 1, h: 1, to: [50, FLOOR], all: true },
+      ],
+    },
+  ),
+  // 14-2: caixas coloridas nos botões, dois pistões, torre pela chave e ponte que cai
+  build(
+    "Cores e pistões",
+    72,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.set(12, FLOOR, "#");
+      g.set(20, FLOOR, "#");
+      for (const c of [30, 38]) g.set(c, FLOOR + 1, ".");
+      g.fill(48, 50, FLOOR - 1, FLOOR - 1);
+      g.set(49, FLOOR - 2, "K");
+      g.fill(55, 61, FLOOR + 1, ROWS - 1, ".");
+      g.set(68, FLOOR, "D");
+    },
+    {
+      boxes: [
+        { col: 7, row: FLOOR, w: 1, h: 1, need: 1, color: 0 },
+        { col: 15, row: FLOOR, w: 1, h: 1, need: 1, color: 1 },
+      ],
+      switches: [
+        { col: 11, row: FLOOR, target: "g1" },
+        { col: 19, row: FLOOR, target: "g1" },
+      ],
+      gates: [{ id: "g1", col: 25, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
+      thorns: [30, 38].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+      pushers: [
+        { col: 32, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 40, row: FLOOR, w: 1, h: 1, dx: -2 },
+      ],
+      falls: fallBridge(55, 61),
+    },
+  ),
+  // 14-3: trilho de todos sob espinhos, pistões e elevador de todos — no apagão
+  build(
+    "Montagem no escuro",
+    66,
+    ROWS + 1,
+    (g) => {
+      spawns(g);
+      g.fill(7, 28, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(15, 22, 0, 2);
+      for (const c of [37, 45]) g.set(c, FLOOR + 1, ".");
+      g.fill(52, 54, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(55, 64, FLOOR - 4, FLOOR + 2);
+      g.set(58, FLOOR - 5, "K");
+      g.set(62, FLOOR - 5, "D");
+    },
+    {
+      blackout: { bright: 1.2, dark: 2.8 },
+      rails: [{ path: [[7, FLOOR + 1], [13, FLOOR + 1], [13, FLOOR - 3], [26, FLOOR - 3], [26, FLOOR + 1]], w: 3, need: ALL }],
+      thorns: [
+        { col: 7, row: FLOOR + 1, w: 22, h: 1 },
+        { col: 15, row: 3, w: 8, h: 1, dir: "down" },
+        ...[37, 45].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+      ],
+      pushers: [
+        { col: 39, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 47, row: FLOOR, w: 1, h: 1, dx: -2 },
+      ],
+      lifts: [{ col: 52, row: FLOOR + 1, w: 3, dy: -5, need: ALL }],
+    },
+  ),
+  // 14-4: encolher para o túnel de espinhos, crescer para o platô e voltar ao normal sob as armadilhas
+  build(
+    "Tamanho e portais",
+    66,
+    ROWS,
+    (g) => {
+      spawns(g);
+      tunnel(g, 14, 19);
+      g.fill(31, 64, FLOOR - 2, FLOOR);
+      g.set(52, FLOOR - 3, "K");
+      g.set(61, FLOOR - 3, "D");
+    },
+    {
+      thorns: [{ col: 14, row: FLOOR, w: 6, h: 1, dir: "down" }],
+      switches: [
+        { col: 10, row: FLOOR, target: "", scale: -0.006, dieSmall: true },
+        { col: 26, row: FLOOR, target: "", scale: 0.02 },
+        { col: 36, row: FLOOR - 3, target: "", scale: -0.015 },
+      ],
+      warps: [40, 44, 48].map((col) => ({ col, row: FLOOR - 4, w: 1, h: 1, to: [2, FLOOR] as [number, number] })),
+    },
+  ),
+];
+
+// Mundo 15 — Grande final: fases longas que encadeiam quase todas as mecânicas.
+const WORLD_15: LevelDef[] = [
+  // 15-1: ponte de caixa de todos, revezamento de 0,9 s, ponte que pisca, pistões, elevador de todos
+  // e esmagador no alto
+  build(
+    "Maratona",
+    80,
+    ROWS + 1,
+    (g) => {
+      spawns(g);
+      g.fill(13, 14, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(32, 34, FLOOR + 1, FLOOR + 2, ".");
+      for (const c of [40, 48]) g.set(c, FLOOR + 1, ".");
+      g.fill(56, 58, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(59, 78, FLOOR - 4, FLOOR + 2);
+      g.set(71, FLOOR - 5, "K");
+      g.set(75, FLOOR - 5, "D");
+    },
+    {
+      boxes: [{ col: 8, row: FLOOR - 1, w: 2, h: 2, need: ALL }],
+      switches: [
+        { col: 20, row: FLOOR, target: "g1", timer: 0.9 },
+        { col: 26, row: FLOOR, target: "g1", timer: 0.9 },
+      ],
+      gates: [{ id: "g1", col: 23, row: FLOOR - 4, w: 1, h: 5 }],
+      blinks: [{ col: 32, row: FLOOR + 1, w: 3, h: 1, on: 1.2, off: 1.5 }],
+      thorns: [
+        ...[40, 48].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 66, row: FLOOR - 7, w: 1, h: 1, dir: "down" as const, dy: 2, speed: 1.25 },
+      ],
+      pushers: [
+        { col: 42, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 50, row: FLOOR, w: 1, h: 1, dx: -2 },
+      ],
+      lifts: [{ col: 56, row: FLOOR + 1, w: 3, dy: -5, need: ALL }],
+    },
+  ),
+  // 15-2: trampolins sobre espinhos, vento contrário sobre valas e revezamento no ventilador
+  build(
+    "Tempestade final",
+    90,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(9, 33, FLOOR + 1, ROWS - 1, ".");
+      g.fill(6, 8, FLOOR, ROWS - 1);
+      for (const c of [13, 20, 27]) g.fill(c, c + 2, FLOOR, ROWS - 1);
+      for (const c of [39, 46, 53]) g.set(c, FLOOR + 1, ".");
+      g.fill(63, 88, FLOOR - 5, FLOOR);
+      g.set(77, FLOOR - 6, "K");
+      g.set(84, FLOOR - 6, "D");
+    },
+    {
+      thorns: [
+        { col: 9, row: FLOOR + 1, w: 25, h: 1 },
+        ...[39, 46, 53].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+      ],
+      springs: [8, 15, 22, 29].map((col) => ({ col, row: FLOOR - 1, w: 1, vy: -7, vx: 4.5 })),
+      winds: [
+        { col: 36, row: 0, w: 21, h: FLOOR + 1, fx: -1.05 },
+        { col: 60, row: 0, w: 3, h: FLOOR + 1, fy: -1.25, target: "fan" },
+      ],
+      switches: [
+        { col: 57, row: FLOOR, target: "fan" },
+        { col: 67, row: FLOOR - 6, target: "fan" },
+      ],
+    },
+  ),
+  // 15-3: revezamento, valas e esmagadores, ponte que pisca e ponte que cai — quase sempre no escuro
+  build(
+    "Tudo no escuro",
+    82,
+    ROWS,
+    (g) => {
+      spawns(g);
+      for (const c of [23, 30, 54]) g.set(c, FLOOR + 1, ".");
+      g.fill(39, 45, FLOOR + 1, ROWS - 1, ".");
+      g.fill(60, 66, FLOOR + 1, ROWS - 1, ".");
+      g.set(70, FLOOR, "K");
+      g.set(78, FLOOR, "D");
+    },
+    {
+      blackout: { bright: 1, dark: 3 },
+      switches: [
+        { col: 9, row: FLOOR, target: "g1", timer: 1 },
+        { col: 15, row: FLOOR, target: "g1", timer: 1 },
+      ],
+      gates: [{ id: "g1", col: 12, row: FLOOR - 4, w: 1, h: 5 }],
+      blinks: [{ col: 39, row: FLOOR + 1, w: 7, h: 1, on: 2.5, off: 1.5 }],
+      falls: fallBridge(60, 66),
+      thorns: [
+        ...[23, 30, 54].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 26, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+        { col: 34, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 0.9 },
+        { col: 50, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.5 },
+        { col: 73, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 1 },
+      ],
+    },
+  ),
+  // 15-4: a festa inteira — caixa de todos, revezamento, cores, pistões, portal de todos, ponte que
+  // cai, esmagador e elevador de todos
+  build(
+    "Park Party",
+    106,
+    ROWS + 1,
+    (g) => {
+      spawns(g);
+      g.fill(13, 14, FLOOR + 1, FLOOR + 2, ".");
+      g.set(34, FLOOR, "#");
+      g.set(42, FLOOR, "#");
+      for (const c of [52, 60]) g.set(c, FLOOR + 1, ".");
+      sealedWall(g, 70);
+      g.fill(76, 82, FLOOR + 1, FLOOR + 2, ".");
+      g.set(90, FLOOR, "K");
+      g.fill(94, 96, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(97, 104, FLOOR - 4, FLOOR + 2);
+      g.set(101, FLOOR - 5, "D");
+    },
+    {
+      boxes: [
+        { col: 8, row: FLOOR - 1, w: 2, h: 2, need: ALL },
+        { col: 29, row: FLOOR, w: 1, h: 1, need: 1, color: 0 },
+        { col: 37, row: FLOOR, w: 1, h: 1, need: 1, color: 1 },
+      ],
+      switches: [
+        { col: 19, row: FLOOR, target: "g1", timer: 0.9 },
+        { col: 25, row: FLOOR, target: "g1", timer: 0.9 },
+        { col: 33, row: FLOOR, target: "g2" },
+        { col: 41, row: FLOOR, target: "g2" },
+      ],
+      gates: [
+        { id: "g1", col: 22, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g2", col: 47, row: FLOOR - 4, w: 1, h: 5, needAll: true },
+      ],
+      thorns: [
+        ...[52, 60].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 86, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+      ],
+      pushers: [
+        { col: 54, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 62, row: FLOOR, w: 1, h: 1, dx: -2 },
+      ],
+      warps: [{ col: 68, row: FLOOR, w: 1, h: 1, to: [72, FLOOR], all: true }],
+      falls: fallBridge(76, 82),
+      lifts: [{ col: 94, row: FLOOR + 1, w: 3, dy: -5, need: ALL }],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
@@ -1136,6 +1514,9 @@ export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Cores", levels: WORLD_10 },
   { name: "Apagão", levels: WORLD_11 },
   { name: "Tamanho", levels: WORLD_12 },
+  { name: "Mistura", levels: WORLD_13 },
+  { name: "Desafio", levels: WORLD_14 },
+  { name: "Grande final", levels: WORLD_15 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

@@ -48,6 +48,18 @@ e não são extraídas nem copiadas. Cada mundo reimplementa uma mecânica a par
 | 10 | Caixas de cor (`ColorBox`) | verificado | 08-color |
 | 11 | Apagão (`Blackout`); holofote pendente | verificado | 09-blackout-scale |
 | 12 | Escala (`ScaleSwitch`); maioria pendente | verificado | 09-blackout-scale |
+| 13 | Mistura: mecânicas anteriores combinadas | verificado | — |
+| 14 | Desafio: combinações mais longas | verificado | — |
+| 15 | Grande final: fases longas que encadeiam quase tudo (15-4 "Park Party") | verificado | — |
+
+### Dificuldade
+
+- Fases 3 e 4 de cada mundo (1-4 e 1-5 no Mundo 1) foram endurecidas: encadeiam 2–4 trechos e
+  combinam a mecânica do mundo com as anteriores. Os Mundos 13–15 são só de desafio.
+- O que é "de todos" (caixas, trilhos e elevadores com `need: ALL`, portões `needAll`, portais
+  `all`) escala com o número de jogadores (2 a 4).
+- Cada fase difícil tem roteiro de solução em `src/game/levels.hard.test.ts` (2 jogadores),
+  composto pelos trechos de `src/game/testing/bot.ts`. Não há roteiro com 4 jogadores ainda.
 
 ## Desconhecidos abertos
 
