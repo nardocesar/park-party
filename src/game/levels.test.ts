@@ -218,17 +218,7 @@ describe("fases", () => {
       solve(w, (a) => a.x + a.w >= 31 * TILE - 1);
     });
 
-    it("4-3 tem solução: passar pelos esmagadores quando sobem", () => {
-      finish(createWorld(parseLevel(at("4-3")), 2));
-    });
 
-    it("4-4 tem solução: ponte que cai sem pular sob o espinho", () => {
-      const w = createWorld(parseLevel(at("4-4")), 2);
-      const [a, b] = w.players;
-      for (let f = 0; f < 300 && b.x + b.w < 12 * TILE - 2; f++) step(w, [a.x + a.w < b.x - 0.5 ? { ...NO_INPUT, right: true } : NO_INPUT, { ...NO_INPUT, right: true }]);
-      for (let f = 0; f < 60 && a.x + a.w < b.x - 0.5; f++) step(w, [{ ...NO_INPUT, right: true }, NO_INPUT]);
-      finish(w);
-    });
   });
 
   describe("Mundo 5 — trilhos e paredes", () => {

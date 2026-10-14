@@ -105,6 +105,32 @@ describe("fases difíceis", () => {
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });
+
+  /** Os dois encostam (a atrás de b) antes da ponte que cai em `col` e atravessam colados. */
+  const tightBridge = (w: ReturnType<typeof createWorld2>, col: number) => {
+    const [a, b] = w.players;
+    for (let f = 0; f < 900 && b.x + b.w < col * TILE - 2; f++)
+      step(w, [a.x + a.w < b.x - 0.5 ? { ...NO_INPUT, right: true } : NO_INPUT, { ...NO_INPUT, right: true }]);
+    for (let f = 0; f < 60 && a.x + a.w < b.x - 0.5; f++) step(w, [{ ...NO_INPUT, right: true }, NO_INPUT]);
+  };
+
+  it("4-3: valas, esmagadores, ponte que cai e mais esmagadores", () => {
+    const w = createWorld2("4-3");
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 22 * TILE && p.onGround), 3000);
+    expect(w.resets).toBe(0);
+    tightBridge(w, 26);
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 34 * TILE && p.onGround), 900);
+    expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("4-4: ponte longa sem pular, valas e esmagadores", () => {
+    const w = createWorld2("4-4");
+    tightBridge(w, 10);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
 });
 
 const FLOOR = 8;

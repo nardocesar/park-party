@@ -345,38 +345,51 @@ const WORLD_4: LevelDef[] = [
       ],
     },
   ),
-  // 4-3: esmagadores que sobem e descem — passar quando estão subindo
+  // 4-3 (difícil): valas, esmagadores de velocidades diferentes, ponte que cai e mais esmagadores
   build(
-    "Esmagadores",
-    44,
+    "Moedor",
+    70,
     ROWS,
     (g) => {
       spawns(g);
-      g.set(32, FLOOR, "K");
-      g.set(40, FLOOR, "D");
+      for (const c of [9, 16, 44, 58]) g.set(c, FLOOR + 1, ".");
+      g.fill(26, 33, FLOOR + 1, ROWS - 1, ".");
+      g.set(52, FLOOR, "K");
+      g.set(66, FLOOR, "D");
     },
     {
+      falls: fallBridge(26, 33),
       thorns: [
-        { col: 12, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1 },
-        { col: 18, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1.25 },
-        { col: 24, row: FLOOR - 3, w: 2, h: 1, dir: "down", dy: 3, speed: 0.75 },
+        ...[9, 16, 44, 58].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 12, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+        { col: 20, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 0.9 },
+        { col: 38, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.5 },
+        { col: 48, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 1 },
+        { col: 54, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
       ],
     },
   ),
-  // 4-4: ponte que cai com espinho móvel por cima — não dá para esperar nem pular
+  // 4-4 (difícil): ponte longa que cai com espinho móvel baixo (pular mata), depois valas e esmagadores
   build(
     "Sem volta",
-    44,
+    62,
     ROWS,
     (g) => {
       spawns(g);
-      g.fill(12, 21, FLOOR + 1, ROWS - 1, ".");
-      g.set(26, FLOOR, "K");
-      g.set(38, FLOOR, "D");
+      g.fill(10, 23, FLOOR + 1, ROWS - 1, ".");
+      for (const c of [30, 37, 50]) g.set(c, FLOOR + 1, ".");
+      g.set(46, FLOOR, "K");
+      g.set(58, FLOOR, "D");
     },
     {
-      falls: fallBridge(12, 21),
-      thorns: [{ col: 12, row: FLOOR - 1, w: 1, h: 1, dx: 9, speed: 0.6 }],
+      falls: fallBridge(10, 23),
+      thorns: [
+        { col: 10, row: FLOOR - 1, w: 1, h: 1, dx: 13, speed: 0.7 },
+        ...[30, 37, 50].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 33, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+        { col: 42, row: FLOOR - 3, w: 2, h: 1, dir: "down" as const, dy: 3, speed: 1 },
+        { col: 54, row: FLOOR - 3, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.5 },
+      ],
     },
   ),
 ];
