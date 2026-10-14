@@ -1,4 +1,4 @@
-import { DOOR_H, DOOR_W, KEY_SIZE, PLAYER_SIZE, SWITCH_H, TILE } from "./constants";
+import { DOOR_H, DOOR_W, FALL_WAIT, KEY_SIZE, PLAYER_SIZE, SWITCH_H, TILE } from "./constants";
 
 /**
  * Fase em ASCII:
@@ -16,6 +16,23 @@ export type SwitchDef = { col: number; row: number; target: string; timer?: numb
 export type GateDef = { id: string; col: number; row: number; w: number; h: number; needAll?: boolean };
 /** Bloco que pisca (BlinkBlockComponent): `on`/`off` em segundos; `phase` adianta o ciclo. */
 export type BlinkDef = { col: number; row: number; w: number; h: number; on: number; off: number; startOn?: boolean; phase?: number };
+/** Chão que cai (FallBoxComponent): cai `wait` s depois de pisado (padrão FALL_WAIT). */
+export type FallDef = { col: number; row: number; w: number; h: number; wait?: number };
+export type ThornDir = "up" | "down" | "left" | "right";
+/**
+ * Espinho (ThornComponent): mata ao toque na área da ponta (`dir`, padrão "up");
+ * com `dx`/`dy` (tiles) vai e volta a `speed` px/frame.
+ */
+export type ThornDef = {
+  col: number;
+  row: number;
+  w: number;
+  h: number;
+  dir?: ThornDir;
+  dx?: number;
+  dy?: number;
+  speed?: number;
+};
 /** Elevador com peso: desce `dy` tiles (negativo sobe) quando `need` jogadores estão em cima. */
 export type LiftDef = { col: number; row: number; w: number; dy: number; need: number };
 export type LevelDef = {
@@ -26,6 +43,8 @@ export type LevelDef = {
   gates?: GateDef[];
   lifts?: LiftDef[];
   blinks?: BlinkDef[];
+  falls?: FallDef[];
+  thorns?: ThornDef[];
   /** Corda que liga os jogadores em sequência (1–2–3…); comprimento em tiles. */
   rope?: { length: number };
 };
@@ -47,6 +66,8 @@ export type Level = {
   switches: { x: number; y: number; w: number; h: number; target: string; timer: number; delay: number }[];
   gates: { id: string; x: number; y: number; w: number; h: number; needAll: boolean }[];
   blinks: { x: number; y: number; w: number; h: number; on: number; off: number; startOn: boolean; phase: number }[];
+  falls: { x: number; y: number; w: number; h: number; wait: number }[];
+  thorns: { x: number; y: number; w: number; h: number; dir: ThornDir; dx: number; dy: number; speed: number }[];
   lifts: { x: number; y: number; w: number; h: number; travel: number; need: number }[];
   /** Comprimento da corda em px, ou null sem corda. */
   rope: number | null;
@@ -100,6 +121,13 @@ export function parseLevel(def: LevelDef): Level {
     })),
     gates: (def.gates ?? []).map((g) => ({
       id: g.id, x: g.col * TILE, y: g.row * TILE, w: g.w * TILE, h: g.h * TILE, needAll: g.needAll ?? false,
+    })),
+    falls: (def.falls ?? []).map((f) => ({
+      x: f.col * TILE, y: f.row * TILE, w: f.w * TILE, h: f.h * TILE, wait: f.wait ?? FALL_WAIT,
+    })),
+    thorns: (def.thorns ?? []).map((t) => ({
+      x: t.col * TILE, y: t.row * TILE, w: t.w * TILE, h: t.h * TILE, dir: t.dir ?? "up",
+      dx: (t.dx ?? 0) * TILE, dy: (t.dy ?? 0) * TILE, speed: t.speed ?? 0,
     })),
     blinks: (def.blinks ?? []).map((b) => ({
       x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE,

@@ -265,10 +265,87 @@ const WORLD_3: LevelDef[] = [
   ),
 ];
 
+// Mundo 4 — Chão traiçoeiro: chão que cai e espinhos (FallBoxComponent, ThornComponent — docs/re/04-fall-thorn.md).
+const fallBridge = (from: number, to: number) =>
+  Array.from({ length: to - from + 1 }, (_, i) => ({ col: from + i, row: FLOOR + 1, w: 1, h: 1 }));
+
+const WORLD_4: LevelDef[] = [
+  // 4-1: ponte de blocos que caem sobre o poço — atravessar juntos, sem parar
+  build(
+    "Ponte que cai",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(10, 17, FLOOR + 1, ROWS - 1, ".");
+      g.set(22, FLOOR, "K");
+      g.set(34, FLOOR, "D");
+    },
+    { falls: fallBridge(10, 17) },
+  ),
+  // 4-2: valas com espinho no fundo (pular) e um trecho com espinhos no teto (não pular)
+  build(
+    "Espinhos",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      for (const c of [9, 14, 19]) g.set(c, FLOOR + 1, ".");
+      g.fill(22, 28, FLOOR - 3, FLOOR - 3);
+      g.fill(31, 34, FLOOR - 1, FLOOR - 1);
+      g.set(33, FLOOR - 2, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      thorns: [
+        { col: 9, row: FLOOR + 1, w: 1, h: 1 },
+        { col: 14, row: FLOOR + 1, w: 1, h: 1 },
+        { col: 19, row: FLOOR + 1, w: 1, h: 1 },
+        { col: 22, row: FLOOR - 2, w: 7, h: 1, dir: "down" },
+      ],
+    },
+  ),
+  // 4-3: esmagadores que sobem e descem — passar quando estão subindo
+  build(
+    "Esmagadores",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.set(32, FLOOR, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      thorns: [
+        { col: 12, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1 },
+        { col: 18, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1.25 },
+        { col: 24, row: FLOOR - 3, w: 2, h: 1, dir: "down", dy: 3, speed: 0.75 },
+      ],
+    },
+  ),
+  // 4-4: ponte que cai com espinho móvel por cima — não dá para esperar nem pular
+  build(
+    "Sem volta",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(12, 21, FLOOR + 1, ROWS - 1, ".");
+      g.set(26, FLOOR, "K");
+      g.set(38, FLOOR, "D");
+    },
+    {
+      falls: fallBridge(12, 21),
+      thorns: [{ col: 12, row: FLOOR - 1, w: 1, h: 1, dx: 9, speed: 0.6 }],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
   { name: "Contra o tempo", levels: WORLD_3 },
+  { name: "Chão traiçoeiro", levels: WORLD_4 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

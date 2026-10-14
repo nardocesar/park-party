@@ -72,6 +72,25 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
   }
   drawDoor(ctx, world);
   for (const b of world.boxes) drawBox(ctx, b, Math.min(b.need, world.players.length));
+  for (const f of world.falls) {
+    const shake = f.touched && f.timer > 0 ? (world.frame % 4 < 2 ? 1 : -1) : 0;
+    ctx.fillStyle = "#a16207";
+    ctx.fillRect(f.x + shake, f.y, f.w, f.h);
+    ctx.strokeStyle = "#713f12";
+    ctx.lineWidth = 1;
+    for (let x = f.x; x < f.x + f.w; x += TILE) ctx.strokeRect(x + 0.5 + shake, f.y + 0.5, TILE - 1, f.h - 1);
+  }
+  // haste dos esmagadores (espinhos que se movem na vertical apontando para baixo)
+  ctx.fillStyle = "#78716c";
+  for (const t of world.thorns) {
+    if (t.dir === "down" && t.dy > 0) ctx.fillRect(t.x + t.w / 2 - 1, 0, 2, t.y);
+  }
+  ctx.fillStyle = "#dc2626";
+  for (const t of world.thorns) {
+    for (let cx = 0; cx < t.w; cx += TILE) {
+      for (let cy = 0; cy < t.h; cy += TILE) drawSpike(ctx, t.x + cx, t.y + cy, t.dir);
+    }
+  }
   if (world.level.rope !== null) drawRope(ctx, world);
   for (const p of world.players) if (!p.cleared) drawPlayer(ctx, p);
   if (!world.key.used) drawKey(ctx, world.key.x, world.key.y);
@@ -149,4 +168,22 @@ function drawRope(ctx: CanvasRenderingContext2D, world: World) {
     ctx.quadraticCurveTo((ax + bx) / 2, (ay + by) / 2 + sag, bx, by);
     ctx.stroke();
   }
+}
+
+/** Espinho ocupando a metade da célula do lado da base (como a área mortal). */
+function drawSpike(ctx: CanvasRenderingContext2D, x: number, y: number, dir: "up" | "down" | "left" | "right") {
+  const h = TILE / 2 + 2;
+  const pts: [number, number][] =
+    dir === "up"
+      ? [[x + 1, y + TILE], [x + TILE / 2, y + TILE - h], [x + TILE - 1, y + TILE]]
+      : dir === "down"
+        ? [[x + 1, y], [x + TILE / 2, y + h], [x + TILE - 1, y]]
+        : dir === "right"
+          ? [[x, y + 1], [x + h, y + TILE / 2], [x, y + TILE - 1]]
+          : [[x + TILE, y + 1], [x + TILE - h, y + TILE / 2], [x + TILE, y + TILE - 1]];
+  ctx.beginPath();
+  ctx.moveTo(...pts[0]);
+  ctx.lineTo(...pts[1]);
+  ctx.lineTo(...pts[2]);
+  ctx.fill();
 }

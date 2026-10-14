@@ -28,6 +28,7 @@ describe("fases", () => {
   /** Anda para a direita pulando quando trava ou quando há buraco fundo à frente. */
   function walker(world: World) {
     const lastX = world.players.map((p) => p.x);
+    const thornJumps = new Set<number>();
     return (i: number, f: number): PlayerInput => {
       const p = world.players[i];
       const stuck = Math.abs(p.x - lastX[i]) < 0.1;
@@ -40,8 +41,33 @@ describe("fases", () => {
       }
       const ahead = Math.floor((p.x + p.w + 2) / TILE);
       const below = Math.floor((p.y + p.h + 1) / TILE);
-      const gap = p.onGround && !isSolidAt(world.level, ahead, below) && !isSolidAt(world.level, ahead, below + 1);
-      return { ...NO_INPUT, right: true, jump: (stuck && f % 16 < 8) || gap };
+      const gap =
+        p.onGround &&
+        !isSolidAt(world.level, ahead, below) &&
+        !isSolidAt(world.level, ahead, below + 1) &&
+        !world.falls.some((fb) => fb.x <= (ahead + 0.5) * TILE && (ahead + 0.5) * TILE < fb.x + fb.w);
+      // vala com espinho no fundo conta como buraco
+      const spikePit =
+        p.onGround &&
+        world.thorns.some((t) => t.speed === 0 && Math.floor(t.x / TILE) === ahead && Math.floor(t.y / TILE) === below);
+      // esmagador logo à frente descendo ou baixo: espera
+      const crusher = world.thorns.find(
+        (t) => t.dy > 0 && t.x < p.x + p.w + 6 && t.x + t.w > p.x - 2 && !(t.way === -1 && t.t < 0.6),
+      );
+      if (crusher && p.onGround && crusher.x >= p.x + p.w - 1) return NO_INPUT;
+      // espinho logo à frente no nível dos pés: pula; espinho acima do caminho: nunca pula
+      const thornAhead = world.thorns.some(
+        (t) => t.x > p.x + p.w - 2 && t.x < p.x + p.w + 6 && t.y < p.y + p.h && t.y + t.h > p.y + p.h - 4,
+      );
+      const thornAbove = world.thorns.some(
+        (t) => t.x < p.x + p.w + 24 && t.x + t.w > p.x && t.y + t.h <= p.y && t.y + t.h > p.y - 40,
+      );
+      // pulo sobre espinho: segura até o ápice (pulo cheio)
+      if (thornAhead && p.onGround) thornJumps.add(i);
+      if (p.onGround && !thornAhead) thornJumps.delete(i);
+      const rising = thornJumps.has(i) && !p.onGround && p.vy < 0;
+      const jump = !thornAbove && ((stuck && f % 16 < 8) || gap || spikePit || thornAhead || rising);
+      return { ...NO_INPUT, right: true, jump };
     };
   }
 
@@ -245,6 +271,42 @@ describe("fases", () => {
       const [a, b] = w.players;
       relay(w, b, a, 10, 18); // depois disso a está à frente
       relay(w, a, b, 32, 40);
+      finish(w);
+    });
+  });
+
+  describe("Mundo 4 — chão que cai e espinhos", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    const finish = (w: World) => {
+      const walk = walker(w);
+      for (let f = 0; f < 4000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    };
+
+    it("4-1 tem solução: atravessar a ponte que cai juntos", () => {
+      const w = createWorld(parseLevel(at("4-1")), 2);
+      // a encosta em b antes da ponte, para atravessarem colados
+      const [a, b] = w.players;
+      for (let f = 0; f < 300 && b.x + b.w < 10 * TILE - 2; f++) step(w, [a.x + a.w < b.x - 0.5 ? { ...NO_INPUT, right: true } : NO_INPUT, { ...NO_INPUT, right: true }]);
+      for (let f = 0; f < 60 && a.x + a.w < b.x - 0.5; f++) step(w, [{ ...NO_INPUT, right: true }, NO_INPUT]);
+      finish(w);
+    });
+
+    it("4-2 tem solução: pular espinhos do chão, não pular sob os do teto, empilhar pela chave", () => {
+      const w = createWorld(parseLevel(at("4-2")), 2);
+      solve(w, (a) => a.x + a.w >= 31 * TILE - 1);
+    });
+
+    it("4-3 tem solução: passar pelos esmagadores quando sobem", () => {
+      finish(createWorld(parseLevel(at("4-3")), 2));
+    });
+
+    it("4-4 tem solução: ponte que cai sem pular sob o espinho", () => {
+      const w = createWorld(parseLevel(at("4-4")), 2);
+      const [a, b] = w.players;
+      for (let f = 0; f < 300 && b.x + b.w < 12 * TILE - 2; f++) step(w, [a.x + a.w < b.x - 0.5 ? { ...NO_INPUT, right: true } : NO_INPUT, { ...NO_INPUT, right: true }]);
+      for (let f = 0; f < 60 && a.x + a.w < b.x - 0.5; f++) step(w, [{ ...NO_INPUT, right: true }, NO_INPUT]);
       finish(w);
     });
   });

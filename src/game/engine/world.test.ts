@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, PLAYER_SIZE, TILE, VIEW_W } from "./constants";
+import { FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, PLAYER_SIZE, TILE, VIEW_W } from "./constants";
 import { parseLevel } from "./level";
 import { createWorld, NO_INPUT, step, type PlayerInput } from "./world";
 
@@ -640,5 +640,65 @@ describe("Mundo 3 — tempo", () => {
     const w = createWorld(room({ blinks: [{ col: 10, row: 3, w: 1, h: 2, on: 100, off: 1 }] }), 2);
     run(w, 200, [NO_INPUT, RIGHT]);
     expect(w.players[1].x + w.players[1].w).toBe(10 * TILE);
+  });
+});
+
+describe("Mundo 4 — chão que cai e espinhos", () => {
+  const level = (extra: object, map?: string[]) =>
+    parseLevel({
+      name: "w4",
+      map: map ?? [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "######.....#########",
+        "######.....#########",
+        "####################",
+      ],
+      ...extra,
+    });
+
+  it("chão que cai: espera 0,22 s depois de pisado e cai até pousar, levando quem está em cima", () => {
+    const w = createWorld(level({ falls: [{ col: 6, row: 5, w: 5, h: 1 }] }), 2);
+    const fall = w.falls[0];
+    const b = w.players[1];
+    run(w, 30, [NO_INPUT, NO_INPUT]);
+    expect(fall.y).toBe(5 * TILE); // ninguém pisou
+    b.x = 8 * TILE;
+    b.y = 5 * TILE - b.h;
+    run(w, Math.round(FALL_WAIT * 60) - 2, [NO_INPUT, NO_INPUT]);
+    expect(fall.y).toBe(5 * TILE);
+    run(w, 60, [NO_INPUT, NO_INPUT]);
+    expect(fall.y).toBe(6 * TILE); // pousou no fundo
+    expect(b.y + b.h).toBe(6 * TILE);
+    expect(w.resets).toBe(0);
+  });
+
+  it("espinho mata ao toque e reinicia a fase", () => {
+    const w = createWorld(level({ thorns: [{ col: 4, row: 4, w: 1, h: 1 }] }, [
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#.1................#",
+      "####################",
+    ]), 1);
+    run(w, 20, [RIGHT]);
+    expect(w.resets).toBe(1);
+    expect(w.players[0].x).toBeLessThan(3 * TILE); // voltou ao início
+  });
+
+  it("espinho móvel vai e volta no percurso", () => {
+    const w = createWorld(level({ thorns: [{ col: 12, row: 1, w: 1, h: 1, dx: 4, dy: 0, speed: 1 }] }), 1);
+    const t = w.thorns[0];
+    const xs: number[] = [];
+    for (let f = 0; f < 200; f++) {
+      step(w, [NO_INPUT]);
+      xs.push(t.x);
+    }
+    expect(Math.max(...xs)).toBeCloseTo(16 * TILE, 0);
+    expect(Math.min(...xs)).toBeCloseTo(12 * TILE, 0);
   });
 });

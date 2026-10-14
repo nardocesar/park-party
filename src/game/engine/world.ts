@@ -2,6 +2,7 @@ import {
   AIR_RESISTIVITY,
   BOX_SPEED,
   COYOTE_FRAMES,
+  THORN_RECTS_UP,
   FPS,
   DOOR_H,
   DOOR_W,
@@ -21,7 +22,7 @@ import {
   VIEW_W,
   WALK_SPEED,
 } from "./constants";
-import { isSolidAt, type Level } from "./level";
+import { isSolidAt, type Level, type ThornDir } from "./level";
 
 export type PlayerInput = { left: boolean; right: boolean; jump: boolean };
 export const NO_INPUT: PlayerInput = { left: false, right: false, jump: false };
@@ -54,8 +55,22 @@ export type Lift = Rect & {
   wait: number;
 };
 
-/** Tudo que é sólido e se move: jogadores, caixas e elevadores. */
-type Body = Player | Box | Lift;
+/** Chão que cai: depois de pisado espera e cai com gravidade até pousar. */
+export type Fall = Rect & { kind: "fall"; index: number; vy: number; touched: boolean; timer: number };
+/** Espinho: mata ao toque; anda de (x0,y0) a (x0+dx, y0+dy) e volta. */
+export type Thorn = Rect & {
+  dir: ThornDir;
+  x0: number;
+  y0: number;
+  dx: number;
+  dy: number;
+  speed: number;
+  t: number;
+  way: 1 | -1;
+};
+
+/** Tudo que é sólido e se move: jogadores, caixas, elevadores e chãos que caem. */
+type Body = Player | Box | Lift | Fall;
 type Support = "tile" | Body | null;
 
 export type Switch = Rect & {
@@ -86,6 +101,8 @@ export type World = {
   switches: Switch[];
   gates: Gate[];
   blinks: Blink[];
+  falls: Fall[];
+  thorns: Thorn[];
   lifts: Lift[];
   key: Key;
   door: Door;
@@ -102,6 +119,8 @@ export function createWorld(level: Level, playerCount: number): World {
     boxes: level.boxes.map((b, index) => ({ kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0 })),
     switches: level.switches.map((sw) => ({ ...sw, on: false, pressed: false, rest: 0, countdown: 0, latched: false })),
     gates: level.gates.map((g) => ({ ...g, open: 0 })),
+    falls: level.falls.map((f, index) => ({ kind: "fall", index, x: f.x, y: f.y, w: f.w, h: f.h, vy: 0, touched: false, timer: 0 })),
+    thorns: level.thorns.map((t) => ({ ...t, x0: t.x, y0: t.y, t: 0, way: 1 })),
     blinks: level.blinks.map((b) => ({ x: b.x, y: b.y, w: b.w, h: b.h, on: b.on, off: b.off, visible: true, timer: 0 })),
     lifts: level.lifts.map((l, index) => ({
       kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0, wait: 0,
@@ -147,6 +166,8 @@ function placeEntities(world: World) {
     b.timer = Math.max(1, Math.round(((b.visible ? def.on : def.off) - def.phase) * FPS));
   });
   for (const l of world.lifts) Object.assign(l, { y: l.startY, weight: 0, wait: 0 });
+  world.falls.forEach((f, i) => Object.assign(f, { x: level.falls[i].x, y: level.falls[i].y, vy: 0, touched: false, timer: 0 }));
+  for (const t of world.thorns) Object.assign(t, { x: t.x0, y: t.y0, t: 0, way: 1 });
   Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
   world.door.open = false;
   world.status = "playing";
@@ -176,7 +197,7 @@ function tileHit(level: Level, r: Rect): boolean {
 }
 
 const active = (world: World) => world.players.filter((p) => !p.cleared);
-const bodies = (world: World): Body[] => [...active(world), ...world.boxes, ...world.lifts];
+const bodies = (world: World): Body[] => [...active(world), ...world.boxes, ...world.lifts, ...world.falls];
 export const gateRect = (g: Gate): Rect => ({ x: g.x, y: g.y, w: g.w, h: g.h * (1 - g.open) });
 /** Sólidos estáticos além dos tiles: portões (parte fechada) e blocos que piscam visíveis. */
 const gateRects = (world: World): Rect[] => [
@@ -307,6 +328,21 @@ export function step(world: World, inputs: PlayerInput[]) {
     displacement.set(l, { dx: 0, dy: l.y - y0 });
   }
 
+  // 2b. Chãos que caem (FallBoxComponent): pisados por cima, esperam e caem até pousar
+  for (const f of world.falls) {
+    if (!f.touched && bodies(world).some((b) => support.get(b) === f)) {
+      f.touched = true;
+      f.timer = Math.round(world.level.falls[f.index].wait * FPS);
+    }
+    const y0 = f.y;
+    if (f.touched && f.timer > 0) f.timer--;
+    else if (f.touched && f.y < world.level.height + TILE * 4) {
+      f.vy = Math.min(GRAVITY_MAX, f.vy + GRAVITY);
+      if (moveAxis(world, f, f.vy, "y", ridersOf(f)).hit) f.vy = 0;
+    }
+    displacement.set(f, { dx: 0, dy: f.y - y0 });
+  }
+
   // 3. Caixas: andam se houver empurradores suficientes; caem sem apoio
   const required = (b: Box) => Math.min(b.need, world.players.length);
   for (const b of world.boxes) {
@@ -350,8 +386,10 @@ export function step(world: World, inputs: PlayerInput[]) {
 
   if (world.level.rope !== null) applyRope(world, world.level.rope, camBounds);
 
-  // 5. Morte: cair do mapa reinicia a fase
-  if (ps.some((p) => p.y > world.level.height + TILE * 2)) {
+  // 5. Morte: cair do mapa ou tocar espinho reinicia a fase
+  moveThorns(world);
+  const deadly = world.thorns.flatMap(thornRects);
+  if (ps.some((p) => p.y > world.level.height + TILE * 2 || deadly.some((d) => overlaps(p, d)))) {
     resetWorld(world);
     return;
   }
@@ -374,6 +412,40 @@ function snapIntoHole(world: World, b: Box) {
   b.x = snapped;
   const blocked = tileHit(world.level, b) || bodies(world).some((o) => o !== b && overlaps(b, o));
   if (blocked || supportOf(world, b) !== null) b.x = x;
+}
+
+/** Áreas mortais do espinho: base e ponta em cada célula, giradas conforme a direção. */
+export function thornRects(t: Thorn): Rect[] {
+  const rotate = (r: Rect): Rect => {
+    switch (t.dir) {
+      case "up":
+        return r;
+      case "down":
+        return { x: r.x, y: TILE - r.y - r.h, w: r.w, h: r.h };
+      case "right":
+        return { x: TILE - r.y - r.h, y: r.x, w: r.h, h: r.w };
+      case "left":
+        return { x: r.y, y: r.x, w: r.h, h: r.w };
+    }
+  };
+  const out: Rect[] = [];
+  for (let cx = 0; cx < t.w; cx += TILE) {
+    for (let cy = 0; cy < t.h; cy += TILE) {
+      for (const r of THORN_RECTS_UP.map(rotate)) out.push({ x: t.x + cx + r.x, y: t.y + cy + r.y, w: r.w, h: r.h });
+    }
+  }
+  return out;
+}
+
+function moveThorns(world: World) {
+  for (const t of world.thorns) {
+    const length = Math.hypot(t.dx, t.dy);
+    if (length === 0 || t.speed === 0) continue;
+    t.t = Math.min(1, Math.max(0, t.t + (t.way * t.speed) / length));
+    if (t.t === 1 || t.t === 0) t.way = t.t === 1 ? -1 : 1;
+    t.x = t.x0 + t.dx * t.t;
+    t.y = t.y0 + t.dy * t.t;
+  }
 }
 
 /**
