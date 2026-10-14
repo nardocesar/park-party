@@ -8,8 +8,8 @@ import { MAX_PLAYERS } from "@/game/engine/constants";
 
 export default function PlayPage(props: PageProps<"/play/[slug]">) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-stone-200 p-4">
-      <Suspense fallback={<p className="text-stone-500">Carregando fase…</p>}>
+    <main className="flex min-h-screen items-center justify-center bg-dusk p-4">
+      <Suspense fallback={<p className="text-dust">Carregando fase…</p>}>
         <PlayLevel {...props} />
       </Suspense>
     </main>

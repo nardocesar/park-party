@@ -101,11 +101,11 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
 
   return (
     <div className="flex w-full max-w-[960px] flex-col gap-3">
-      <div className="flex items-center justify-between text-sm text-stone-700">
+      <div className="flex items-center justify-between text-sm text-sand">
         <Link href="/" className="font-semibold hover:underline">
           ← Park Party
         </Link>
-        <span className="font-semibold">{name}</span>
+        <span className="font-western text-base text-gold">{name}</span>
         <span className="tabular-nums">
           {formatTime(elapsed)} · mortes {resets}
           {bestMs !== null && ` · recorde ${formatTime(bestMs)}`}
@@ -117,21 +117,21 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
           ref={canvasRef}
           width={VIEW_W * SCALE}
           height={VIEW_H * SCALE}
-          className="block h-auto w-full rounded-lg border-4 border-stone-800 [image-rendering:pixelated]"
+          className="block h-auto w-full rounded-lg border-4 border-plank-edge [image-rendering:pixelated]"
           data-testid="game-canvas"
         />
         {clearedMs !== null && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg bg-stone-900/70 text-white">
-            <p className="text-3xl font-bold">Fase concluída!</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg bg-dusk/75 text-sand">
+            <p className="font-western text-4xl text-gold">Fase concluída!</p>
             <p className="tabular-nums">{formatTime(clearedMs)}</p>
             {!saved ? (
-              <p className="text-sm text-stone-300">Salvando…</p>
+              <p className="text-sm text-dust">Salvando…</p>
             ) : nextHref ? (
-              <Link href={nextHref} className="rounded bg-amber-400 px-4 py-2 font-semibold text-stone-900">
+              <Link href={nextHref} className="rounded bg-gold px-4 py-2 font-semibold text-dusk">
                 Próxima fase (Enter)
               </Link>
             ) : (
-              <Link href="/" className="rounded bg-amber-400 px-4 py-2 font-semibold text-stone-900">
+              <Link href="/" className="rounded bg-gold px-4 py-2 font-semibold text-dusk">
                 Voltar ao menu
               </Link>
             )}
@@ -139,7 +139,7 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
         )}
       </div>
 
-      <ul className="flex flex-wrap gap-4 text-xs text-stone-600">
+      <ul className="flex flex-wrap gap-4 text-xs text-dust">
         {Array.from({ length: playerCount }, (_, i) => (
           <li key={i} className="flex items-center gap-1">
             <span className="inline-block h-3 w-3 rounded-sm" style={{ background: PLAYER_COLORS[i] }} />
