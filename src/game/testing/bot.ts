@@ -126,3 +126,40 @@ export function solo(w: World, who: number[], done: () => boolean, max = 2000) {
   for (let f = 0; f < max && !done(); f++) step(w, w.players.map((_, j) => (who.includes(j) ? walk(j, f) : NO_INPUT)));
   return done();
 }
+
+/** Anda para um lado (sem pular) até `done`. */
+const go = (dir: 1 | -1): PlayerInput => ({ ...NO_INPUT, right: dir > 0, left: dir < 0 });
+
+/**
+ * Paredão com corda: `base` vai até o degrau duplo e encosta no paredão (borda em `wallCol`);
+ * `climber` sobe no degrau, na cabeça da base e no paredão (pés na linha `topRow`); depois anda
+ * no alto içando a base pela corda.
+ */
+export function stackHoist(w: World, base: Player, climber: Player, wallCol: number, topRow: number) {
+  const walk = walker(w);
+  const bi = w.players.indexOf(base);
+  const ci = w.players.indexOf(climber);
+  const onTop = (p: Player) => p.onGround && Math.abs(p.y + p.h - topRow * TILE) < 0.01;
+  for (let f = 0; f < 900 && !(base.onGround && base.x + base.w >= wallCol * TILE - 0.5); f++)
+    step(w, w.players.map((_, i) => (i === bi ? walk(i, f) : NO_INPUT)));
+  for (let f = 0; f < 900 && !onTop(climber); f++) step(w, w.players.map((_, i) => (i === ci ? walk(i, f) : NO_INPUT)));
+  drive(w, (p) => (p === climber ? go(1) : NO_INPUT), () => onTop(base), 600);
+  return onTop(base) && onTop(climber);
+}
+
+/**
+ * Rapel: `holder` acompanha `faller` de perto até ele cair no poço (coluna `shaftCol`); depois o
+ * holder anda para trás içando o faller de volta à superfície (pés na linha `surfaceRow`).
+ */
+export function rapel(w: World, faller: Player, holder: Player, shaftCol: number, surfaceRow: number) {
+  waitFor(w, () => faller.onGround && holder.onGround, 60);
+  drive(
+    w,
+    (p) => (p === faller ? go(1) : p === holder && holder.x + holder.w < faller.x - 18 ? go(1) : NO_INPUT),
+    () => !faller.onGround && faller.x > shaftCol * TILE - 4,
+    900,
+  );
+  waitFor(w, () => false, 120);
+  drive(w, (p) => (p === holder ? go(-1) : NO_INPUT), () => faller.onGround && Math.abs(faller.y + faller.h - surfaceRow * TILE) < 0.01, 900);
+  return faller.onGround && Math.abs(faller.y + faller.h - surfaceRow * TILE) < 0.01;
+}

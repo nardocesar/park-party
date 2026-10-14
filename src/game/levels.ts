@@ -34,6 +34,9 @@ type Grid = {
 };
 
 
+const fallBridge = (from: number, to: number) =>
+  Array.from({ length: to - from + 1 }, (_, i) => ({ col: from + i, row: FLOOR + 1, w: 1, h: 1 }));
+
 /** Exigência de "todos": é limitada ao número de jogadores da partida (escala de 2 a 4). */
 const ALL = 99;
 
@@ -161,34 +164,40 @@ const WORLD_2: LevelDef[] = [
     },
     ROPE,
   ),
-  // 2-3: torre humana no degrau duplo leva o primeiro ao paredão; ele iça o segundo
+  // 2-3 (difícil): dois paredões (torre no degrau duplo + içar pela corda) com um rapel no meio
+  // até a chave e uma vala com espinho antes do segundo paredão.
   build(
-    "Paredão",
-    40,
-    ROWS,
-    (g) => {
-      spawns(g);
-      g.fill(20, 21, FLOOR, FLOOR);
-      g.fill(22, 38, FLOOR - 2, FLOOR);
-      g.set(30, FLOOR - 3, "K");
-      g.set(36, FLOOR - 3, "D");
-    },
-    ROPE,
-  ),
-  // 2-4: rapel num poço estreito (1 tile) para pegar a chave e depois o paredão
-  build(
-    "Rapel e paredão",
-    44,
+    "Paredão duplo",
+    52,
     DEEP,
     (g) => {
       spawns(g);
-      g.fill(12, 12, FLOOR + 1, DEEP - 1, ".");
-      g.set(12, DEEP - 2, "K");
-      g.fill(24, 25, FLOOR, FLOOR);
-      g.fill(26, 42, FLOOR - 2, FLOOR);
-      g.set(39, FLOOR - 3, "D");
+      g.fill(10, 11, FLOOR, FLOOR);
+      g.fill(12, 19, FLOOR - 2, FLOOR);
+      g.fill(26, 26, FLOOR + 1, DEEP - 1, ".");
+      g.set(26, DEEP - 2, "K");
+      g.set(30, FLOOR + 1, ".");
+      g.fill(34, 35, FLOOR, FLOOR);
+      g.fill(36, 43, FLOOR - 2, FLOOR);
+      g.set(48, FLOOR, "D");
     },
-    ROPE,
+    { ...ROPE, thorns: [{ col: 30, row: FLOOR + 1, w: 1, h: 1 }] },
+  ),
+  // 2-4 (difícil): ponte que cai atravessada amarrados, rapel no poço pela chave e paredão no fim
+  build(
+    "Corda bamba",
+    52,
+    DEEP,
+    (g) => {
+      spawns(g);
+      g.fill(8, 15, FLOOR + 1, DEEP - 1, ".");
+      g.fill(25, 25, FLOOR + 1, DEEP - 1, ".");
+      g.set(25, DEEP - 2, "K");
+      g.fill(32, 33, FLOOR, FLOOR);
+      g.fill(34, 50, FLOOR - 2, FLOOR);
+      g.set(46, FLOOR - 3, "D");
+    },
+    { ...ROPE, falls: fallBridge(8, 15) },
   ),
 ];
 
@@ -287,8 +296,6 @@ const WORLD_3: LevelDef[] = [
 ];
 
 // Mundo 4 — Chão traiçoeiro: chão que cai e espinhos (FallBoxComponent, ThornComponent — docs/re/04-fall-thorn.md).
-const fallBridge = (from: number, to: number) =>
-  Array.from({ length: to - from + 1 }, (_, i) => ({ col: from + i, row: FLOOR + 1, w: 1, h: 1 }));
 
 const WORLD_4: LevelDef[] = [
   // 4-1: ponte de blocos que caem sobre o poço — atravessar juntos, sem parar
