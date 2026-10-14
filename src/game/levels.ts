@@ -34,6 +34,9 @@ type Grid = {
 };
 
 
+/** Exigência de "todos": é limitada ao número de jogadores da partida (escala de 2 a 4). */
+const ALL = 99;
+
 const spawns = (g: Grid) => "1234".split("").forEach((d, i) => g.set(2 + i, FLOOR, d));
 
 const WORLD_1: LevelDef[] = [
@@ -69,41 +72,59 @@ const WORLD_1: LevelDef[] = [
     g.fill(33, 46, FLOOR - 2, FLOOR);
     g.set(42, FLOOR - 3, "D");
   }),
-  // 1-4: a caixa grande (2 jogadores) cai no buraco e vira ponte; a pequena segura o botão do portão.
-  // Uma linha a mais de chão para o buraco ter fundo (2 tiles: quem cai fica preso, R reinicia).
+  // 1-4 (difícil): caixa que exige todos vira ponte; duas caixas seguram os botões do portão;
+  // a chave fica num platô que exige torre; o elevador final só sobe com todos.
   build(
-    "Caixa de ponte",
-    52,
+    "Ponte, botões e torre",
+    58,
     ROWS + 1,
     (g) => {
       spawns(g);
-      g.fill(15, 17, FLOOR + 1, FLOOR + 2, ".");
-      g.set(24, FLOOR, "K");
-      g.set(38, FLOOR, "#");
-      g.set(47, FLOOR, "D");
+      g.fill(13, 14, FLOOR + 1, FLOOR + 2, ".");
+      g.set(24, FLOOR, "#");
+      g.set(31, FLOOR, "#");
+      g.fill(39, 41, FLOOR - 1, FLOOR - 1);
+      g.set(40, FLOOR - 2, "K");
+      g.fill(44, 46, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(47, 56, FLOOR - 4, FLOOR + 2);
+      g.set(53, FLOOR - 5, "D");
     },
     {
       boxes: [
-        { col: 8, row: FLOOR - 1, w: 3, h: 2, need: 2 },
-        { col: 30, row: FLOOR, w: 1, h: 1, need: 1 },
+        { col: 8, row: FLOOR - 1, w: 2, h: 2, need: ALL },
+        { col: 19, row: FLOOR, w: 1, h: 1, need: 1 },
+        { col: 27, row: FLOOR, w: 1, h: 1, need: 1 },
       ],
-      switches: [{ col: 37, row: FLOOR, target: "g1" }],
-      gates: [{ id: "g1", col: 42, row: FLOOR - 4, w: 1, h: 5 }],
+      switches: [
+        { col: 23, row: FLOOR, target: "g1" },
+        { col: 30, row: FLOOR, target: "g1" },
+      ],
+      gates: [{ id: "g1", col: 35, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
+      lifts: [{ col: 44, row: FLOOR + 1, w: 3, dy: -5, need: ALL }],
     },
   ),
-  // 1-5: o elevador só sobe com os dois em cima (empilhados contam) até o topo do muro
+  // 1-5 (difícil): dois elevadores que exigem todos, em níveis diferentes; a chave flutua acima do
+  // último nível e exige torre.
   build(
-    "Todos no elevador",
-    48,
-    ROWS,
+    "Elevadores em série",
+    44,
+    ROWS + 1,
     (g) => {
       spawns(g);
-      g.fill(10, 13, FLOOR + 1, ROWS - 1, ".");
-      g.fill(14, 22, FLOOR - 2, ROWS - 1);
-      g.set(18, FLOOR - 3, "K");
-      g.set(42, FLOOR, "D");
+      g.fill(10, 13, FLOOR + 1, FLOOR + 3, ".");
+      g.fill(14, 42, FLOOR - 2, FLOOR + 3); // patamar 1 (topo na linha 6)
+      g.fill(18, 21, FLOOR - 2, FLOOR - 2, "."); // vão do segundo elevador
+      g.fill(22, 42, FLOOR - 4, FLOOR - 3); // patamar 2 (topo na linha 4)
+      g.fill(30, 32, 2, 2); // plataforma flutuante: torre a partir do patamar 2
+      g.set(31, 1, "K");
+      g.set(38, FLOOR - 5, "D");
     },
-    { lifts: [{ col: 10, row: FLOOR + 1, w: 4, dy: -3, need: 2 }] },
+    {
+      lifts: [
+        { col: 10, row: FLOOR + 1, w: 4, dy: -3, need: ALL },
+        { col: 18, row: FLOOR - 2, w: 4, dy: -2, need: ALL },
+      ],
+    },
   ),
 ];
 
@@ -343,7 +364,6 @@ const WORLD_4: LevelDef[] = [
 
 // Mundo 5 — Engrenagens: trilhos e paredes que empurram
 // (LinePathLift, UpDownLift, MoveWall — docs/re/05-rails.md).
-const ALL = 99; // trilho que exige todos os jogadores
 
 const WORLD_5: LevelDef[] = [
   // 5-1: o trilho só cruza o poço com todos em cima

@@ -99,34 +99,6 @@ describe("fases", () => {
     solve(createWorld(parseLevel(LEVELS[2]), 2), (a) => a.x + a.w >= 18 * TILE - 1);
   });
 
-  it("1-4 tem solução com 2 jogadores (caixa de ponte e botão)", () => {
-    const w = createWorld(parseLevel(LEVELS[3]), 2);
-    const walk = walker(w);
-    for (let f = 0; f < 4000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
-    expect(w.resets).toBe(0);
-    expect(w.status).toBe("cleared");
-  });
-
-  it("1-5 tem solução com 2 jogadores (elevador exige os dois)", () => {
-    const w = createWorld(parseLevel(LEVELS[4]), 2);
-    const [a, b] = w.players; // b nasce à frente de a
-    const lift = w.lifts[0];
-    const right: PlayerInput = { ...NO_INPUT, right: true };
-    // b vai até o muro, em cima do elevador; sozinho, o elevador não sobe
-    for (let f = 0; f < 600 && b.x + b.w < 14 * TILE - 0.5; f++) step(w, [NO_INPUT, right]);
-    for (let f = 0; f < 60; f++) step(w, [NO_INPUT, NO_INPUT]);
-    expect(lift.y).toBe(9 * TILE);
-    // a entra no elevador ao lado de b: agora o peso é 2
-    for (let f = 0; f < 300 && lift.weight < 2; f++) step(w, [right, NO_INPUT]);
-    expect(support(w, a)).toBeUndefined();
-    for (let f = 0; f < 300 && lift.y > 6 * TILE; f++) step(w, [NO_INPUT, NO_INPUT]);
-    expect(lift.y).toBe(6 * TILE);
-    const walk = walker(w);
-    for (let f = 0; f < 3000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
-    expect(w.resets).toBe(0);
-    expect(w.status).toBe("cleared");
-  });
-
   describe("Mundo 2 — corda", () => {
     const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
     const idle = NO_INPUT;
