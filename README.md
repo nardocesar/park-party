@@ -1,6 +1,6 @@
 <div align="center">
 
-# Park Party
+<h1><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-park-party-dark.png"><img src="docs/readme/title-park-party-light.png" alt="Park Party" height="90"></picture></h1>
 
 **Plataforma cooperativa de faroeste para 2 a 4 jogadores no mesmo teclado.**
 Peguem a chave, abram o saloon e entrem juntos — ninguém passa sozinho.
@@ -26,7 +26,7 @@ originais e cada um usa a cor do seu jogador na roupa e na setinha sobre a cabe�
 - O que é "de todos" (caixas pesadas, plataformas, portais) **escala com o tamanho do grupo**
 - Progresso, desbloqueio de fases e **recordes por número de jogadores** salvos no Postgres
 
-## Mecânicas
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-mecanicas-dark.png"><img src="docs/readme/title-mecanicas-light.png" alt="Mecânicas" height="40"></picture></h2>
 
 <table>
   <tr>
@@ -55,7 +55,7 @@ originais e cada um usa a cor do seu jogador na roupa e na setinha sobre a cabe�
   </tr>
 </table>
 
-### Os 15 mundos
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-mundos-dark.png"><img src="docs/readme/title-mundos-light.png" alt="Os 15 mundos" height="32"></picture></h3>
 
 | | Mundo | Mecânica |
 |---|---|---|
@@ -76,7 +76,7 @@ originais e cada um usa a cor do seu jogador na roupa e na setinha sobre a cabe�
 As fases 3 e 4 de cada mundo são as difíceis: encadeiam vários trechos e misturam a
 mecânica do mundo com as anteriores.
 
-## Controles
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-controles-dark.png"><img src="docs/readme/title-controles-light.png" alt="Controles" height="40"></picture></h2>
 
 | Jogador | Andar | Pular | Ação (gravidade, etc.) |
 |---|---|---|---|
@@ -88,7 +88,7 @@ mecânica do mundo com as anteriores.
 Gamepads funcionam também: o gamepad N controla o jogador N. `R` reinicia a fase, `Esc`
 volta ao menu e `Enter` vai para a próxima fase depois de concluir.
 
-## Rodando localmente
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-rodando-dark.png"><img src="docs/readme/title-rodando-light.png" alt="Rodando localmente" height="40"></picture></h2>
 
 Requisitos: Node 20.9+ e Docker (para o Postgres).
 
@@ -101,7 +101,7 @@ npm run db:seed          # grava as 61 fases no banco
 npm run dev              # http://localhost:3000
 ```
 
-## Como é feito
+<h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-como-e-feito-dark.png"><img src="docs/readme/title-como-e-feito-light.png" alt="Como é feito" height="40"></picture></h2>
 
 - **Next.js 16** (App Router, Server Components) + **React 19** + **Tailwind 4**
 - **Canvas 2D** com resolução interna de 320×180, escalada em pixel art; sprites em grades
