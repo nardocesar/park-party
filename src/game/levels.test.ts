@@ -97,4 +97,79 @@ describe("fases", () => {
     expect(w.resets).toBe(0);
     expect(w.status).toBe("cleared");
   });
+
+  describe("Mundo 2 — corda", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    const idle = NO_INPUT;
+    const go = (dir: 1 | -1, jump = false): PlayerInput => ({ ...NO_INPUT, left: dir < 0, right: dir > 0, jump });
+
+    it("2-1 tem solução com 2 jogadores (buracos com corda)", () => {
+      const w = createWorld(parseLevel(at("2-1")), 2);
+      const walk = walker(w);
+      for (let f = 0; f < 4000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    });
+
+    it("2-2 tem solução: desce pendurado, pega a chave e é içado", () => {
+      const w = createWorld(parseLevel(at("2-2")), 2);
+      const [a, b] = w.players;
+      // b (à frente) anda até cair no poço; a fica parado segurando
+      for (let f = 0; f < 5; f++) step(w, [idle, idle]);
+      // a acompanha b de perto, para a corda ter folga quando b cair no poço
+      for (let f = 0; f < 600 && b.onGround; f++) step(w, [a.x + a.w < b.x - 18 ? go(1) : idle, go(1)]);
+      for (let f = 0; f < 120; f++) step(w, [idle, idle]);
+      expect(w.resets).toBe(0);
+      expect(w.key.holder).toBe(1);
+      // a anda para a esquerda, içando b
+      for (let f = 0; f < 600 && !(b.onGround && b.y + b.h === 9 * TILE); f++) step(w, [go(-1), idle]);
+      expect(b.y + b.h).toBe(9 * TILE);
+      // os dois vão para a porta (à esquerda)
+      for (let f = 0; f < 1500 && w.status === "playing"; f++) {
+        const door = w.door.x + w.door.w / 2;
+        step(w, w.players.map((p) => (p.cleared ? idle : go(p.x + p.w / 2 < door ? 1 : -1))));
+      }
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    });
+
+    it("2-3 tem solução: torre no degrau duplo e içar pelo paredão", () => {
+      const w = createWorld(parseLevel(at("2-3")), 2);
+      const [a, b] = w.players;
+      const walk = walker(w);
+      // b sobe no degrau e encosta no paredão
+      for (let f = 0; f < 600 && !(b.onGround && b.x + b.w >= 22 * TILE - 0.5); f++) step(w, [idle, walk(1, f)]);
+      // a sobe no degrau, depois na cabeça de b, depois no paredão
+      for (let f = 0; f < 900 && !(a.onGround && a.y + a.h === 6 * TILE); f++) step(w, [walk(0, f), idle]);
+      expect(a.y + a.h).toBe(6 * TILE);
+      // a continua andando no alto e iça b pelo paredão
+      for (let f = 0; f < 600 && !(b.onGround && b.y + b.h === 6 * TILE); f++) step(w, [go(1), idle]);
+      expect(b.y + b.h).toBe(6 * TILE);
+      for (let f = 0; f < 3000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    });
+
+    it("2-4 tem solução: rapel no poço e depois o paredão", () => {
+      const w = createWorld(parseLevel(at("2-4")), 2);
+      const [a, b] = w.players;
+      const walk = walker(w);
+      for (let f = 0; f < 5; f++) step(w, [idle, idle]);
+      // a acompanha b de perto, para a corda ter folga quando b cair no poço
+      for (let f = 0; f < 600 && b.onGround; f++) step(w, [a.x + a.w < b.x - 18 ? go(1) : idle, go(1)]);
+      for (let f = 0; f < 120; f++) step(w, [idle, idle]);
+      expect(w.key.holder).toBe(1);
+      for (let f = 0; f < 600 && !(b.onGround && b.y + b.h === 9 * TILE); f++) step(w, [go(-1), idle]);
+      expect(b.y + b.h).toBe(9 * TILE);
+      // agora a vai à frente: atravessa o poço estreito pulando e b segue
+      for (let f = 0; f < 1500 && !(a.onGround && a.x + a.w >= 26 * TILE - 0.5); f++) step(w, [walk(0, f), walk(1, f)]);
+      for (let f = 0; f < 900 && !(b.onGround && b.y + b.h === 6 * TILE); f++) step(w, [idle, walk(1, f)]);
+      expect(b.y + b.h).toBe(6 * TILE);
+      for (let f = 0; f < 600 && !(a.onGround && a.y + a.h === 6 * TILE); f++) step(w, [idle, go(1)]);
+      expect(a.y + a.h).toBe(6 * TILE);
+      for (let f = 0; f < 3000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    });
+  });
 });

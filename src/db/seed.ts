@@ -4,7 +4,8 @@ import { LEVELS } from "../game/levels";
 
 async function main() {
   for (const [i, def] of LEVELS.entries()) {
-    const row = { slug: `1-${i + 1}`, name: def.name, order: i, data: def };
+    const { slug, ...data } = def;
+    const row = { slug, name: def.name, order: i, data };
     await db.insert(levels).values(row).onConflictDoUpdate({ target: levels.slug, set: row });
   }
   console.log(`${LEVELS.length} fases gravadas`);

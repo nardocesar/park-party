@@ -19,6 +19,8 @@ export type LevelDef = {
   switches?: SwitchDef[];
   gates?: GateDef[];
   lifts?: LiftDef[];
+  /** Corda que liga os jogadores em sequência (1–2–3…); comprimento em tiles. */
+  rope?: { length: number };
 };
 
 export type Vec = { x: number; y: number };
@@ -38,6 +40,8 @@ export type Level = {
   switches: { x: number; y: number; w: number; h: number; target: string }[];
   gates: { id: string; x: number; y: number; w: number; h: number }[];
   lifts: { x: number; y: number; w: number; h: number; travel: number; need: number }[];
+  /** Comprimento da corda em px, ou null sem corda. */
+  rope: number | null;
 };
 
 export function parseLevel(def: LevelDef): Level {
@@ -86,6 +90,7 @@ export function parseLevel(def: LevelDef): Level {
       x: s.col * TILE, y: (s.row + 1) * TILE - SWITCH_H, w: TILE, h: SWITCH_H, target: s.target,
     })),
     gates: (def.gates ?? []).map((g) => ({ id: g.id, x: g.col * TILE, y: g.row * TILE, w: g.w * TILE, h: g.h * TILE })),
+    rope: def.rope ? def.rope.length * TILE : null,
     lifts: (def.lifts ?? []).map((l) => ({
       x: l.col * TILE, y: l.row * TILE, w: l.w * TILE, h: TILE, travel: l.dy * TILE, need: l.need,
     })),

@@ -36,7 +36,7 @@ type Grid = {
 
 const spawns = (g: Grid) => "1234".split("").forEach((d, i) => g.set(2 + i, FLOOR, d));
 
-export const LEVELS: LevelDef[] = [
+const WORLD_1: LevelDef[] = [
   // 1-1: um degrau sobe sozinho; a chave fica numa plataforma de 2 tiles que exige empilhar
   build("Primeiros passos", 40, ROWS, (g) => {
     spawns(g);
@@ -106,3 +106,77 @@ export const LEVELS: LevelDef[] = [
     { lifts: [{ col: 10, row: FLOOR + 1, w: 4, dy: -3, need: 2 }] },
   ),
 ];
+
+// Mundo 2 — Amarrados: todos ligados por uma corda (DistanceConstraint, docs/re/02-rope.md).
+const ROPE = { rope: { length: 4 } };
+const DEEP = 14; // fases com poço: chão mais grosso para quem está pendurado continuar visível
+
+const WORLD_2: LevelDef[] = [
+  // 2-1: a corda arrasta quem fica para trás; buracos de 1 tile matam
+  build(
+    "Amarrados",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(12, 12, FLOOR + 1, ROWS - 1, ".");
+      g.set(16, FLOOR, "K");
+      g.fill(20, 20, FLOOR + 1, ROWS - 1, ".");
+      g.set(26, FLOOR, "#");
+      g.set(36, FLOOR, "D");
+    },
+    ROPE,
+  ),
+  // 2-2: a chave está no fundo de um poço; um desce pendurado e o outro o iça de volta
+  build(
+    "Rapel",
+    40,
+    DEEP,
+    (g) => {
+      spawns(g);
+      g.set(8, FLOOR, "D");
+      g.fill(18, 19, FLOOR + 1, DEEP - 1, ".");
+      g.set(18, DEEP - 2, "K");
+    },
+    ROPE,
+  ),
+  // 2-3: torre humana no degrau duplo leva o primeiro ao paredão; ele iça o segundo
+  build(
+    "Paredão",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(20, 21, FLOOR, FLOOR);
+      g.fill(22, 38, FLOOR - 2, FLOOR);
+      g.set(30, FLOOR - 3, "K");
+      g.set(36, FLOOR - 3, "D");
+    },
+    ROPE,
+  ),
+  // 2-4: rapel num poço estreito (1 tile) para pegar a chave e depois o paredão
+  build(
+    "Rapel e paredão",
+    44,
+    DEEP,
+    (g) => {
+      spawns(g);
+      g.fill(12, 12, FLOOR + 1, DEEP - 1, ".");
+      g.set(12, DEEP - 2, "K");
+      g.fill(24, 25, FLOOR, FLOOR);
+      g.fill(26, 42, FLOOR - 2, FLOOR);
+      g.set(39, FLOOR - 3, "D");
+    },
+    ROPE,
+  ),
+];
+
+export const WORLDS: { name: string; levels: LevelDef[] }[] = [
+  { name: "Primeiros passos", levels: WORLD_1 },
+  { name: "Amarrados", levels: WORLD_2 },
+];
+
+/** Todas as fases em ordem, com slug "mundo-fase". */
+export const LEVELS: (LevelDef & { slug: string })[] = WORLDS.flatMap((w, wi) =>
+  w.levels.map((l, li) => ({ ...l, slug: `${wi + 1}-${li + 1}` })),
+);

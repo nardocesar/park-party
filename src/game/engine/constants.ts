@@ -28,3 +28,8 @@ export const SWITCH_H = 4;
 export const GATE_SPEED = 1;
 export const LIFT_SPEED = 0.5;
 export const LIFT_WAIT_FRAMES = 60;
+
+// Observado: DistanceConstraintComponent (.cctor 0x21e6a40) — docs/re/02-rope.md
+export const ROPE_K = 0.2;
+/** RESULT_Y_MAX = 20.15 em unidades do jogo (jogador de colisão 46 de altura), convertido para px. */
+export const ROPE_RESULT_Y_MAX = (20.15 * PLAYER_SIZE) / 46;

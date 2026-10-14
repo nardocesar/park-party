@@ -28,6 +28,27 @@ Status: `todo` | `investigando` | `implementado` | `verificado` | `bloqueado`
 | 11 | Seleção de fase, progresso, melhores tempos | verificado | — | `progress.test.ts`; desbloqueio e avanço verificados no navegador |
 | 12 | Multiplayer online | todo | | Só com aprovação do Carlos |
 
+## Mundos (mecânicas lidas do binário via REA; fases originais, 4 por mundo)
+
+Regra: as fases do PICO PARK 2 ficam criptografadas em `StreamingAssets/Stage/PP2`
+e não são extraídas nem copiadas. Cada mundo reimplementa uma mecânica a partir do código
+(`tools/il2cpp_methods.py` + REA/Ghidra) e traz fases próprias com teste de solução.
+
+| Mundo | Mecânica (componente) | Status | RE |
+|---|---|---|---|
+| 1 | Empilhar, chave, caixa, botão/portão, elevador | verificado | 00, 01 |
+| 2 | Corda (`DistanceConstraintComponent`) | verificado | 02-rope |
+| 3 | Botão com tempo / atraso (`SwitchTimer`, `DelaySwitch`) + blocos que piscam (`BlinkBlock`) | todo | |
+| 4 | Chão que cai (`FallBox`, `FallingWall`) + espinhos (`Thorn*`) | todo | |
+| 5 | Plataformas em trilho (`LinePathLift`, `MoveWall`, `UpDownLift`) | todo | |
+| 6 | Vento (`Wind`) | todo | |
+| 7 | Trampolim e botão de pulo (`JumpStand`, `JumpSwitch`) | todo | |
+| 8 | Gravidade invertida (`PlayerComponent.reverseGravity`) | todo | |
+| 9 | Teletransporte (`Warp`, `WarpAll`) | todo | |
+| 10 | Caixas de cor / interruptores de cor (`ColorBox`, `ForceColorBox`) | todo | |
+| 11 | Escuridão e holofote (`DarknessRect`, `SearchLight`, `Blackout`) | todo | |
+| 12 | Maioria (`MajorityController`) / escala (`ScaleSwitch`) | todo | |
+
 ## Desconhecidos abertos
 
 - `unk_b931977a…` (REA): multiplicador de caminhada, gravidade e pulo efetivos. O código

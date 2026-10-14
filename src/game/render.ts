@@ -47,6 +47,7 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
   }
   drawDoor(ctx, world);
   for (const b of world.boxes) drawBox(ctx, b, Math.min(b.need, world.players.length));
+  if (world.level.rope !== null) drawRope(ctx, world);
   for (const p of world.players) if (!p.cleared) drawPlayer(ctx, p);
   if (!world.key.used) drawKey(ctx, world.key.x, world.key.y);
   ctx.restore();
@@ -101,4 +102,26 @@ function drawBox(ctx: CanvasRenderingContext2D, b: Box, need: number) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(String(left === 0 ? need : left), x + b.w / 2, y + b.h / 2 + 1);
+}
+
+function drawRope(ctx: CanvasRenderingContext2D, world: World) {
+  const chain = world.players.filter((p) => !p.cleared);
+  const length = world.level.rope ?? 0;
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i + 1 < chain.length; i++) {
+    const a = chain[i];
+    const b = chain[i + 1];
+    const ax = a.x + a.w / 2;
+    const ay = a.y + a.h / 2;
+    const bx = b.x + b.w / 2;
+    const by = b.y + b.h / 2;
+    const d = Math.hypot(bx - ax, by - ay);
+    // folgada: curva para baixo; esticada: reta e mais escura
+    const sag = Math.max(0, length - d) * 0.5;
+    ctx.strokeStyle = d >= length ? "#44403c" : "#78716c";
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.quadraticCurveTo((ax + bx) / 2, (ay + by) / 2 + sag, bx, by);
+    ctx.stroke();
+  }
 }

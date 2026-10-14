@@ -474,3 +474,79 @@ describe("câmera compartilhada", () => {
     expect(b.x - a.x).toBeLessThanOrEqual(VIEW_W);
   });
 });
+
+describe("corda entre os jogadores (DistanceConstraint)", () => {
+  const FLATROPE = parseLevel({
+    name: "flatrope",
+    map: [
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#.1.2..............#",
+      "####################",
+    ],
+    rope: { length: 4 },
+  });
+  const centerDist = (w: ReturnType<typeof createWorld>) => {
+    const [a, b] = w.players;
+    return Math.hypot(b.x + b.w / 2 - (a.x + a.w / 2), b.y + b.h / 2 - (a.y + a.h / 2));
+  };
+
+  it("folgada (mais perto que o comprimento) não interfere", () => {
+    const w = createWorld(FLATROPE, 2);
+    const ax = w.players[0].x;
+    run(w, 20, [NO_INPUT, RIGHT]);
+    expect(centerDist(w)).toBeLessThan(4 * TILE);
+    expect(w.players[0].x).toBe(ax);
+  });
+
+  it("esticada no chão: quem anda arrasta o parceiro e a distância fica perto do comprimento", () => {
+    const w = createWorld(FLATROPE, 2);
+    const ax = w.players[0].x;
+    run(w, 200, [NO_INPUT, RIGHT]);
+    expect(w.players[0].x).toBeGreaterThan(ax + 20);
+    expect(centerDist(w)).toBeLessThan(4 * TILE + 12);
+  });
+
+  const CLIFF = parseLevel({
+    name: "cliff",
+    map: [
+      "#..................#",
+      "#..................#",
+      "#........1.2.......#",
+      "##########.........#",
+      "##########.........#",
+      "##########.........#",
+      "##########.........#",
+      "##########.........#",
+      "##########.........#",
+      "##########.........#",
+    ],
+    rope: { length: 3 },
+  });
+
+  it("quem cai fica pendurado; quem está no chão segura", () => {
+    const w = createWorld(CLIFF, 2);
+    const [a, b] = w.players;
+    b.x = 10 * TILE + 2; // b começa já fora da borda
+    run(w, 180, [NO_INPUT, NO_INPUT]);
+    expect(w.resets).toBe(0);
+    expect(a.onGround).toBe(true);
+    expect(a.y + a.h).toBe(3 * TILE);
+    expect(b.y).toBeGreaterThan(3 * TILE);
+    expect(b.y).toBeLessThan(3 * TILE + 3 * TILE + 8);
+  });
+
+  it("quem está no alto andando para longe iça o parceiro pela parede", () => {
+    const w = createWorld(CLIFF, 2);
+    const b = w.players[1];
+    b.x = 10 * TILE + 2;
+    run(w, 120, [NO_INPUT, NO_INPUT]);
+    // a vai para a esquerda, puxando b para cima pela parede
+    run(w, 400, [LEFT, NO_INPUT]);
+    expect(w.resets).toBe(0);
+    expect(b.y + b.h).toBe(3 * TILE);
+    expect(b.onGround).toBe(true);
+  });
+});

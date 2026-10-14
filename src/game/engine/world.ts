@@ -14,6 +14,8 @@ import {
   LIFT_SPEED,
   LIFT_WAIT_FRAMES,
   PLAYER_SIZE,
+  ROPE_K,
+  ROPE_RESULT_Y_MAX,
   TILE,
   VIEW_W,
   WALK_SPEED,
@@ -320,6 +322,8 @@ export function step(world: World, inputs: PlayerInput[]) {
     displacement.set(p, { dx: p.x - x0, dy: p.y - y0 });
   }
 
+  if (world.level.rope !== null) applyRope(world, world.level.rope, camBounds);
+
   // 5. Morte: cair do mapa reinicia a fase
   if (ps.some((p) => p.y > world.level.height + TILE * 2)) {
     resetWorld(world);
@@ -344,6 +348,52 @@ function snapIntoHole(world: World, b: Box) {
   b.x = snapped;
   const blocked = tileHit(world.level, b) || bodies(world).some((o) => o !== b && overlaps(b, o));
   if (blocked || supportOf(world, b) !== null) b.x = x;
+}
+
+/**
+ * Corda (DistanceConstraintComponent): liga os jogadores ativos em sequência pelo índice. Cada par
+ * só puxa quando a distância entre os centros passa do comprimento; a força é ROPE_K × excesso na
+ * direção do vizinho, dividida entre os dois. Quem está no chão e segura alguém pendurado não é
+ * arrastado (ancora) nem puxado para baixo. Puxão horizontal contra parede vira subida.
+ */
+function applyRope(world: World, length: number, camBounds?: [number, number]) {
+  const chain = active(world);
+  const pull = new Map<Player, { dx: number; dy: number }>();
+  const center = (p: Player) => ({ x: p.x + p.w / 2, y: p.y + p.h / 2 });
+  for (let i = 0; i + 1 < chain.length; i++) {
+    const a = chain[i];
+    const b = chain[i + 1];
+    const ca = center(a);
+    const cb = center(b);
+    const d = Math.hypot(cb.x - ca.x, cb.y - ca.y);
+    if (d <= length) continue;
+    const ux = (cb.x - ca.x) / d;
+    const uy = (cb.y - ca.y) / d;
+    const aAnchor = a.onGround && !b.onGround;
+    const bAnchor = b.onGround && !a.onGround;
+    const shareA = aAnchor ? 0 : bAnchor ? 1 : 0.5;
+    const f = ROPE_K * (d - length);
+    for (const [p, share, sx, sy] of [
+      [a, shareA, ux, uy],
+      [b, 1 - shareA, -ux, -uy],
+    ] as const) {
+      const acc = pull.get(p) ?? { dx: 0, dy: 0 };
+      acc.dx += f * share * sx;
+      acc.dy += f * share * sy;
+      pull.set(p, acc);
+    }
+  }
+  for (const [p, { dx, dy: rawDy }] of pull) {
+    let dy = rawDy;
+    if (p.onGround && dy > 0) dy = 0; // no chão não é puxado para baixo
+    const { hit } = moveAxis(world, p, dx, "x", new Set(), camBounds);
+    if (hit && Math.abs(dx) > 0 && dy <= 0) dy -= Math.abs(dx); // contra a parede: sobe
+    dy = Math.max(-ROPE_RESULT_Y_MAX, Math.min(ROPE_RESULT_Y_MAX, dy));
+    moveAxis(world, p, dy, "y", new Set());
+    if (dy < 0 && p.vy > 0) p.vy = 0;
+    if (dx !== 0 && Math.sign(dx) !== Math.sign(p.vx) && !p.onGround) p.vx = 0;
+    p.onGround = supportOf(world, p) !== null;
+  }
 }
 
 function updateSwitches(world: World) {
