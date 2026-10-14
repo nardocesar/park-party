@@ -184,3 +184,37 @@ export function crossBlinkBridge(w: World, blinkIndex: number, frames = 70, walk
   waitFor(w, () => b.visible && b.timer > frames, 900);
   drive(w, () => ({ ...NO_INPUT, right: true }), () => false, walkFrames);
 }
+
+/** Espera o pistão `index` recolher (parado com folga) e todos passam até `pastCol`. */
+export function passPiston(w: World, index: number, waitCol: number, pastCol: number) {
+  const piston = w.pushers[index];
+  const byX = [...w.players].sort((p, q) => q.x - p.x); // o da frente fica mais perto do pistão
+  goTo(w, byX.map((p, i) => [p, mid(waitCol - i)] as [Player, number]), 1500, { unstick: false });
+  waitFor(w, () => piston.state === "idle" && piston.timer > 80, 900);
+  // cada um para assim que passa de `pastCol` (não segue andando enquanto espera o outro)
+  const walk = walker(w);
+  const past = (p: Player) => p.x > pastCol * TILE && p.onGround;
+  for (let f = 0; f < 600 && !w.players.every(past); f++) step(w, w.players.map((p, i) => (past(p) ? NO_INPUT : walk(i, f))));
+  return w.players.every(past);
+}
+
+const railLength = (w: World, index: number) => {
+  const path = w.level.rails[index].path;
+  let t = 0;
+  for (let i = 1; i < path.length; i++) t += Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+  return t;
+};
+
+/** Todos sobem no trilho `index` (nas colunas `cols`) e esperam ele chegar ao fim. */
+export function rideRail(w: World, index: number, cols: number[], max = 4000) {
+  const rail = w.rails[index];
+  const def = w.level.rails[index];
+  if (def.need === 0) waitFor(w, () => rail.s === 0 && rail.wait > 30, 1500);
+  // quem está mais à frente fica com a coluna mais à frente (ninguém precisa passar pelo outro)
+  const byX = [...w.players].sort((p, q) => p.x - q.x);
+  const sortedCols = [...cols].sort((x, y) => x - y);
+  goTo(w, byX.map((p, i) => [p, mid(sortedCols[i])] as [Player, number]), def.need === 0 ? 90 : 1500, { unstick: false });
+  const end = railLength(w, index);
+  waitFor(w, () => rail.s === end && (def.need !== 0 || rail.wait > 0), max);
+  return rail.s === end;
+}

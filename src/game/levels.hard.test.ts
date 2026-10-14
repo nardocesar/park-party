@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TILE } from "./engine/constants";
-import { climbOn, crossBlinkBridge, finish, goTo, jumpOnto, mid, rapel, relay, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
+import { climbOn, crossBlinkBridge, finish, goTo, jumpOnto, mid, passPiston, rapel, relay, rideRail, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
 import { NO_INPUT, step } from "./engine/world";
 
 /** Fases difíceis: cada roteiro compõe trechos (empurrar, empilhar, elevador…) com 2 jogadores. */
@@ -128,6 +128,36 @@ describe("fases difíceis", () => {
   it("4-4: ponte longa sem pular, valas e esmagadores", () => {
     const w = createWorld2("4-4");
     tightBridge(w, 10);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("5-3: quatro pistões e a plataforma automática sobre espinhos", () => {
+    const w = createWorld2("5-3");
+    expect(passPiston(w, 0, 7, 14)).toBe(true);
+    expect(passPiston(w, 1, 15, 22)).toBe(true);
+    expect(w.resets).toBe(0);
+    goTo(w, [[w.players[1], mid(23)], [w.players[0], mid(22)]], 600, { unstick: false });
+    expect(rideRail(w, 0, [25, 24])).toBe(true);
+    goTo(w, [[w.players[1], mid(41)], [w.players[0], mid(40)]], 600, { unstick: false });
+    expect(w.resets).toBe(0);
+    expect(passPiston(w, 2, 43, 50)).toBe(true);
+    expect(passPiston(w, 3, 51, 58)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("5-4: trilho de todos, pistões e elevador de todos", () => {
+    const w = createWorld2("5-4");
+    expect(rideRail(w, 0, [7, 8])).toBe(true);
+    // descem juntos do trilho (que exige todos e volta quando alguém sai)
+    goTo(w, [[w.players[1], mid(31)], [w.players[0], mid(30)]], 600, { unstick: false });
+    expect(w.resets).toBe(0);
+    expect(passPiston(w, 0, 34, 41)).toBe(true);
+    expect(passPiston(w, 1, 42, 49)).toBe(true);
+    goTo(w, [[w.players[0], mid(52)], [w.players[1], mid(53)]], 900, { unstick: false });
+    waitFor(w, () => w.lifts[0].y === (FLOOR - 4) * TILE, 900);
+    expect(w.lifts[0].y).toBe((FLOOR - 4) * TILE);
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });

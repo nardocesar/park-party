@@ -272,30 +272,7 @@ describe("fases", () => {
       finish(w);
     });
 
-    it("5-3 tem solução: passar pelos pistões quando recolhem", () => {
-      const w = createWorld(parseLevel(at("5-3")), 2);
-      for (const [i, piston] of w.pushers.entries()) {
-        const pit = piston.x0 - 2 * TILE; // vala com espinho antes do pistão
-        goTo(w, [pit - 3 * TILE, pit - 2 * TILE]);
-        for (let f = 0; f < 900 && !(piston.state === "idle" && piston.timer > 80); f++) step(w, [NO_INPUT, NO_INPUT]);
-        const walk = walker(w);
-        const past = piston.x0 + 2 * TILE;
-        for (let f = 0; f < 300 && !w.players.every((p) => p.x > past); f++) {
-          step(w, w.players.map((p, j) => (p.x > past ? NO_INPUT : walk(j, f))));
-        }
-        expect(w.resets, `pistão ${i}`).toBe(0);
-      }
-      finish(w);
-    });
 
-    it("5-4 tem solução: trilho em L sem pular sob os espinhos", () => {
-      const w = createWorld(parseLevel(at("5-4")), 2);
-      goTo(w, [7 * TILE + 2, 8 * TILE + 14]);
-      rideToEnd(w, 4000);
-      expect(w.resets).toBe(0);
-      expect(w.rails[0].s).toBe(railEnd(w));
-      finish(w);
-    });
   });
 
   describe("Mundos 6 e 7 — vento e molas", () => {

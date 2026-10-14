@@ -425,46 +425,61 @@ const WORLD_5: LevelDef[] = [
     },
     { rails: [{ path: [[13, FLOOR + 1], [13, FLOOR - 3]], w: 3, need: 0, wait: 1.5 }] },
   ),
-  // 5-3: pistões que empurram de volta para valas com espinho; passar quando recolhem
+  // 5-3 (difícil): quatro pistões com valas de espinho e uma plataforma automática sobre espinhos
+  // que é preciso pegar e largar na hora certa.
   build(
-    "Empurrão",
-    44,
+    "Linha de pistões",
+    72,
     ROWS,
     (g) => {
       spawns(g);
-      for (const c of [10, 22]) g.set(c, FLOOR + 1, ".");
-      g.set(31, FLOOR, "K");
-      g.set(40, FLOOR, "D");
+      for (const c of [10, 18, 46, 54]) g.set(c, FLOOR + 1, ".");
+      g.fill(24, 37, FLOOR + 1, ROWS - 1, ".");
+      g.set(60, FLOOR, "K");
+      g.set(68, FLOOR, "D");
     },
     {
       thorns: [
-        { col: 10, row: FLOOR + 1, w: 1, h: 1 },
-        { col: 22, row: FLOOR + 1, w: 1, h: 1 },
+        ...[10, 18, 46, 54].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+        { col: 24, row: FLOOR + 1, w: 14, h: 1 },
       ],
       pushers: [
         { col: 12, row: FLOOR, w: 1, h: 1, dx: -2 },
-        { col: 24, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 20, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 48, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 56, row: FLOOR, w: 1, h: 1, dx: -2 },
       ],
+      rails: [{ path: [[24, FLOOR + 1], [35, FLOOR + 1]], w: 3, need: 0, wait: 1.5, speed: 0.75 }],
     },
   ),
-  // 5-4: trilho em L sobre espinhos, com espinhos no teto do trecho alto
+  // 5-4 (difícil): trilho em L que exige todos sob espinhos no teto, dois pistões e um elevador de
+  // todos até a porta.
   build(
     "Linha de montagem",
-    44,
-    ROWS,
+    66,
+    ROWS + 1,
     (g) => {
       spawns(g);
-      g.fill(7, 28, FLOOR + 1, ROWS - 1, ".");
+      g.fill(7, 28, FLOOR + 1, FLOOR + 2, ".");
       g.fill(15, 22, 0, 2);
-      g.set(34, FLOOR, "K");
-      g.set(40, FLOOR, "D");
+      for (const c of [37, 45]) g.set(c, FLOOR + 1, ".");
+      g.fill(52, 54, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(55, 64, FLOOR - 4, FLOOR + 2);
+      g.set(58, FLOOR - 5, "K");
+      g.set(62, FLOOR - 5, "D");
     },
     {
       rails: [{ path: [[7, FLOOR + 1], [13, FLOOR + 1], [13, FLOOR - 3], [26, FLOOR - 3], [26, FLOOR + 1]], w: 3, need: ALL }],
       thorns: [
         { col: 7, row: FLOOR + 1, w: 22, h: 1 },
         { col: 15, row: 3, w: 8, h: 1, dir: "down" },
+        ...[37, 45].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
       ],
+      pushers: [
+        { col: 39, row: FLOOR, w: 1, h: 1, dx: -2 },
+        { col: 47, row: FLOOR, w: 1, h: 1, dx: -2 },
+      ],
+      lifts: [{ col: 52, row: FLOOR + 1, w: 3, dy: -5, need: ALL }],
     },
   ),
 ];
