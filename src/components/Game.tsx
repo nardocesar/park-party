@@ -36,6 +36,8 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
   const [elapsed, setElapsed] = useState(0);
   const [resets, setResets] = useState(0);
   const [clearedMs, setClearedMs] = useState<number | null>(null);
+  // a próxima fase só abre depois que a conclusão foi gravada (desbloqueio vem do banco)
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -49,13 +51,14 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
     let raf = 0;
     let last = performance.now();
     let acc = 0;
-    let saved = false;
+    let finished = false;
+    let canAdvance = false;
     let hudTimer = 0;
 
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "KeyR") resetWorld(world);
       if (e.code === "Escape") router.push("/");
-      if (e.code === "Enter" && world.status === "cleared" && nextHref) router.push(nextHref);
+      if (e.code === "Enter" && canAdvance && nextHref) router.push(nextHref);
     };
     window.addEventListener("keydown", onKey);
 
@@ -68,11 +71,16 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
       }
       render(ctx, world);
 
-      if (world.status === "cleared" && !saved) {
-        saved = true;
+      if (world.status === "cleared" && !finished) {
+        finished = true;
         const ms = Math.round(world.frame * STEP_MS);
         setClearedMs(ms);
-        saveTime(levelId, playerCount, ms).catch(() => {});
+        saveTime(levelId, playerCount, ms)
+          .catch(() => {})
+          .finally(() => {
+            canAdvance = true;
+            setSaved(true);
+          });
       }
       if (now - hudTimer > 200) {
         hudTimer = now;
@@ -116,7 +124,9 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg bg-stone-900/70 text-white">
             <p className="text-3xl font-bold">Fase concluída!</p>
             <p className="tabular-nums">{formatTime(clearedMs)}</p>
-            {nextHref ? (
+            {!saved ? (
+              <p className="text-sm text-stone-300">Salvando…</p>
+            ) : nextHref ? (
               <Link href={nextHref} className="rounded bg-amber-400 px-4 py-2 font-semibold text-stone-900">
                 Próxima fase (Enter)
               </Link>

@@ -20,3 +20,9 @@ export async function getBestTime(levelId: number, playerCount: number): Promise
 export async function insertTime(levelId: number, playerCount: number, timeMs: number) {
   await db.insert(bestTimes).values({ levelId, playerCount, timeMs });
 }
+
+/** Fases concluídas pelo menos uma vez (qualquer número de jogadores). */
+export async function clearedLevelIds(): Promise<Set<number>> {
+  const rows = await db.selectDistinct({ levelId: bestTimes.levelId }).from(bestTimes);
+  return new Set(rows.map((r) => r.levelId));
+}
