@@ -17,22 +17,25 @@ Status: `todo` | `investigando` | `implementado` | `verificado` | `bloqueado`
 |---|---|---|---|---|
 | 1 | Movimento, pulo variável, gravidade, coyote time | verificado | 00-overview (consts `Game.SideAction`) | `world.test.ts` › movimento e pulo |
 | 2 | Colisão tiles + AABB entre jogadores; empilhar e ser carregado | verificado | 00-overview (inferido) | `world.test.ts` › empilhar |
-| 3 | Multiplayer local (teclado 4 + Gamepad API) | implementado | — | e2e `play.spec.ts` cobre teclado; gamepad não testado |
+| 3 | Multiplayer local (teclado 4 + Gamepad API) | verificado | — | `input.test.ts` (teclado + gamepad mockado), e2e `play.spec.ts`; gamepad físico não testado |
 | 4 | Chave compartilhada, porta, vitória com todos na porta | verificado | `KeyComponent`, `GoalComponent` | `world.test.ts` › chave, porta |
 | 5 | Morte/reset coletivo | verificado | — | `world.test.ts` › morte e reset |
-| 6 | Câmera compartilhada + borda da tela bloqueia | implementado | `calcScreenEndWalkVeloX` | sem teste dedicado |
-| 7 | Caixa empurrável que exige N jogadores | todo | `PushBoxComponent` | |
-| 8 | Botões/placas de pressão e portões | todo | `SwitchComponent`, `GateComponent` | |
-| 9 | Plataformas/elevadores com carga mínima | todo | `WeightedLiftComponent` | |
-| 10 | Formato de fase + 5 fases próprias no Postgres | implementado | — | 3 de 5 fases; `levels.test.ts` resolve as 3 com bot de 2 jogadores |
-| 11 | Seleção de fase, progresso, melhores tempos | implementado | — | menu + tempos gravados em `best_times`; falta desbloqueio progressivo |
+| 6 | Câmera compartilhada + borda da tela bloqueia | verificado | `calcScreenEndWalkVeloX` | `world.test.ts` › câmera compartilhada |
+| 7 | Caixa empurrável que exige N jogadores | verificado | `PushBoxComponent` (regra inferida; `VELO_X` desconhecido) | `world.test.ts` › caixa; fase 1-4 |
+| 8 | Botões/placas de pressão e portões | verificado | `SwitchComponent`, `GateComponent` (velocidades desconhecidas) | `world.test.ts` › botão e portão; fase 1-4 |
+| 9 | Plataformas/elevadores com carga mínima | verificado | `WeightedLiftComponent` (`WAIT_TIME`, `MOVE_SPEED_DEFAULT` desconhecidos) | `world.test.ts` › elevador; fase 1-5 |
+| 10 | Formato de fase + 5 fases próprias no Postgres | verificado | — | 5 fases; `levels.test.ts` resolve todas com 2 jogadores |
+| 11 | Seleção de fase, progresso, melhores tempos | verificado | — | `progress.test.ts`; desbloqueio e avanço verificados no navegador |
 | 12 | Multiplayer online | todo | | Só com aprovação do Carlos |
 
 ## Desconhecidos abertos
 
-- `unk_32ca01d6…`: valores FP do jogador/objetos no Quantum. Para fechar, o REA
-  precisa de um provider nativo (Ghidra 12.1 + JDK 21) numa fatia arm64
-  do `GameAssembly.dylib`.
+- `unk_32ca01d6…`: valores FP do jogador/objetos no Quantum. Em andamento:
+  Ghidra 12.1.4 instalado (`~/tools`, decompilador arm64 compilado das fontes),
+  fatia arm64 em `~/tools/re-targets/`, REA com `REA_GHIDRA_STARTUP_TIMEOUT_MS=7200000`.
+  Caminho: string `PhotonQuantumCode.dll` → Il2CppCodeGenModule → `methodPointers[rid-1]`
+  → `.cctor` (rids: PlayerComponent 4161, QPlayerDefine 6853, PushBox 4444,
+  Key 3056, WeightedLift 5876, Gate 2510, Switch 5338).
 
 ## Notas operacionais
 

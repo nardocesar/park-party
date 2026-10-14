@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, PLAYER_SIZE, TILE } from "./constants";
+import { GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, PLAYER_SIZE, TILE, VIEW_W } from "./constants";
 import { parseLevel } from "./level";
 import { createWorld, NO_INPUT, step, type PlayerInput } from "./world";
 
@@ -455,5 +455,22 @@ describe("caixa encaixa em buraco da mesma largura", () => {
     run(w, 400, [RIGHT, RIGHT]);
     expect(w.boxes[0].x).toBe(10 * TILE);
     expect(w.boxes[0].y).toBe(4 * TILE);
+  });
+});
+
+describe("câmera compartilhada", () => {
+  const WIDE = parseLevel({
+    name: "wide",
+    map: ["#" + ".".repeat(58) + "#", "#" + ".".repeat(58) + "#", "#.1.2" + ".".repeat(54) + "#", "#".repeat(60)],
+  });
+
+  it("segue a média dos jogadores e a borda da tela impede que se separem", () => {
+    const w = createWorld(WIDE, 2);
+    const [a, b] = w.players;
+    run(w, 600, [NO_INPUT, RIGHT]);
+    // b anda, a fica: b para na borda direita da câmera
+    expect(b.x + b.w).toBeCloseTo(w.cameraX + VIEW_W, 5);
+    expect(a.x).toBeGreaterThanOrEqual(w.cameraX - 0.001);
+    expect(b.x - a.x).toBeLessThanOrEqual(VIEW_W);
   });
 });
