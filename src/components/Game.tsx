@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { saveTime } from "@/app/play/[slug]/actions";
+import { createAudio, type Audio } from "@/game/audio";
 import { FPS, VIEW_H, VIEW_W } from "@/game/engine/constants";
 import { parseLevel, type LevelDef } from "@/game/engine/level";
 import { createWorld, resetWorld, step, type World } from "@/game/engine/world";
@@ -30,6 +31,10 @@ declare global {
 
 const formatTime = (ms: number) => `${(ms / 1000).toFixed(2)} s`;
 
+// um só contexto de áudio para todas as fases (o navegador só o libera após um gesto)
+let sharedAudio: Audio | null = null;
+const getAudio = () => (sharedAudio ??= createAudio());
+
 export default function Game({ levelId, name, def, playerCount, nextHref, bestMs }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
@@ -38,6 +43,13 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
   const [clearedMs, setClearedMs] = useState<number | null>(null);
   // a próxima fase só abre depois que a conclusão foi gravada (desbloqueio vem do banco)
   const [saved, setSaved] = useState(false);
+  // começa "com som" no servidor; o estado salvo no navegador entra após montar
+  const [muted, setMuted] = useState(false);
+  const toggleMute = () => {
+    const audio = getAudio();
+    audio.setMuted(!audio.muted());
+    setMuted(audio.muted());
+  };
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -55,8 +67,18 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
     let canAdvance = false;
     let hudTimer = 0;
 
+    const audio = getAudio();
+    setMuted(audio.muted());
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "KeyR") resetWorld(world);
+      audio.unlock();
+      if (e.code === "KeyR") {
+        resetWorld(world);
+        audio.play("restart");
+      }
+      if (e.code === "KeyM") {
+        audio.setMuted(!audio.muted());
+        setMuted(audio.muted());
+      }
       if (e.code === "Escape") router.push("/");
       if (e.code === "Enter" && canAdvance && nextHref) router.push(nextHref);
     };
@@ -67,6 +89,7 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
       last = now;
       while (acc >= STEP_MS) {
         step(world, readInputs(keyboard.down, playerCount));
+        for (const e of world.events) audio.play(e);
         acc -= STEP_MS;
       }
       render(ctx, world);
@@ -106,9 +129,20 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
           ← Park Party
         </Link>
         <span className="font-western text-base text-gold">{name}</span>
-        <span className="tabular-nums">
-          {formatTime(elapsed)} · mortes {resets}
-          {bestMs !== null && ` · recorde ${formatTime(bestMs)}`}
+        <span className="flex items-center gap-3">
+          <span className="tabular-nums">
+            {formatTime(elapsed)} · mortes {resets}
+            {bestMs !== null && ` · recorde ${formatTime(bestMs)}`}
+          </span>
+          <button
+            type="button"
+            onClick={toggleMute}
+            aria-label={muted ? "Ligar o som" : "Desligar o som"}
+            aria-pressed={muted}
+            className="rounded border border-plank-edge bg-plank px-2 py-0.5 text-xs hover:bg-plank-edge"
+          >
+            {muted ? "🔇 som" : "🔊 som"}
+          </button>
         </span>
       </div>
 
@@ -146,7 +180,7 @@ export default function Game({ levelId, name, def, playerCount, nextHref, bestMs
             J{i + 1}: {KEY_LABELS[i]} (ou gamepad {i + 1})
           </li>
         ))}
-        <li>R reinicia · Esc menu</li>
+        <li>R reinicia · M som · Esc menu</li>
       </ul>
     </div>
   );

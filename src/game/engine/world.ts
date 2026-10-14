@@ -116,6 +116,11 @@ export type Gate = Rect & { id: string; open: number; needAll: boolean };
 export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean };
 export type Door = Rect & { open: boolean };
 
+/** O que aconteceu no último quadro, para o som (e outros efeitos) reagirem. */
+export type GameEvent =
+  | "jump" | "flip" | "spring" | "warp" | "crumble" | "switch"
+  | "key" | "keyPass" | "door" | "enter" | "clear" | "death";
+
 export type World = {
   level: Level;
   players: Player[];
@@ -134,6 +139,8 @@ export type World = {
   status: "playing" | "cleared";
   frame: number;
   resets: number;
+  /** Eventos do último `step` (a lista é recriada a cada quadro). */
+  events: GameEvent[];
 };
 
 export function createWorld(level: Level, playerCount: number): World {
@@ -161,6 +168,7 @@ export function createWorld(level: Level, playerCount: number): World {
     status: "playing",
     frame: 0,
     resets: 0,
+    events: [],
   };
   for (let i = 0; i < playerCount; i++) {
     world.players.push({
@@ -313,7 +321,9 @@ function countPushers(box: Box, dir: 1 | -1, ps: Player[], inputs: PlayerInput[]
 }
 
 export function step(world: World, inputs: PlayerInput[]) {
+  world.events = [];
   if (world.status !== "playing") return;
+  const emit = (e: GameEvent) => world.events.push(e);
   world.frame++;
   const ps = active(world);
   const support = new Map<Body, Support>();
@@ -372,6 +382,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     if (world.level.flipGravity && input.down && !p.downHeld && grounded) {
       p.gravDir = p.gravDir > 0 ? -1 : 1;
       p.vy = 0;
+      emit("flip");
       p.coyote = 0;
     }
     p.downHeld = input.down ?? false;
@@ -381,6 +392,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     if (input.jump && !p.jumpHeld && p.coyote > 0) {
       p.vy = JUMP_VELO * gd * p.scale;
       p.coyote = 0;
+      emit("jump");
     }
     p.jumpHeld = input.jump;
     const g = (input.jump && p.vy * gd < 0 ? GRAVITY_WEAK : GRAVITY) * p.scale;
@@ -390,6 +402,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     const feet = { x: p.x, y: p.y + p.h, w: p.w, h: EPS };
     const spring = gd > 0 && world.level.springs.find((sp) => powered(sp.target) && overlaps(feet, sp));
     if (spring) {
+      if (p.vy !== spring.vy) emit("spring");
       p.vy = spring.vy;
       if (spring.vx !== 0) p.vx = spring.vx;
       p.coyote = 0;
@@ -466,6 +479,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     crushed ||= pushOut(world, p, p.offset - before, 0, new Set());
   }
   if (crushed) {
+    emit("death");
     resetWorld(world);
     return;
   }
@@ -474,6 +488,7 @@ export function step(world: World, inputs: PlayerInput[]) {
   for (const f of world.falls) {
     if (!f.touched && bodies(world).some((b) => support.get(b) === f)) {
       f.touched = true;
+      emit("crumble");
       f.timer = Math.round(world.level.falls[f.index].wait * FPS);
     }
     const y0 = f.y;
@@ -536,6 +551,7 @@ export function step(world: World, inputs: PlayerInput[]) {
   const outOfMap = (p: Player) => p.y > world.level.height + TILE * 2 || p.y < -TILE * 2;
   const tooSmall = applyScaleSwitches(world);
   if (tooSmall || ps.some((p) => outOfMap(p) || deadly.some((d) => overlaps(p, d)))) {
+    emit("death");
     resetWorld(world);
     return;
   }
@@ -716,6 +732,7 @@ function updateWarps(world: World) {
     const toucher = ps.find((p) => p.warpCooldown === 0 && overlaps(p, wp));
     if (!toucher) continue;
     const group = wp.all ? ps : [toucher];
+    world.events.push("warp");
     group.forEach((p, i) => {
       Object.assign(p, { x: wp.to.x + (TILE - p.w) / 2 + i * TILE, y: wp.to.y + TILE - p.h, vx: 0, vy: 0, warpCooldown: 30 });
     });
@@ -726,6 +743,7 @@ function updateSwitches(world: World) {
   const things = bodies(world);
   for (const sw of world.switches) {
     const wasPressed = sw.pressed;
+    const wasOn = sw.on;
     sw.pressed = things.some((b) => overlaps(b, sw));
     if (sw.delay > 0) {
       if (sw.pressed && !wasPressed && sw.countdown === 0 && !sw.latched) sw.countdown = Math.round(sw.delay * FPS);
@@ -738,6 +756,7 @@ function updateSwitches(world: World) {
     } else {
       sw.on = sw.pressed;
     }
+    if (sw.on && !wasOn) world.events.push("switch");
   }
   for (const g of world.gates) {
     const mine = world.switches.filter((sw) => sw.target === g.id);
@@ -776,6 +795,7 @@ function updateKey(world: World) {
       key.excluded = key.holder;
       key.excludeTimer = KEY_EXCLUDE_FRAMES;
     }
+    world.events.push(key.holder === null ? "key" : "keyPass");
     key.holder = p.index;
     break;
   }
@@ -799,11 +819,18 @@ function updateDoor(world: World) {
     door.open = true;
     key.used = true;
     key.holder = null;
+    world.events.push("door");
   }
   if (!door.open) return;
   for (const p of active(world)) {
     const cx = p.x + p.w / 2;
-    if (cx > door.x && cx < door.x + door.w && overlaps(p, door)) p.cleared = true;
+    if (cx > door.x && cx < door.x + door.w && overlaps(p, door)) {
+      p.cleared = true;
+      world.events.push("enter");
+    }
   }
-  if (world.players.every((p) => p.cleared)) world.status = "cleared";
+  if (world.players.every((p) => p.cleared)) {
+    world.status = "cleared";
+    world.events.push("clear");
+  }
 }
