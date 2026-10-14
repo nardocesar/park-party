@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GRAVITY, JUMP_VELO, PLAYER_SIZE, TILE } from "./constants";
+import { GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, PLAYER_SIZE, TILE } from "./constants";
 import { parseLevel } from "./level";
 import { createWorld, NO_INPUT, step, type PlayerInput } from "./world";
 
@@ -409,6 +409,18 @@ describe("elevador com peso", () => {
     expect(b.y + b.h).toBe(a.y);
   });
 
+  it("espera um pouco no fim do curso antes de voltar (WAIT_TIME)", () => {
+    const w = createWorld(LIFTED, 2);
+    const [a, b] = w.players;
+    a.x = 9 * TILE;
+    b.x = 11 * TILE;
+    run(w, 200, [NO_INPUT, NO_INPUT]);
+    a.y = -200;
+    a.x = 2 * TILE;
+    run(w, LIFT_WAIT_FRAMES - 5, [NO_INPUT, NO_INPUT]);
+    expect(w.lifts[0].y).toBe(liftTop + 2 * TILE);
+  });
+
   it("volta à posição inicial quando o peso sai", () => {
     const w = createWorld(LIFTED, 2);
     const [a, b] = w.players;
@@ -421,5 +433,27 @@ describe("elevador com peso", () => {
     run(w, 300, [NO_INPUT, NO_INPUT]);
     expect(w.lifts[0].y).toBe(liftTop);
     expect(b.y + b.h).toBe(liftTop);
+  });
+});
+
+describe("caixa encaixa em buraco da mesma largura", () => {
+  it("cai no buraco exato mesmo com passo fracionário", () => {
+    const level = parseLevel({
+      name: "exactpit",
+      map: [
+        "#....................#",
+        "#....................#",
+        "#....................#",
+        "#.1.2................#",
+        "##########...#########",
+        "##########...#########",
+        "######################",
+      ],
+      boxes: [{ col: 6, row: 2, w: 3, h: 2, need: 2 }],
+    });
+    const w = createWorld(level, 2);
+    run(w, 400, [RIGHT, RIGHT]);
+    expect(w.boxes[0].x).toBe(10 * TILE);
+    expect(w.boxes[0].y).toBe(4 * TILE);
   });
 });

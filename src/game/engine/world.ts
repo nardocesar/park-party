@@ -12,6 +12,7 @@ import {
   KEY_EXCLUDE_FRAMES,
   KEY_SIZE,
   LIFT_SPEED,
+  LIFT_WAIT_FRAMES,
   PLAYER_SIZE,
   TILE,
   VIEW_W,
@@ -39,7 +40,16 @@ export type Player = Rect & {
 export type Box = Rect & { kind: "box"; index: number; vy: number; need: number; pushers: number };
 
 /** Plataforma cinemática: não colide, só carrega quem está em cima. */
-export type Lift = Rect & { kind: "lift"; index: number; startY: number; travel: number; need: number; weight: number };
+export type Lift = Rect & {
+  kind: "lift";
+  index: number;
+  startY: number;
+  travel: number;
+  need: number;
+  weight: number;
+  /** Frames que ainda espera no fim do curso depois que o peso sai. */
+  wait: number;
+};
 
 /** Tudo que é sólido e se move: jogadores, caixas e elevadores. */
 type Body = Player | Box | Lift;
@@ -75,7 +85,7 @@ export function createWorld(level: Level, playerCount: number): World {
     switches: level.switches.map((sw) => ({ ...sw, on: false })),
     gates: level.gates.map((g) => ({ ...g, open: 0 })),
     lifts: level.lifts.map((l, index) => ({
-      kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0,
+      kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0, wait: 0,
     })),
     key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false },
     door: { x: level.door.x, y: level.door.y, w: DOOR_W, h: DOOR_H, open: false },
@@ -112,7 +122,7 @@ function placeEntities(world: World) {
   for (const b of world.boxes) placeBox(world, b);
   for (const sw of world.switches) sw.on = false;
   for (const g of world.gates) g.open = 0;
-  for (const l of world.lifts) Object.assign(l, { y: l.startY, weight: 0 });
+  for (const l of world.lifts) Object.assign(l, { y: l.startY, weight: 0, wait: 0 });
   Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
   world.door.open = false;
   world.status = "playing";
@@ -260,7 +270,10 @@ export function step(world: World, inputs: PlayerInput[]) {
       }
     }
     l.weight = [...stack].filter((b) => b.kind === "player").length;
-    const target = l.startY + (l.weight >= Math.min(l.need, world.players.length) ? l.travel : 0);
+    const loaded = l.weight >= Math.min(l.need, world.players.length);
+    if (loaded) l.wait = LIFT_WAIT_FRAMES;
+    else if (l.wait > 0) l.wait--;
+    const target = l.startY + (loaded || l.wait > 0 ? l.travel : 0);
     const y0 = l.y;
     l.y += Math.max(-LIFT_SPEED, Math.min(LIFT_SPEED, target - l.y));
     displacement.set(l, { dx: 0, dy: l.y - y0 });
@@ -276,7 +289,10 @@ export function step(world: World, inputs: PlayerInput[]) {
     const x0 = b.x;
     const y0 = b.y;
     const riders = ridersOf(b);
-    if (dir !== 0) moveAxis(world, b, dir * BOX_SPEED, "x", riders);
+    if (dir !== 0) {
+      moveAxis(world, b, dir * BOX_SPEED, "x", riders);
+      snapIntoHole(world, b);
+    }
     b.vy = Math.min(GRAVITY_MAX, b.vy + GRAVITY);
     if (moveAxis(world, b, b.vy, "y", new Set()).hit) b.vy = 0;
     if (b.y > world.level.height + TILE * 2) placeBox(world, b);
@@ -314,6 +330,20 @@ export function step(world: World, inputs: PlayerInput[]) {
   updateKey(world);
   updateDoor(world);
   updateCamera(world);
+}
+
+/**
+ * A caixa anda em passos fracionários e nunca alinharia exatamente com um buraco da sua largura,
+ * ficando apoiada por uma fração de pixel. Se a posição alinhada ao tile mais próximo (a menos de um
+ * passo) não tem apoio nem colisão, encaixa nela para cair.
+ */
+function snapIntoHole(world: World, b: Box) {
+  const snapped = Math.round(b.x / TILE) * TILE;
+  if (snapped === b.x || Math.abs(snapped - b.x) > BOX_SPEED) return;
+  const x = b.x;
+  b.x = snapped;
+  const blocked = tileHit(world.level, b) || bodies(world).some((o) => o !== b && overlaps(b, o));
+  if (blocked || supportOf(world, b) !== null) b.x = x;
 }
 
 function updateSwitches(world: World) {

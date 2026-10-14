@@ -1,7 +1,16 @@
 import type { LevelDef } from "./engine/level";
 
+const ROWS = 11;
+const FLOOR = ROWS - 3; // última linha jogável acima do chão
+
 /** Monta o mapa ASCII por retângulos para evitar erro de alinhamento. */
-function build(name: string, cols: number, rows: number, draw: (g: Grid) => void): LevelDef {
+function build(
+  name: string,
+  cols: number,
+  rows: number,
+  draw: (g: Grid) => void,
+  extra: Omit<LevelDef, "name" | "map"> = {},
+): LevelDef {
   const cells = Array.from({ length: rows }, () => Array<string>(cols).fill("."));
   const g: Grid = {
     fill: (c0, c1, r0, r1, ch = "#") => {
@@ -11,12 +20,12 @@ function build(name: string, cols: number, rows: number, draw: (g: Grid) => void
       cells[r][c] = ch;
     },
   };
-  // paredes laterais e chão (2 linhas)
+  // paredes laterais e chão (da linha abaixo de FLOOR até o fim)
   g.fill(0, 0, 0, rows - 1);
   g.fill(cols - 1, cols - 1, 0, rows - 1);
-  g.fill(0, cols - 1, rows - 2, rows - 1);
+  g.fill(0, cols - 1, FLOOR + 1, rows - 1);
   draw(g);
-  return { name, map: cells.map((r) => r.join("")) };
+  return { name, map: cells.map((r) => r.join("")), ...extra };
 }
 
 type Grid = {
@@ -24,8 +33,6 @@ type Grid = {
   set: (c: number, r: number, ch: string) => void;
 };
 
-const ROWS = 11;
-const FLOOR = ROWS - 3; // última linha jogável acima do chão
 
 const spawns = (g: Grid) => "1234".split("").forEach((d, i) => g.set(2 + i, FLOOR, d));
 
@@ -62,4 +69,40 @@ export const LEVELS: LevelDef[] = [
     g.fill(33, 46, FLOOR - 2, FLOOR);
     g.set(42, FLOOR - 3, "D");
   }),
+  // 1-4: a caixa grande (2 jogadores) cai no buraco e vira ponte; a pequena segura o botão do portão.
+  // Uma linha a mais de chão para o buraco ter fundo (2 tiles: quem cai fica preso, R reinicia).
+  build(
+    "Caixa de ponte",
+    52,
+    ROWS + 1,
+    (g) => {
+      spawns(g);
+      g.fill(15, 17, FLOOR + 1, FLOOR + 2, ".");
+      g.set(24, FLOOR, "K");
+      g.set(38, FLOOR, "#");
+      g.set(47, FLOOR, "D");
+    },
+    {
+      boxes: [
+        { col: 8, row: FLOOR - 1, w: 3, h: 2, need: 2 },
+        { col: 30, row: FLOOR, w: 1, h: 1, need: 1 },
+      ],
+      switches: [{ col: 37, row: FLOOR, target: "g1" }],
+      gates: [{ id: "g1", col: 42, row: FLOOR - 4, w: 1, h: 5 }],
+    },
+  ),
+  // 1-5: o elevador só sobe com os dois em cima (empilhados contam) até o topo do muro
+  build(
+    "Todos no elevador",
+    48,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(10, 13, FLOOR + 1, ROWS - 1, ".");
+      g.fill(14, 22, FLOOR - 2, ROWS - 1);
+      g.set(18, FLOOR - 3, "K");
+      g.set(42, FLOOR, "D");
+    },
+    { lifts: [{ col: 10, row: FLOOR + 1, w: 4, dy: -3, need: 2 }] },
+  ),
 ];

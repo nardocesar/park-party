@@ -27,3 +27,4 @@ export const BOX_SPEED = 0.75;
 export const SWITCH_H = 4;
 export const GATE_SPEED = 1;
 export const LIFT_SPEED = 0.5;
+export const LIFT_WAIT_FRAMES = 60;
