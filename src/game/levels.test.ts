@@ -605,4 +605,83 @@ describe("fases", () => {
       finish(w);
     });
   });
+
+  describe("Mundo 10 — cores", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    type P = World["players"][number];
+    const finish = (w: World) => {
+      const walk = walker(w);
+      for (let f = 0; f < 5000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    };
+    const drive = (w: World, inputs: (p: P, i: number) => PlayerInput, done: () => boolean, max = 900) => {
+      for (let f = 0; f < max && !done(); f++) step(w, w.players.map((p, i) => inputs(p, i)));
+    };
+    /** Só o jogador `i` anda com o bot genérico até `done`. */
+    const solo = (w: World, i: number, done: () => boolean, max = 1500) => {
+      const walk = walker(w);
+      for (let f = 0; f < max && !done(); f++) step(w, w.players.map((_, j) => (j === i ? walk(j, f) : NO_INPUT)));
+    };
+
+    it("10-1 tem solução: cada um empurra a própria caixa para o buraco", () => {
+      const w = createWorld(parseLevel(at("10-1")), 2);
+      solo(w, 0, () => w.boxes[0].y === 9 * TILE);
+      expect(w.boxes[0].y).toBe(9 * TILE);
+      solo(w, 1, () => w.boxes[1].y === 9 * TILE, 2500);
+      expect(w.boxes[1].y).toBe(9 * TILE);
+      finish(w);
+    });
+
+    it("10-2 tem solução: a caixa azul pula levando o laranja", () => {
+      const w = createWorld(parseLevel(at("10-2")), 2);
+      const [a, b] = w.players;
+      const box = w.boxes[0];
+      const lastX = new Map<P, number>();
+      const toward = (p: P, x: number, jump = false): PlayerInput => {
+        const stuck = p.onGround && Math.abs(p.x - (lastX.get(p) ?? NaN)) < 0.1;
+        lastX.set(p, p.x);
+        if (Math.abs(p.x - x) <= 1) return { ...NO_INPUT, jump };
+        return { ...NO_INPUT, left: p.x > x, right: p.x < x, jump: jump || stuck };
+      };
+      // b se posiciona ao lado da caixa; a sobe na caixa
+      // a (laranja) sobe na caixa azul — ele não a empurra; b (o dono) para ao lado sem encostar
+      drive(w, (q) => (q === a ? toward(q, 15 * TILE + 1) : NO_INPUT), () => a.onGround && Math.abs(a.y + a.h - box.y) < 0.01 && Math.abs(a.x - (15 * TILE + 1)) <= 1, 900);
+      drive(w, (q) => (q === b ? toward(q, 13 * TILE) : NO_INPUT), () => Math.abs(b.x - 13 * TILE) <= 1 && b.onGround, 900);
+      expect(a.y + a.h).toBe(box.y);
+      // b pula (soltando antes, para ser uma nova apertada); no ápice da caixa, a pula para a direita
+      step(w, [NO_INPUT, NO_INPUT]);
+      step(w, [NO_INPUT, NO_INPUT]);
+      step(w, [NO_INPUT, { ...NO_INPUT, jump: true }]);
+      drive(w, () => NO_INPUT, () => box.vy >= -0.5, 30);
+      drive(w, (q) => (q === a ? { ...NO_INPUT, right: true, jump: true } : NO_INPUT), () => a.onGround && a.y + a.h === 6 * TILE, 120);
+      expect(a.y + a.h).toBe(6 * TILE);
+      // a liga o botão da mola; b sobe pela mola
+      drive(w, (q) => (q === a ? toward(q, 20 * TILE + 1) : NO_INPUT), () => w.switches[0].on, 300);
+      drive(w, (q) => (q === b ? toward(q, 14 * TILE + 1) : NO_INPUT), () => b.vy < -1, 600);
+      drive(w, (q) => (q === b ? { ...NO_INPUT, right: true, jump: q.vy < 0 } : NO_INPUT), () => b.onGround && b.y + b.h === 6 * TILE, 200);
+      expect(b.y + b.h).toBe(6 * TILE);
+      finish(w);
+    });
+
+    it("10-3 tem solução: cada caixa no seu botão (sem pular perto do portão)", () => {
+      const w = createWorld(parseLevel(at("10-3")), 2);
+      const [a, b] = w.players;
+      // o azul vai primeiro (pula a caixa laranja), empurra a sua até o botão e para antes do portão
+      solo(w, 1, () => b.x > 23 * TILE - 2 && b.onGround);
+      // o laranja empurra a sua até o botão e para atrás do azul
+      solo(w, 0, () => a.x > 22 * TILE - 2 && a.onGround);
+      drive(w, () => NO_INPUT, () => w.gates[0].open === 1, 200);
+      expect(w.switches.every((sw) => sw.on)).toBe(true);
+      expect(w.gates[0].open).toBe(1);
+      finish(w);
+    });
+
+    it("10-4 tem solução: ponte azul e caixas nos botões", () => {
+      const w = createWorld(parseLevel(at("10-4")), 2);
+      solo(w, 1, () => w.boxes[0].y === 9 * TILE);
+      expect(w.boxes[0].y).toBe(9 * TILE);
+      finish(w);
+    });
+  });
 });

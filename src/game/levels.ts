@@ -739,6 +739,97 @@ const WORLD_9: LevelDef[] = [
   ),
 ];
 
+// Mundo 10 — Cores: caixas que só o dono empurra e que pulam com ele (ColorBoxComponent —
+// docs/re/08-color.md). Cor 0 = laranja (J1), cor 1 = azul (J2).
+const WORLD_10: LevelDef[] = [
+  // 10-1: caixas altas de cada cor viram ponte em buracos fundos — só o dono empurra
+  build(
+    "Sua cor",
+    46,
+    ROWS + 1,
+    (g) => {
+      spawns(g);
+      g.fill(14, 14, FLOOR + 1, FLOOR + 2, ".");
+      g.fill(28, 28, FLOOR + 1, FLOOR + 2, ".");
+      g.set(34, FLOOR, "K");
+      g.set(41, FLOOR, "D");
+    },
+    {
+      boxes: [
+        { col: 9, row: FLOOR - 1, w: 1, h: 2, need: 1, color: 0 },
+        { col: 22, row: FLOOR - 1, w: 1, h: 2, need: 1, color: 1 },
+      ],
+    },
+  ),
+  // 10-2: o azul pula e a caixa azul leva o laranja até o platô; lá em cima, o botão liga a mola
+  build(
+    "Caixa saltadora",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(16, 38, FLOOR - 2, FLOOR);
+      g.set(26, FLOOR - 3, "K");
+      g.set(35, FLOOR - 3, "D");
+    },
+    {
+      boxes: [{ col: 15, row: FLOOR, w: 1, h: 1, need: 1, color: 1 }],
+      springs: [{ col: 14, row: FLOOR, w: 1, vy: -9, target: "s" }],
+      switches: [{ col: 20, row: FLOOR - 3, target: "s" }],
+    },
+  ),
+  // 10-3: cada caixa colorida segura um dos botões do portão
+  build(
+    "Cada um no seu botão",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.set(12, FLOOR, "#");
+      g.set(20, FLOOR, "#");
+      g.set(30, FLOOR, "K");
+      g.set(38, FLOOR, "D");
+    },
+    {
+      boxes: [
+        { col: 7, row: FLOOR, w: 1, h: 1, need: 1, color: 0 },
+        { col: 15, row: FLOOR, w: 1, h: 1, need: 1, color: 1 },
+      ],
+      switches: [
+        { col: 11, row: FLOOR, target: "g1" },
+        { col: 19, row: FLOOR, target: "g1" },
+      ],
+      gates: [{ id: "g1", col: 25, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
+    },
+  ),
+  // 10-4: ponte da cor certa e depois as caixas pequenas nos botões
+  build(
+    "Arco-íris",
+    56,
+    ROWS + 1,
+    (g) => {
+      spawns(g);
+      g.fill(14, 14, FLOOR + 1, FLOOR + 2, ".");
+      g.set(28, FLOOR, "#");
+      g.set(36, FLOOR, "#");
+      g.set(45, FLOOR, "K");
+      g.set(51, FLOOR, "D");
+    },
+    {
+      boxes: [
+        { col: 9, row: FLOOR - 1, w: 1, h: 2, need: 1, color: 1 },
+        { col: 22, row: FLOOR, w: 1, h: 1, need: 1, color: 0 },
+        { col: 31, row: FLOOR, w: 1, h: 1, need: 1, color: 1 },
+      ],
+      switches: [
+        { col: 27, row: FLOOR, target: "g1" },
+        { col: 35, row: FLOOR, target: "g1" },
+      ],
+      gates: [{ id: "g1", col: 40, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
@@ -749,6 +840,7 @@ export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Molas", levels: WORLD_7 },
   { name: "De ponta-cabeça", levels: WORLD_8 },
   { name: "Portais", levels: WORLD_9 },
+  { name: "Cores", levels: WORLD_10 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

@@ -56,3 +56,6 @@ export const MOVEWALL_RETURN_SPEED = 0.75;
 export const MOVEWALL_IDLE = 1.5;
 export const MOVEWALL_WAIT = 1.5;
 export const MOVEWALL_W = 8;
+
+// Observado: ColorBoxComponent.normalProc empurra a 1 unidade/frame (0x10000) → 0,5 px/frame.
+export const COLOR_BOX_SPEED = 0.5;

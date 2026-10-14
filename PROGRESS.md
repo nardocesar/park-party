@@ -45,7 +45,7 @@ e não são extraídas nem copiadas. Cada mundo reimplementa uma mecânica a par
 | 7 | Trampolim (`JumpStand`); `JumpSwitch` pendente | verificado | 06-wind-spring |
 | 8 | Gravidade invertida (`PlayerComponent.reverseGravity`) | verificado | 07-gravity-warp |
 | 9 | Teletransporte (`Warp`) | verificado | 07-gravity-warp |
-| 10 | Caixas de cor / interruptores de cor (`ColorBox`, `ForceColorBox`) | todo | |
+| 10 | Caixas de cor (`ColorBox`) | verificado | 08-color |
 | 11 | Escuridão e holofote (`DarknessRect`, `SearchLight`, `Blackout`) | todo | |
 | 12 | Maioria (`MajorityController`) / escala (`ScaleSwitch`) | todo | |
 

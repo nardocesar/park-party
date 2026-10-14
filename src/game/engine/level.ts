@@ -5,7 +5,8 @@ import { DOOR_H, DOOR_W, FALL_WAIT, KEY_SIZE, PLAYER_SIZE, RAIL_SPEED, SWITCH_H,
  *   '#' bloco sólido   '.' vazio
  *   '1'..'8' spawn dos jogadores   'K' chave   'D' porta
  */
-export type BoxDef = { col: number; row: number; w: number; h: number; need: number };
+/** Caixa empurrável. `color`: só o jogador desse índice empurra, e ela pula quando ele pula (ColorBox). */
+export type BoxDef = { col: number; row: number; w: number; h: number; need: number; color?: number };
 /**
  * Botão de pressão: liga enquanto algo está em cima e abre o portão `target`.
  * `timer`: continua ligado N segundos depois de solto (SwitchComponent.m_TimerAddSecond).
@@ -96,7 +97,7 @@ export type Level = {
   key: Vec;
   door: Vec;
   /** Caixas em px; `need` é quantos jogadores precisam empurrar juntos. */
-  boxes: { x: number; y: number; w: number; h: number; need: number }[];
+  boxes: { x: number; y: number; w: number; h: number; need: number; color: number | null }[];
   switches: { x: number; y: number; w: number; h: number; target: string; timer: number; delay: number }[];
   gates: { id: string; x: number; y: number; w: number; h: number; needAll: boolean }[];
   blinks: { x: number; y: number; w: number; h: number; on: number; off: number; startOn: boolean; phase: number }[];
@@ -154,7 +155,9 @@ export function parseLevel(def: LevelDef): Level {
     spawns: spawnByDigit.sort((a, b) => a[0] - b[0]).map(([, v]) => v),
     key,
     door,
-    boxes: (def.boxes ?? []).map((b) => ({ x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE, need: b.need })),
+    boxes: (def.boxes ?? []).map((b) => ({
+      x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE, need: b.need, color: b.color ?? null,
+    })),
     switches: (def.switches ?? []).map((s) => ({
       x: s.col * TILE, y: s.ceiling ? s.row * TILE : (s.row + 1) * TILE - SWITCH_H, w: TILE, h: SWITCH_H, target: s.target,
       timer: s.timer ?? 0, delay: s.delay ?? 0,

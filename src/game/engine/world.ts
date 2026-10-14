@@ -1,6 +1,7 @@
 import {
   AIR_RESISTIVITY,
   BOX_SPEED,
+  COLOR_BOX_SPEED,
   COYOTE_FRAMES,
   THORN_RECTS_UP,
   FPS,
@@ -52,7 +53,7 @@ export type Player = Rect & {
   warpCooldown: number;
 };
 
-export type Box = Rect & { kind: "box"; index: number; vy: number; need: number; pushers: number };
+export type Box = Rect & { kind: "box"; index: number; vy: number; need: number; pushers: number; color: number | null };
 
 /** Plataforma cinemática: não colide, só carrega quem está em cima. */
 export type Lift = Rect & {
@@ -134,7 +135,9 @@ export function createWorld(level: Level, playerCount: number): World {
   const world: World = {
     level,
     players: [],
-    boxes: level.boxes.map((b, index) => ({ kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0 })),
+    boxes: level.boxes.map((b, index) => ({
+      kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0, color: b.color,
+    })),
     switches: level.switches.map((sw) => ({ ...sw, on: false, pressed: false, rest: 0, countdown: 0, latched: false })),
     gates: level.gates.map((g) => ({ ...g, open: 0 })),
     falls: level.falls.map((f, index) => ({ kind: "fall", index, x: f.x, y: f.y, w: f.w, h: f.h, vy: 0, touched: false, timer: 0 })),
@@ -287,7 +290,8 @@ function updateCamera(world: World) {
 function countPushers(box: Box, dir: 1 | -1, ps: Player[], inputs: PlayerInput[], support: Map<Body, Support>) {
   const pressing = ps.filter((p) => {
     const input = inputs[p.index] ?? NO_INPUT;
-    return (dir > 0 ? input.right && !input.left : input.left && !input.right) && support.get(p) !== box;
+    const owner = box.color === null || p.index === box.color; // caixa colorida: só o dono empurra
+    return owner && (dir > 0 ? input.right && !input.left : input.left && !input.right) && support.get(p) !== box;
   });
   const touches = (back: Rect, front: Rect) =>
     verticalOverlap(back, front) && Math.abs(dir > 0 ? back.x + back.w - front.x : front.x + front.w - back.x) < EPS;
@@ -343,6 +347,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     return { fx, fy };
   };
   const wind = new Map<Player, { fx: number; fy: number }>();
+  const jumpPressed = new Set<number>();
 
   // 1. Controle e gravidade dos jogadores
   for (const p of ps) {
@@ -367,6 +372,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     p.downHeld = input.down ?? false;
 
     const gd = p.gravDir;
+    if (input.jump && !p.jumpHeld) jumpPressed.add(p.index);
     if (input.jump && !p.jumpHeld && p.coyote > 0) {
       p.vy = JUMP_VELO * gd;
       p.coyote = 0;
@@ -485,11 +491,13 @@ export function step(world: World, inputs: PlayerInput[]) {
     const y0 = b.y;
     const riders = ridersOf(b);
     if (dir !== 0) {
-      moveAxis(world, b, dir * BOX_SPEED, "x", riders);
+      moveAxis(world, b, dir * (b.color === null ? BOX_SPEED : COLOR_BOX_SPEED), "x", riders);
       snapIntoHole(world, b);
     }
+    // caixa colorida pula junto com o dono (ColorBoxComponent.isEnableJump)
+    if (b.color !== null && jumpPressed.has(b.color) && support.get(b) !== null) b.vy = JUMP_VELO;
     b.vy = Math.min(GRAVITY_MAX, b.vy + GRAVITY);
-    if (moveAxis(world, b, b.vy, "y", new Set()).hit) b.vy = 0;
+    if (moveAxis(world, b, b.vy, "y", b.vy < 0 ? riders : new Set()).hit) b.vy = 0;
     if (b.y > world.level.height + TILE * 2) placeBox(world, b);
     displacement.set(b, { dx: b.x - x0, dy: b.y - y0 });
   }

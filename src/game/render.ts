@@ -238,6 +238,19 @@ function drawKey(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function drawBox(ctx: CanvasRenderingContext2D, b: Box, need: number) {
   const x = Math.round(b.x);
   const y = Math.round(b.y);
+  if (b.color !== null) {
+    // caixa colorida: cor do dono, sem número (só ele empurra)
+    ctx.fillStyle = PLAYER_COLORS[b.color % PLAYER_COLORS.length];
+    ctx.globalAlpha = 0.85;
+    ctx.fillRect(x, y, b.w, b.h);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "#1c1917";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, b.w - 1, b.h - 1);
+    ctx.fillStyle = "#1c1917";
+    ctx.fillRect(x + b.w / 2 - 1, y + 3, 2, b.h - 6);
+    return;
+  }
   ctx.fillStyle = "#b08a5a";
   ctx.fillRect(x, y, b.w, b.h);
   ctx.strokeStyle = "#6b4f2e";

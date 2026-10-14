@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, MOVEWALL_IDLE, PLAYER_SIZE, TILE, VIEW_W, WALK_SPEED } from "./constants";
+import { COLOR_BOX_SPEED, FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, MOVEWALL_IDLE, PLAYER_SIZE, TILE, VIEW_W, WALK_SPEED } from "./constants";
 import { parseLevel } from "./level";
 import { createWorld, NO_INPUT, step, type PlayerInput } from "./world";
 
@@ -924,5 +924,55 @@ describe("Mundos 8 e 9 — gravidade invertida e teletransporte", () => {
     run(w, 80, [NO_INPUT, RIGHT]);
     expect(w.players.every((p) => p.x >= 12 * TILE - 1)).toBe(true);
     expect(Math.abs(w.players[0].x - w.players[1].x)).toBeGreaterThanOrEqual(PLAYER_SIZE);
+  });
+});
+
+describe("Mundo 10 — caixas coloridas", () => {
+  const room = (extra: object) =>
+    parseLevel({
+      name: "w10",
+      map: [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "####################",
+      ],
+      ...extra,
+    });
+
+  it("só o jogador da mesma cor empurra a caixa colorida", () => {
+    const w = createWorld(room({ boxes: [{ col: 8, row: 4, w: 1, h: 1, need: 1, color: 0 }] }), 2);
+    const [a, b] = w.players;
+    b.x = 8 * TILE - b.w; // b (cor 1) encostado
+    a.x = 2 * TILE;
+    run(w, 60, [NO_INPUT, RIGHT]);
+    expect(w.boxes[0].x).toBe(8 * TILE);
+    b.x = 14 * TILE;
+    a.x = 8 * TILE - a.w;
+    run(w, 60, [RIGHT, NO_INPUT]);
+    expect(w.boxes[0].x).toBeCloseTo(8 * TILE + 60 * COLOR_BOX_SPEED, 0);
+  });
+
+  it("a caixa pula quando o dono pula, levando quem está em cima", () => {
+    const w = createWorld(room({ boxes: [{ col: 8, row: 4, w: 1, h: 1, need: 1, color: 1 }] }), 2);
+    const [a, b] = w.players;
+    a.x = 8 * TILE + 1;
+    a.y = 4 * TILE - a.h;
+    b.x = 2 * TILE;
+    run(w, 5, [NO_INPUT, NO_INPUT]);
+    let minBox = w.boxes[0].y;
+    let minA = a.y;
+    step(w, [NO_INPUT, JUMP]);
+    for (let f = 0; f < 30; f++) {
+      step(w, [NO_INPUT, NO_INPUT]);
+      minBox = Math.min(minBox, w.boxes[0].y);
+      minA = Math.min(minA, a.y);
+    }
+    expect(4 * TILE - minBox).toBeGreaterThan(15);
+    expect(4 * TILE - a.h - minA).toBeGreaterThan(15);
+    run(w, 60, [NO_INPUT, NO_INPUT]);
+    expect(w.boxes[0].y).toBe(4 * TILE);
   });
 });
