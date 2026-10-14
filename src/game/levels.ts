@@ -517,42 +517,55 @@ const WORLD_6: LevelDef[] = [
       winds: [{ col: 10, row: 0, w: 22, h: FLOOR + 1, fx: -0.9 }],
     },
   ),
-  // 6-3: o ventilador liga com o botão de baixo ou com o de cima — revezamento
+  // 6-3 (difícil): vento contrário forte sobre três valas e, no fim, o ventilador de revezamento
   build(
-    "Ventilador",
-    40,
+    "Vendaval",
+    62,
     ROWS,
     (g) => {
       spawns(g);
-      g.fill(14, 38, FLOOR - 5, FLOOR);
-      g.set(28, FLOOR - 6, "K");
-      g.set(35, FLOOR - 6, "D");
+      for (const c of [12, 19, 26]) g.set(c, FLOOR + 1, ".");
+      g.fill(36, 60, FLOOR - 5, FLOOR);
+      g.set(50, FLOOR - 6, "K");
+      g.set(57, FLOOR - 6, "D");
     },
     {
-      winds: [{ col: 11, row: 0, w: 3, h: FLOOR + 1, fy: -1.25, target: "fan" }],
+      thorns: [12, 19, 26].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+      winds: [
+        { col: 9, row: 0, w: 21, h: FLOOR + 1, fx: -1.05 },
+        { col: 33, row: 0, w: 3, h: FLOOR + 1, fy: -1.25, target: "fan" },
+      ],
       switches: [
-        { col: 7, row: FLOOR, target: "fan" },
-        { col: 18, row: FLOOR - 6, target: "fan" },
+        { col: 30, row: FLOOR, target: "fan" },
+        { col: 40, row: FLOOR - 6, target: "fan" },
       ],
     },
   ),
-  // 6-4: a corrente sobe até a faixa de vento lateral, que atravessa o campo de espinhos
+  // 6-4 (difícil): corrente + faixa lateral sobre espinhos até o patamar, depois vento contrário com
+  // esmagadores e valas.
   build(
     "Tempestade",
-    44,
+    70,
     ROWS,
     (g) => {
       spawns(g);
       g.fill(9, 31, FLOOR + 1, ROWS - 1, ".");
-      g.fill(32, 42, FLOOR - 4, FLOOR);
-      g.set(36, FLOOR - 5, "K");
-      g.set(40, FLOOR - 5, "D");
+      g.fill(32, 68, FLOOR - 4, FLOOR);
+      for (const c of [40, 54]) g.set(c, FLOOR - 4, ".");
+      g.set(60, FLOOR - 5, "K");
+      g.set(66, FLOOR - 5, "D");
     },
     {
-      thorns: [{ col: 9, row: FLOOR + 1, w: 23, h: 1 }],
+      thorns: [
+        { col: 9, row: FLOOR + 1, w: 23, h: 1 },
+        ...[40, 54].map((col) => ({ col, row: FLOOR - 4, w: 1, h: 1 })),
+        { col: 46, row: 0, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1 },
+        { col: 50, row: 0, w: 1, h: 1, dir: "down" as const, dy: 3, speed: 1.25 },
+      ],
       winds: [
         { col: 9, row: 2, w: 2, h: FLOOR - 1, fy: -1.25 },
         { col: 9, row: 1, w: 23, h: 3, fx: 1, fy: -0.4 },
+        { col: 36, row: 0, w: 22, h: 4, fx: -0.7 },
       ],
     },
   ),
@@ -592,42 +605,51 @@ const WORLD_7: LevelDef[] = [
       ],
     },
   ),
-  // 7-3: trampolim diagonal sobre o campo de espinhos
+  // 7-3 (difícil): corrente de trampolins diagonais sobre um campo de espinhos; cada um pousa num
+  // pilar de 3 tiles onde está o próximo. Segurar direção no ar estraga o salto.
   build(
-    "Salto longo",
-    40,
+    "Saltos em cadeia",
+    52,
     ROWS,
     (g) => {
       spawns(g);
-      g.fill(11, 13, FLOOR + 1, ROWS - 1, ".");
-      g.set(22, FLOOR, "K");
-      g.set(34, FLOOR, "D");
+      g.fill(9, 33, FLOOR + 1, ROWS - 1, ".");
+      g.fill(6, 8, FLOOR, ROWS - 1); // degrau com a primeira mola
+      for (const c of [13, 20, 27]) g.fill(c, c + 2, FLOOR, ROWS - 1); // pilares
+      g.set(40, FLOOR, "K");
+      g.set(47, FLOOR, "D");
     },
     {
-      thorns: [{ col: 11, row: FLOOR + 1, w: 3, h: 1 }],
-      springs: [{ col: 9, row: FLOOR, w: 1, vy: -7, vx: 4.5 }],
+      thorns: [{ col: 9, row: FLOOR + 1, w: 25, h: 1 }],
+      springs: [8, 15, 22, 29].map((col) => ({ col, row: FLOOR - 1, w: 1, vy: -7, vx: 4.5 })),
     },
   ),
-  // 7-4: dois trampolins em níveis diferentes; o de cima depende de botão no meio ou no topo
+  // 7-4 (difícil): torre de dois andares com botões e um terceiro trampolim, ligado por botões no topo
+  // ou na plataforma da porta, que lança por cima de um corredor de espinhos.
   build(
     "Torre de molas",
-    40,
+    54,
     ROWS + 2,
     (g) => {
       spawns(g);
-      g.fill(13, 38, FLOOR - 1, FLOOR);
-      g.fill(24, 38, FLOOR - 5, FLOOR);
-      g.set(32, FLOOR - 6, "K");
-      g.set(36, FLOOR - 6, "D");
+      g.fill(13, 52, FLOOR - 1, FLOOR); // andar do meio (topo na linha 7)
+      g.fill(24, 34, FLOOR - 5, FLOOR); // topo (linha 3)
+      g.fill(43, 52, FLOOR - 5, FLOOR - 2); // plataforma da porta (linha 3)
+      g.set(46, FLOOR - 6, "K");
+      g.set(50, FLOOR - 6, "D");
     },
     {
+      thorns: [{ col: 35, row: FLOOR - 2, w: 8, h: 1 }],
       springs: [
         { col: 11, row: FLOOR, w: 1, vy: -7.5 },
         { col: 21, row: FLOOR - 2, w: 1, vy: -9, target: "top" },
+        { col: 34, row: FLOOR - 6, w: 1, vy: -7, vx: 8, target: "far" },
       ],
       switches: [
         { col: 16, row: FLOOR - 2, target: "top" },
         { col: 28, row: FLOOR - 6, target: "top" },
+        { col: 26, row: FLOOR - 6, target: "far" },
+        { col: 44, row: FLOOR - 6, target: "far" },
       ],
     },
   ),

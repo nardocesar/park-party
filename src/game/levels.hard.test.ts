@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TILE } from "./engine/constants";
-import { climbOn, crossBlinkBridge, finish, goTo, jumpOnto, mid, passPiston, rapel, relay, rideRail, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
+import { climbOn, crossBlinkBridge, drive, steer, finish, goTo, jumpOnto, mid, passPiston, rapel, relay, rideRail, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
 import { NO_INPUT, step } from "./engine/world";
 
 /** Fases difíceis: cada roteiro compõe trechos (empurrar, empilhar, elevador…) com 2 jogadores. */
@@ -158,6 +158,85 @@ describe("fases difíceis", () => {
     goTo(w, [[w.players[0], mid(52)], [w.players[1], mid(53)]], 900, { unstick: false });
     waitFor(w, () => w.lifts[0].y === (FLOOR - 4) * TILE, 900);
     expect(w.lifts[0].y).toBe((FLOOR - 4) * TILE);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  const onRow = (p: { onGround: boolean; y: number; h: number }, row: number) => p.onGround && Math.abs(p.y + p.h - row * TILE) < 0.01;
+
+  it("6-3: vento contrário sobre valas e revezamento no ventilador", () => {
+    const w = createWorld2("6-3");
+    solo(w, [0, 1], () => w.players.every((p) => p.x > 28 * TILE && p.onGround), 3000);
+    expect(w.resets).toBe(0);
+    const [front, back] = w.players[0].x > w.players[1].x ? [w.players[0], w.players[1]] : [w.players[1], w.players[0]];
+    const s = steer();
+    // quem está atrás segura o botão de baixo; o da frente sobe e liga o botão de cima
+    drive(w, (q) => (q === back ? s(q, mid(30)) : q === front ? s(q, mid(34), { unstick: false }) : NO_INPUT), () => front.y < 2 * TILE, 900);
+    drive(w, (q) => (q === front ? s(q, mid(40), { unstick: false }) : NO_INPUT), () => onRow(front, 3) && Math.abs(front.x + front.w / 2 - mid(40)) <= 1, 600);
+    expect(w.switches[1].on).toBe(true);
+    drive(w, (q) => (q === back ? s(q, mid(34), { unstick: false }) : NO_INPUT), () => back.y < 2 * TILE, 900);
+    drive(w, (q) => (q === back ? s(q, mid(38), { unstick: false }) : NO_INPUT), () => onRow(back, 3), 300);
+    expect(onRow(back, 3)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("6-4: corrente e faixa lateral, depois vento contrário com esmagadores", () => {
+    const w = createWorld2("6-4");
+    const spots = [mid(9), mid(10)];
+    const s = steer();
+    drive(w, (q, i) => s(q, spots[i]), () => w.players.every((p, i) => Math.abs(p.x + p.w / 2 - spots[i]) <= 1 && p.onGround), 900);
+    drive(w, (q, i) => ({ ...s(q, spots[i], { unstick: false }), jump: false }), () => w.players.every((p) => p.y < 4 * TILE), 300);
+    drive(w, () => ({ ...NO_INPUT, right: true }), () => w.players.every((p) => onRow(p, FLOOR - 4)), 900);
+    expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  /** `p` vai até o trampolim da coluna `col` (pula nele se preciso) e, sem tocar nos controles, voa até pousar. */
+  const bounce = (w: ReturnType<typeof createWorld2>, p: (typeof w.players)[number], col: number, hold = false) => {
+    const s = steer();
+    drive(w, (q) => (q === p ? s(q, mid(col)) : NO_INPUT), () => p.vy < -6, 900); // mola lança a −7 ou mais (pulo normal é −5,1)
+    drive(w, (q) => (q === p && hold ? { ...NO_INPUT, right: true, jump: q.vy < 0 } : NO_INPUT), () => p.onGround && p.vy === 0, 200);
+    return p.onGround;
+  };
+
+  it("7-3: corrente de trampolins diagonais sobre espinhos", () => {
+    const w = createWorld2("7-3");
+    const [a, b] = w.players;
+    for (const col of [8, 15, 22, 29]) {
+      const [front, back] = a.x > b.x ? [a, b] : [b, a];
+      bounce(w, front, col);
+      expect(w.resets).toBe(0);
+      bounce(w, back, col);
+      expect(w.resets).toBe(0);
+    }
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("7-4: torre de molas com três trampolins e revezamentos", () => {
+    const w = createWorld2("7-4");
+    const [a, b] = w.players;
+    const s = steer();
+    const hold = (p: typeof a, col: number) => drive(w, (q) => (q === p ? s(q, mid(col)) : NO_INPUT), () => Math.abs(p.x + p.w / 2 - mid(col)) <= 1 && p.onGround, 900);
+    bounce(w, b, 11, true);
+    hold(b, 18); // sai do ponto de pouso
+    bounce(w, a, 11, true);
+    expect(onRow(a, FLOOR - 1) && onRow(b, FLOOR - 1)).toBe(true);
+    // a segura o botão do meio; b sobe pela segunda mola e segura o do topo; a sobe
+    hold(a, 16);
+    bounce(w, b, 21, true);
+    hold(b, 28);
+    bounce(w, a, 21, true);
+    expect(onRow(a, FLOOR - 5) && onRow(b, FLOOR - 5)).toBe(true);
+    // a segura o botão "far" do topo; b voa pela terceira mola e segura o da plataforma; a voa
+    hold(a, 26);
+    bounce(w, b, 34);
+    expect(w.resets).toBe(0);
+    hold(b, 44);
+    bounce(w, a, 34);
+    expect(w.resets).toBe(0);
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });
