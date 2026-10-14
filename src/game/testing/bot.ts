@@ -218,3 +218,12 @@ export function rideRail(w: World, index: number, cols: number[], max = 4000) {
   waitFor(w, () => rail.s === end && (def.need !== 0 || rail.wait > 0), max);
   return rail.s === end;
 }
+
+/** Leva os jogadores aos centros `cols` (na ordem em que estão) e quem tem `flip[i]` aperta "baixo". */
+export function goFlip(w: World, cols: number[], flip: boolean[]) {
+  const byX = [...w.players].sort((p, q) => p.x - q.x);
+  const ok = goTo(w, byX.map((p, i) => [p, mid(cols[i])] as [Player, number]), 1500, { unstick: false });
+  step(w, w.players.map((p) => ({ ...NO_INPUT, down: flip[byX.indexOf(p)] })));
+  waitFor(w, () => w.players.every((q) => q.onGround), 120);
+  return ok;
+}

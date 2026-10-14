@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TILE } from "./engine/constants";
-import { climbOn, crossBlinkBridge, drive, steer, finish, goTo, jumpOnto, mid, passPiston, rapel, relay, rideRail, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
+import { climbOn, crossBlinkBridge, drive, goFlip, steer, finish, goTo, jumpOnto, mid, passPiston, rapel, relay, rideRail, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
 import { NO_INPUT, step } from "./engine/world";
 
 /** Fases difíceis: cada roteiro compõe trechos (empurrar, empilhar, elevador…) com 2 jogadores. */
@@ -237,6 +237,46 @@ describe("fases difíceis", () => {
     hold(b, 44);
     bounce(w, a, 34);
     expect(w.resets).toBe(0);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("8-3: seis inversões com a chave pendurada no meio", () => {
+    const w = createWorld2("8-3");
+    for (const col of [8, 17, 27, 37, 47, 57]) {
+      expect(goFlip(w, [col - 1, col], [true, true])).toBe(true);
+      expect(w.resets).toBe(0);
+    }
+    expect(w.key.holder).not.toBeNull();
+    expect(w.players.every((p) => p.gravDir === 1)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("8-4: dois espelhos de botões trocando de lado e o poço final pelo teto", () => {
+    const w = createWorld2("8-4");
+    const both = (cols: number[]) => {
+      const byX = [...w.players].sort((p, q) => p.x - q.x);
+      return goTo(w, byX.map((p, i) => [p, mid(cols[i])] as [(typeof byX)[number], number]), 1500, { unstick: false });
+    };
+    goFlip(w, [6, 7], [true, true]); // os dois no teto sobre o primeiro poço
+    goFlip(w, [16, 17], [false, true]); // o da frente desce para o botão do chão
+    both([17, 19]);
+    waitFor(w, () => w.gates[0].open === 1, 200);
+    expect(w.gates[0].open).toBe(1);
+    // o de baixo sobe para passar os espinhos do chão; desce depois deles
+    goFlip(w, [23, 24], [false, true]);
+    goFlip(w, [31, 32], [false, true]);
+    both([33, 35]);
+    waitFor(w, () => w.gates[1].open === 1, 200);
+    expect(w.gates[1].open).toBe(1);
+    // o do teto desce antes dos espinhos do teto; os dois sobem para o poço final e descem depois
+    goFlip(w, [39, 40], [true, false]);
+    both([48, 51]);
+    goFlip(w, [52, 53], [true, true]);
+    goFlip(w, [59, 60], [true, true]);
+    expect(w.resets).toBe(0);
+    expect(w.players.every((p) => p.gravDir === 1)).toBe(true);
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });

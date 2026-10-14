@@ -695,51 +695,60 @@ const WORLD_8: LevelDef[] = [
       gates: [{ id: "g1", col: 19, row: 2, w: 1, h: 7, needAll: true }],
     },
   ),
-  // 8-3: espinhos alternam entre chão e teto — inverter na hora certa
+  // 8-3 (difícil): seis inversões — espinhos alternam entre chão e teto; a chave está pendurada no
+  // meio do caminho pelo teto.
   build(
     "Zigue-zague",
-    46,
+    66,
     ROWS,
     (g) => {
-      ceiling(g, 46);
+      ceiling(g, 66);
       spawns(g);
-      g.fill(10, 15, FLOOR + 1, ROWS - 1, ".");
-      g.fill(30, 33, FLOOR + 1, ROWS - 1, ".");
-      g.set(22, FLOOR, "K");
-      g.set(41, FLOOR, "D");
+      for (const c of [10, 30, 50]) g.fill(c, c + 5, FLOOR + 1, ROWS - 1, ".");
+      g.set(28, 2, "K");
+      g.set(61, FLOOR, "D");
     },
     {
       ...FLIP,
       thorns: [
-        { col: 10, row: FLOOR + 1, w: 6, h: 1 },
-        { col: 20, row: 2, w: 6, h: 1, dir: "down" },
-        { col: 30, row: FLOOR + 1, w: 4, h: 1 },
+        ...[10, 30, 50].map((col) => ({ col, row: FLOOR + 1, w: 6, h: 1 })),
+        { col: 20, row: 2, w: 6, h: 1, dir: "down" as const },
+        { col: 40, row: 2, w: 6, h: 1, dir: "down" as const },
       ],
     },
   ),
-  // 8-4: pelo teto sobre os espinhos até o espelho de botões, e de volta ao chão
+  // 8-4 (difícil): dois espelhos de botões (teto + chão ao mesmo tempo) com espinhos entre eles que
+  // obrigam cada um a trocar de lado, e um poço final atravessado pelo teto.
   build(
     "Avesso",
-    48,
+    70,
     ROWS,
     (g) => {
-      ceiling(g, 48);
+      ceiling(g, 70);
       spawns(g);
       g.fill(9, 14, FLOOR + 1, ROWS - 1, ".");
-      g.set(36, 2, "K");
-      g.set(43, FLOOR, "D");
+      g.fill(55, 58, FLOOR + 1, ROWS - 1, ".");
+      g.set(50, FLOOR, "K");
+      g.set(64, FLOOR, "D");
     },
     {
       ...FLIP,
       thorns: [
         { col: 9, row: FLOOR + 1, w: 6, h: 1 },
-        { col: 30, row: FLOOR, w: 4, h: 1 },
+        { col: 26, row: FLOOR, w: 4, h: 1 },
+        { col: 42, row: 2, w: 6, h: 1, dir: "down" },
+        { col: 55, row: FLOOR + 1, w: 4, h: 1 },
       ],
       switches: [
-        { col: 20, row: 2, target: "g1", timer: 3, ceiling: true },
-        { col: 22, row: FLOOR, target: "g1", timer: 3 },
+        { col: 17, row: 2, target: "g1", timer: 2.5, ceiling: true },
+        { col: 19, row: FLOOR, target: "g1", timer: 2.5 },
+        { col: 33, row: 2, target: "g2", timer: 2, ceiling: true },
+        { col: 35, row: FLOOR, target: "g2", timer: 2 },
       ],
-      gates: [{ id: "g1", col: 26, row: 2, w: 1, h: 7, needAll: true }],
+      gates: [
+        { id: "g1", col: 22, row: 2, w: 1, h: 7, needAll: true },
+        { id: "g2", col: 38, row: 2, w: 1, h: 7, needAll: true },
+      ],
     },
   ),
 ];

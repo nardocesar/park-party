@@ -384,28 +384,7 @@ describe("fases", () => {
       finish(w);
     });
 
-    it("8-3 tem solução: inverter entre os espinhos do chão e do teto", () => {
-      const w = createWorld(parseLevel(at("8-3")), 2);
-      goFlip(w, [7 * TILE, 8 * TILE], [true, true]);
-      goFlip(w, [17 * TILE, 18 * TILE], [true, true]);
-      goFlip(w, [27 * TILE, 28 * TILE], [true, true]);
-      goFlip(w, [35 * TILE, 36 * TILE], [true, true]);
-      expect(w.resets).toBe(0);
-      finish(w);
-    });
 
-    it("8-4 tem solução: teto, espelho de botões, teto de novo e chão", () => {
-      const w = createWorld(parseLevel(at("8-4")), 2);
-      goFlip(w, [6 * TILE, 7 * TILE], [true, true]);
-      // a fica no teto no botão; b volta ao chão depois dos espinhos e segura o botão de baixo
-      goFlip(w, [17 * TILE, 18 * TILE], [false, true]);
-      drive(w, (q, i) => toward(q, [20 * TILE + 1, 22 * TILE + 1][i]), () => w.gates[0].open === 1, 600);
-      expect(w.gates[0].open).toBe(1);
-      goFlip(w, [27 * TILE, 28 * TILE], [false, true]);
-      goFlip(w, [38 * TILE, 39 * TILE], [true, true]);
-      expect(w.players.every((p) => p.gravDir === 1)).toBe(true);
-      finish(w);
-    });
 
     it("9-1 tem solução: pelo portal", () => {
       finish(createWorld(parseLevel(at("9-1")), 2));
