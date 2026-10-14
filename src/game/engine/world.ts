@@ -11,6 +11,7 @@ import {
   JUMP_VELO,
   KEY_EXCLUDE_FRAMES,
   KEY_SIZE,
+  LIFT_SPEED,
   PLAYER_SIZE,
   TILE,
   VIEW_W,
@@ -37,8 +38,11 @@ export type Player = Rect & {
 
 export type Box = Rect & { kind: "box"; index: number; vy: number; need: number; pushers: number };
 
-/** Tudo que é sólido e se move: jogadores e caixas. */
-type Body = Player | Box;
+/** Plataforma cinemática: não colide, só carrega quem está em cima. */
+export type Lift = Rect & { kind: "lift"; index: number; startY: number; travel: number; need: number; weight: number };
+
+/** Tudo que é sólido e se move: jogadores, caixas e elevadores. */
+type Body = Player | Box | Lift;
 type Support = "tile" | Body | null;
 
 export type Switch = Rect & { target: string; on: boolean };
@@ -54,6 +58,7 @@ export type World = {
   boxes: Box[];
   switches: Switch[];
   gates: Gate[];
+  lifts: Lift[];
   key: Key;
   door: Door;
   cameraX: number;
@@ -69,6 +74,9 @@ export function createWorld(level: Level, playerCount: number): World {
     boxes: level.boxes.map((b, index) => ({ kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0 })),
     switches: level.switches.map((sw) => ({ ...sw, on: false })),
     gates: level.gates.map((g) => ({ ...g, open: 0 })),
+    lifts: level.lifts.map((l, index) => ({
+      kind: "lift", index, x: l.x, y: l.y, w: l.w, h: l.h, startY: l.y, travel: l.travel, need: l.need, weight: 0,
+    })),
     key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false },
     door: { x: level.door.x, y: level.door.y, w: DOOR_W, h: DOOR_H, open: false },
     cameraX: 0,
@@ -104,6 +112,7 @@ function placeEntities(world: World) {
   for (const b of world.boxes) placeBox(world, b);
   for (const sw of world.switches) sw.on = false;
   for (const g of world.gates) g.open = 0;
+  for (const l of world.lifts) Object.assign(l, { y: l.startY, weight: 0 });
   Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
   world.door.open = false;
   world.status = "playing";
@@ -133,7 +142,7 @@ function tileHit(level: Level, r: Rect): boolean {
 }
 
 const active = (world: World) => world.players.filter((p) => !p.cleared);
-const bodies = (world: World): Body[] => [...active(world), ...world.boxes];
+const bodies = (world: World): Body[] => [...active(world), ...world.boxes, ...world.lifts];
 export const gateRect = (g: Gate): Rect => ({ x: g.x, y: g.y, w: g.w, h: g.h * (1 - g.open) });
 const gateRects = (world: World) => world.gates.map(gateRect).filter((r) => r.h > 0);
 
@@ -236,7 +245,28 @@ export function step(world: World, inputs: PlayerInput[]) {
     p.vy = Math.min(GRAVITY_MAX, p.vy + g);
   }
 
-  // 2. Caixas: andam se houver empurradores suficientes; caem sem apoio
+  // 2. Elevadores: o peso é quem está em cima, direta ou indiretamente (empilhado)
+  for (const l of world.lifts) {
+    const stack = new Set<Body>([l]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const b of bodies(world)) {
+        const s = support.get(b);
+        if (!stack.has(b) && s && s !== "tile" && stack.has(s)) {
+          stack.add(b);
+          grew = true;
+        }
+      }
+    }
+    l.weight = [...stack].filter((b) => b.kind === "player").length;
+    const target = l.startY + (l.weight >= Math.min(l.need, world.players.length) ? l.travel : 0);
+    const y0 = l.y;
+    l.y += Math.max(-LIFT_SPEED, Math.min(LIFT_SPEED, target - l.y));
+    displacement.set(l, { dx: 0, dy: l.y - y0 });
+  }
+
+  // 3. Caixas: andam se houver empurradores suficientes; caem sem apoio
   const required = (b: Box) => Math.min(b.need, world.players.length);
   for (const b of world.boxes) {
     const right = countPushers(b, 1, ps, inputs, support);
@@ -253,7 +283,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     displacement.set(b, { dx: b.x - x0, dy: b.y - y0 });
   }
 
-  // 3. Jogadores de baixo para cima: quem está em cima herda o deslocamento do suporte
+  // 4. Jogadores de baixo para cima: quem está em cima herda o deslocamento do suporte
   const camBounds: [number, number] | undefined =
     world.level.width > VIEW_W ? [world.cameraX, world.cameraX + VIEW_W - PLAYER_SIZE] : undefined;
   const order = [...ps].sort((a, b) => b.y + b.h - (a.y + a.h));
@@ -265,7 +295,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     const y0 = p.y;
     if (carry) {
       moveAxis(world, p, carry.dx, "x", riders, camBounds);
-      if (carry.dy < 0) moveAxis(world, p, carry.dy, "y", riders);
+      if (carry.dy !== 0) moveAxis(world, p, carry.dy, "y", carry.dy < 0 ? riders : new Set([s as Body]));
     }
     moveAxis(world, p, p.vx, "x", riders, camBounds);
     const { hit } = moveAxis(world, p, p.vy, "y", p.vy < 0 ? riders : new Set());
@@ -274,7 +304,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     displacement.set(p, { dx: p.x - x0, dy: p.y - y0 });
   }
 
-  // 4. Morte: cair do mapa reinicia a fase
+  // 5. Morte: cair do mapa reinicia a fase
   if (ps.some((p) => p.y > world.level.height + TILE * 2)) {
     resetWorld(world);
     return;

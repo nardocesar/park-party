@@ -368,3 +368,58 @@ describe("botão e portão", () => {
     expect(w.gates[0].open).toBe(0);
   });
 });
+
+describe("elevador com peso", () => {
+  const LIFTED = parseLevel({
+    name: "lifted",
+    map: [
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#.1.2..............#",
+      "########......######",
+      "########......######",
+      "########......######",
+      "####################",
+    ],
+    lifts: [{ col: 8, row: 6, w: 6, dy: 2, need: 2 }],
+  });
+  const liftTop = 6 * TILE;
+
+  it("um jogador sozinho não faz descer elevador que exige 2", () => {
+    const w = createWorld(LIFTED, 2);
+    w.players[0].x = 9 * TILE;
+    run(w, 120, [NO_INPUT, NO_INPUT]);
+    expect(w.lifts[0].y).toBe(liftTop);
+    expect(w.players[0].y + w.players[0].h).toBe(liftTop);
+  });
+
+  it("dois jogadores (mesmo empilhados) fazem descer e são levados junto", () => {
+    const w = createWorld(LIFTED, 2);
+    const [a, b] = w.players;
+    a.x = 9 * TILE;
+    b.x = a.x;
+    b.y = a.y - PLAYER_SIZE - 2;
+    run(w, 200, [NO_INPUT, NO_INPUT]);
+    expect(w.lifts[0].y).toBe(liftTop + 2 * TILE);
+    expect(a.y + a.h).toBe(w.lifts[0].y);
+    expect(a.onGround).toBe(true);
+    expect(b.y + b.h).toBe(a.y);
+  });
+
+  it("volta à posição inicial quando o peso sai", () => {
+    const w = createWorld(LIFTED, 2);
+    const [a, b] = w.players;
+    a.x = 9 * TILE;
+    b.x = 11 * TILE;
+    run(w, 200, [NO_INPUT, NO_INPUT]);
+    expect(w.lifts[0].y).toBe(liftTop + 2 * TILE);
+    a.y = -200; // tira um do elevador (teleporte para fora)
+    a.x = 2 * TILE;
+    run(w, 300, [NO_INPUT, NO_INPUT]);
+    expect(w.lifts[0].y).toBe(liftTop);
+    expect(b.y + b.h).toBe(liftTop);
+  });
+});

@@ -35,6 +35,16 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
     ctx.fillStyle = sw.on ? "#16a34a" : "#dc2626";
     ctx.fillRect(sw.x + 2, sw.y + (sw.on ? 2 : 0), sw.w - 4, sw.h - (sw.on ? 2 : 0));
   }
+  for (const l of world.lifts) {
+    const need = Math.min(l.need, world.players.length);
+    ctx.fillStyle = "#0e7490";
+    ctx.fillRect(l.x, Math.round(l.y), l.w, l.h);
+    ctx.fillStyle = "#ecfeff";
+    ctx.font = "bold 9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${Math.min(l.weight, need)}/${need}`, l.x + l.w / 2, Math.round(l.y) + l.h / 2 + 1);
+  }
   drawDoor(ctx, world);
   for (const b of world.boxes) drawBox(ctx, b, Math.min(b.need, world.players.length));
   for (const p of world.players) if (!p.cleared) drawPlayer(ctx, p);
