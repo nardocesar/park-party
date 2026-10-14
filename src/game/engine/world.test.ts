@@ -243,3 +243,81 @@ describe("morte e reset", () => {
     expect(Math.abs(w.players[0].x - start[0].x)).toBeLessThan(1);
   });
 });
+
+describe("caixa empurrável", () => {
+  const BOXROOM = parseLevel({
+    name: "boxroom",
+    map: [
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#.1.2..............#",
+      "####################",
+    ],
+    boxes: [{ col: 8, row: 3, w: 2, h: 2, need: 2 }],
+  });
+
+  it("caixa é sólida: bloqueia e serve de chão", () => {
+    const w = createWorld(BOXROOM, 2);
+    run(w, 200, [NO_INPUT, RIGHT]);
+    const p = w.players[1];
+    expect(p.x + p.w).toBe(8 * TILE);
+    p.x = 8 * TILE + 4;
+    p.y = 3 * TILE - p.h - 10;
+    run(w, 30, [NO_INPUT, NO_INPUT]);
+    expect(p.y + p.h).toBe(3 * TILE);
+    expect(p.onGround).toBe(true);
+  });
+
+  it("um jogador sozinho não move caixa que exige 2", () => {
+    const w = createWorld(BOXROOM, 2);
+    // a fica à frente e b atrás, longe: só a empurra
+    w.players[0].x = 8 * TILE - PLAYER_SIZE - 20;
+    w.players[1].x = 1 * TILE;
+    run(w, 120, [RIGHT, NO_INPUT]);
+    expect(w.boxes[0].x).toBe(8 * TILE);
+  });
+
+  it("dois jogadores em fila empurram a caixa", () => {
+    const w = createWorld(BOXROOM, 2);
+    run(w, 200, [RIGHT, RIGHT]);
+    expect(w.boxes[0].x).toBeGreaterThan(8 * TILE + 20);
+    // ninguém atravessa a caixa
+    for (const p of w.players) expect(p.x + p.w).toBeLessThanOrEqual(w.boxes[0].x + 0.001);
+  });
+
+  it("quem está em cima da caixa é carregado quando ela anda", () => {
+    const w = createWorld(BOXROOM, 3);
+    const rider = w.players[2];
+    rider.x = 8 * TILE + 8;
+    rider.y = 3 * TILE - rider.h;
+    run(w, 5, [NO_INPUT, NO_INPUT, NO_INPUT]);
+    const offset = rider.x - w.boxes[0].x;
+    run(w, 200, [RIGHT, RIGHT, NO_INPUT]);
+    expect(w.boxes[0].x).toBeGreaterThan(8 * TILE + 20);
+    expect(rider.x - w.boxes[0].x).toBeCloseTo(offset, 5);
+  });
+
+  it("caixa cai quando perde o chão", () => {
+    const level = parseLevel({
+      name: "boxpit",
+      map: [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "##########...#######",
+        "##########...#######",
+        "####################",
+      ],
+      boxes: [{ col: 7, row: 3, w: 2, h: 2, need: 2 }],
+    });
+    const w = createWorld(level, 2);
+    run(w, 300, [RIGHT, RIGHT]);
+    // a caixa cai no buraco (2 tiles de fundo) e vira ponte no nível do chão
+    expect(w.boxes[0].y).toBe(5 * TILE);
+    expect(w.resets).toBe(0);
+  });
+});

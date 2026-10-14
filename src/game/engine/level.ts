@@ -5,7 +5,8 @@ import { DOOR_H, DOOR_W, KEY_SIZE, PLAYER_SIZE, TILE } from "./constants";
  *   '#' bloco sólido   '.' vazio
  *   '1'..'8' spawn dos jogadores   'K' chave   'D' porta
  */
-export type LevelDef = { name: string; map: string[] };
+export type BoxDef = { col: number; row: number; w: number; h: number; need: number };
+export type LevelDef = { name: string; map: string[]; boxes?: BoxDef[] };
 
 export type Vec = { x: number; y: number };
 
@@ -19,6 +20,8 @@ export type Level = {
   spawns: Vec[];
   key: Vec;
   door: Vec;
+  /** Caixas em px; `need` é quantos jogadores precisam empurrar juntos. */
+  boxes: { x: number; y: number; w: number; h: number; need: number }[];
 };
 
 export function parseLevel(def: LevelDef): Level {
@@ -62,6 +65,7 @@ export function parseLevel(def: LevelDef): Level {
     spawns: spawnByDigit.sort((a, b) => a[0] - b[0]).map(([, v]) => v),
     key,
     door,
+    boxes: (def.boxes ?? []).map((b) => ({ x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE, need: b.need })),
   };
 }
 

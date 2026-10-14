@@ -1,5 +1,6 @@
 import {
   AIR_RESISTIVITY,
+  BOX_SPEED,
   COYOTE_FRAMES,
   DOOR_H,
   DOOR_W,
@@ -22,6 +23,7 @@ export const NO_INPUT: PlayerInput = { left: false, right: false, jump: false };
 type Rect = { x: number; y: number; w: number; h: number };
 
 export type Player = Rect & {
+  kind: "player";
   index: number;
   vx: number;
   vy: number;
@@ -32,12 +34,19 @@ export type Player = Rect & {
   cleared: boolean;
 };
 
+export type Box = Rect & { kind: "box"; index: number; vy: number; need: number; pushers: number };
+
+/** Tudo que é sólido e se move: jogadores e caixas. */
+type Body = Player | Box;
+type Support = "tile" | Body | null;
+
 export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean };
 export type Door = Rect & { open: boolean };
 
 export type World = {
   level: Level;
   players: Player[];
+  boxes: Box[];
   key: Key;
   door: Door;
   cameraX: number;
@@ -50,6 +59,7 @@ export function createWorld(level: Level, playerCount: number): World {
   const world: World = {
     level,
     players: [],
+    boxes: level.boxes.map((b, index) => ({ kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0 })),
     key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false },
     door: { x: level.door.x, y: level.door.y, w: DOOR_W, h: DOOR_H, open: false },
     cameraX: 0,
@@ -59,7 +69,7 @@ export function createWorld(level: Level, playerCount: number): World {
   };
   for (let i = 0; i < playerCount; i++) {
     world.players.push({
-      index: i, x: 0, y: 0, w: PLAYER_SIZE, h: PLAYER_SIZE,
+      kind: "player", index: i, x: 0, y: 0, w: PLAYER_SIZE, h: PLAYER_SIZE,
       vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, facing: 1, cleared: false,
     });
   }
@@ -82,14 +92,23 @@ function placeEntities(world: World) {
     };
     Object.assign(p, { x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false });
   }
+  for (const b of world.boxes) placeBox(world, b);
   Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
   world.door.open = false;
   world.status = "playing";
   updateCamera(world);
 }
 
+function placeBox(world: World, b: Box) {
+  const def = world.level.boxes[b.index];
+  Object.assign(b, { x: def.x, y: def.y, vy: 0, pushers: 0 });
+}
+
 const overlaps = (a: Rect, b: Rect) =>
   a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+const EPS = 0.01;
+const verticalOverlap = (a: Rect, b: Rect) => a.y < b.y + b.h && b.y < a.y + a.h;
 
 function tileHit(level: Level, r: Rect): boolean {
   const c0 = Math.floor(r.x / TILE);
@@ -103,47 +122,42 @@ function tileHit(level: Level, r: Rect): boolean {
 }
 
 const active = (world: World) => world.players.filter((p) => !p.cleared);
+const bodies = (world: World): Body[] => [...active(world), ...world.boxes];
 
-/** O que está logo abaixo do jogador: "tile", índice de outro jogador, ou null. */
-function supportOf(world: World, p: Player): "tile" | number | null {
-  const probe = { x: p.x, y: p.y + p.h, w: p.w, h: 0.01 };
+/** O que está logo abaixo do corpo: "tile", outro corpo, ou null. */
+function supportOf(world: World, body: Body): Support {
+  const probe = { x: body.x, y: body.y + body.h, w: body.w, h: EPS };
   if (tileHit(world.level, probe)) return "tile";
-  for (const o of active(world)) if (o !== p && overlaps(probe, o)) return o.index;
+  for (const o of bodies(world)) if (o !== body && overlaps(probe, o)) return o;
   return null;
 }
 
 /**
  * Move um eixo em subpassos de no máximo 4 px e encosta no primeiro obstáculo.
- * `ignore` são jogadores atravessáveis neste movimento (quem está em cima de mim).
+ * `ignore` são corpos atravessáveis neste movimento (quem está em cima de mim).
  */
-function moveAxis(world: World, p: Player, d: number, axis: "x" | "y", ignore: Set<number>, bounds?: [number, number]) {
-  let moved = 0;
+function moveAxis(world: World, body: Body, d: number, axis: "x" | "y", ignore: Set<Body>, bounds?: [number, number]) {
   let hit = false;
   const steps = Math.ceil(Math.abs(d) / 4);
+  const size = axis === "x" ? body.w : body.h;
   for (let i = 0; i < steps && !hit; i++) {
     const delta = d / steps;
-    p[axis] += delta;
-    moved += delta;
+    body[axis] += delta;
     if (axis === "x" && bounds) {
-      if (p.x < bounds[0]) { moved += bounds[0] - p.x; p.x = bounds[0]; hit = true; }
-      if (p.x > bounds[1]) { moved -= p.x - bounds[1]; p.x = bounds[1]; hit = true; }
+      if (body.x < bounds[0]) { body.x = bounds[0]; hit = true; }
+      if (body.x > bounds[1]) { body.x = bounds[1]; hit = true; }
     }
-    const size = axis === "x" ? p.w : p.h;
-    if (tileHit(world.level, p)) {
-      const before = p[axis];
-      p[axis] = delta > 0 ? Math.floor((p[axis] + size) / TILE) * TILE - size : Math.ceil(p[axis] / TILE) * TILE;
-      moved += p[axis] - before;
+    if (tileHit(world.level, body)) {
+      body[axis] = delta > 0 ? Math.floor((body[axis] + size) / TILE) * TILE - size : Math.ceil(body[axis] / TILE) * TILE;
       hit = true;
     }
-    for (const o of active(world)) {
-      if (o === p || ignore.has(o.index) || !overlaps(p, o)) continue;
-      const before = p[axis];
-      p[axis] = delta > 0 ? o[axis] - size : o[axis] + (axis === "x" ? o.w : o.h);
-      moved += p[axis] - before;
+    for (const o of bodies(world)) {
+      if (o === body || ignore.has(o) || !overlaps(body, o)) continue;
+      body[axis] = delta > 0 ? o[axis] - size : o[axis] + (axis === "x" ? o.w : o.h);
       hit = true;
     }
   }
-  return { moved, hit };
+  return { hit };
 }
 
 function updateCamera(world: World) {
@@ -154,25 +168,50 @@ function updateCamera(world: World) {
   world.cameraX = Math.min(max, Math.max(0, center - VIEW_W / 2));
 }
 
+/**
+ * Quantos jogadores empurram a caixa na direção `dir`: quem encosta na lateral apertando
+ * para ela, mais quem encosta nesses (fila), todos apertando na mesma direção.
+ */
+function countPushers(box: Box, dir: 1 | -1, ps: Player[], inputs: PlayerInput[], support: Map<Body, Support>) {
+  const pressing = ps.filter((p) => {
+    const input = inputs[p.index] ?? NO_INPUT;
+    return (dir > 0 ? input.right && !input.left : input.left && !input.right) && support.get(p) !== box;
+  });
+  const touches = (back: Rect, front: Rect) =>
+    verticalOverlap(back, front) && Math.abs(dir > 0 ? back.x + back.w - front.x : front.x + front.w - back.x) < EPS;
+  const chain: Rect[] = [box];
+  const counted = new Set<Player>();
+  for (let i = 0; i < chain.length; i++) {
+    for (const p of pressing) {
+      if (counted.has(p) || !touches(p, chain[i])) continue;
+      counted.add(p);
+      chain.push(p);
+    }
+  }
+  return counted.size;
+}
+
 export function step(world: World, inputs: PlayerInput[]) {
   if (world.status !== "playing") return;
   world.frame++;
   const ps = active(world);
+  const support = new Map<Body, Support>();
+  for (const b of bodies(world)) support.set(b, supportOf(world, b));
+  const ridersOf = (body: Body) => new Set(bodies(world).filter((o) => support.get(o) === body));
+  const displacement = new Map<Body, { dx: number; dy: number }>();
 
-  // 1. Suporte no início do frame, controle e gravidade
-  const support = new Map<number, "tile" | number | null>();
+  // 1. Controle e gravidade dos jogadores
   for (const p of ps) {
     const input = inputs[p.index] ?? NO_INPUT;
-    const s = supportOf(world, p);
-    support.set(p.index, s);
-    p.coyote = s !== null ? COYOTE_FRAMES : Math.max(0, p.coyote - 1);
+    const grounded = support.get(p) !== null;
+    p.coyote = grounded ? COYOTE_FRAMES : Math.max(0, p.coyote - 1);
 
     const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
     if (dir !== 0) {
       p.vx = dir * WALK_SPEED;
       p.facing = dir as 1 | -1;
     } else {
-      p.vx = s !== null ? 0 : p.vx * AIR_RESISTIVITY;
+      p.vx = grounded ? 0 : p.vx * AIR_RESISTIVITY;
     }
 
     if (input.jump && !p.jumpHeld && p.coyote > 0) {
@@ -184,15 +223,31 @@ export function step(world: World, inputs: PlayerInput[]) {
     p.vy = Math.min(GRAVITY_MAX, p.vy + g);
   }
 
-  // 2. Movimento de baixo para cima: quem está em cima herda o deslocamento do suporte
+  // 2. Caixas: andam se houver empurradores suficientes; caem sem apoio
+  const required = (b: Box) => Math.min(b.need, world.players.length);
+  for (const b of world.boxes) {
+    const right = countPushers(b, 1, ps, inputs, support);
+    const left = countPushers(b, -1, ps, inputs, support);
+    b.pushers = Math.max(right, left);
+    const dir = (right >= required(b) ? 1 : 0) - (left >= required(b) ? 1 : 0);
+    const x0 = b.x;
+    const y0 = b.y;
+    const riders = ridersOf(b);
+    if (dir !== 0) moveAxis(world, b, dir * BOX_SPEED, "x", riders);
+    b.vy = Math.min(GRAVITY_MAX, b.vy + GRAVITY);
+    if (moveAxis(world, b, b.vy, "y", new Set()).hit) b.vy = 0;
+    if (b.y > world.level.height + TILE * 2) placeBox(world, b);
+    displacement.set(b, { dx: b.x - x0, dy: b.y - y0 });
+  }
+
+  // 3. Jogadores de baixo para cima: quem está em cima herda o deslocamento do suporte
   const camBounds: [number, number] | undefined =
     world.level.width > VIEW_W ? [world.cameraX, world.cameraX + VIEW_W - PLAYER_SIZE] : undefined;
-  const displacement = new Map<number, { dx: number; dy: number }>();
   const order = [...ps].sort((a, b) => b.y + b.h - (a.y + a.h));
   for (const p of order) {
-    const riders = new Set(ps.filter((o) => support.get(o.index) === p.index).map((o) => o.index));
-    const s = support.get(p.index);
-    const carry = typeof s === "number" ? displacement.get(s) : undefined;
+    const riders = ridersOf(p);
+    const s = support.get(p);
+    const carry = s && s !== "tile" ? displacement.get(s) : undefined;
     const x0 = p.x;
     const y0 = p.y;
     if (carry) {
@@ -203,10 +258,10 @@ export function step(world: World, inputs: PlayerInput[]) {
     const { hit } = moveAxis(world, p, p.vy, "y", p.vy < 0 ? riders : new Set());
     if (hit) p.vy = 0;
     p.onGround = supportOf(world, p) !== null;
-    displacement.set(p.index, { dx: p.x - x0, dy: p.y - y0 });
+    displacement.set(p, { dx: p.x - x0, dy: p.y - y0 });
   }
 
-  // 3. Morte: cair do mapa reinicia a fase
+  // 4. Morte: cair do mapa reinicia a fase
   if (ps.some((p) => p.y > world.level.height + TILE * 2)) {
     resetWorld(world);
     return;

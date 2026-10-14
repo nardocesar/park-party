@@ -23,3 +23,4 @@ export const DOOR_H = 24;
 export const VIEW_W = 320;
 export const VIEW_H = 180;
 export const MAX_PLAYERS = 4;
+export const BOX_SPEED = 0.75;

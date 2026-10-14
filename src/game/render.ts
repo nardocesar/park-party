@@ -1,5 +1,5 @@
 import { TILE, VIEW_H, VIEW_W } from "./engine/constants";
-import type { Player, World } from "./engine/world";
+import type { Box, Player, World } from "./engine/world";
 
 export const PLAYER_COLORS = ["#f97316", "#38bdf8", "#f472b6", "#4ade80"];
 
@@ -25,6 +25,7 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
   }
 
   drawDoor(ctx, world);
+  for (const b of world.boxes) drawBox(ctx, b, Math.min(b.need, world.players.length));
   for (const p of world.players) if (!p.cleared) drawPlayer(ctx, p);
   if (!world.key.used) drawKey(ctx, world.key.x, world.key.y);
   ctx.restore();
@@ -62,4 +63,21 @@ function drawKey(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fill();
   ctx.fillRect(x + 5, y + 4, 5, 2);
   ctx.fillRect(x + 8, y + 6, 2, 2);
+}
+
+function drawBox(ctx: CanvasRenderingContext2D, b: Box, need: number) {
+  const x = Math.round(b.x);
+  const y = Math.round(b.y);
+  ctx.fillStyle = "#b08a5a";
+  ctx.fillRect(x, y, b.w, b.h);
+  ctx.strokeStyle = "#6b4f2e";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, b.w - 2, b.h - 2);
+  // quantos ainda faltam para a caixa andar
+  const left = Math.max(0, need - b.pushers);
+  ctx.fillStyle = left === 0 ? "#166534" : "#1c1917";
+  ctx.font = "bold 10px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(String(left === 0 ? need : left), x + b.w / 2, y + b.h / 2 + 1);
 }
