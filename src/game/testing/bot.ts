@@ -70,7 +70,7 @@ export function drive(w: World, inputs: (p: Player, i: number) => PlayerInput, d
 export const waitFor = (w: World, done: () => boolean, max = 600) => drive(w, () => NO_INPUT, done, max);
 
 /** Entrada para levar `p` até o centro `cx`; pula se travar (degrau, trampolim desligado). */
-export function steer(w: World) {
+export function steer() {
   const last = new Map<Player, number>();
   return (p: Player, cx: number, opts: { jump?: boolean; unstick?: boolean } = {}): PlayerInput => {
     const c = p.x + p.w / 2;
@@ -83,7 +83,7 @@ export function steer(w: World) {
 
 /** Leva cada jogador da lista até o centro correspondente (os outros parados). */
 export function goTo(w: World, moves: [Player, number][], max = 1500, opts: { unstick?: boolean } = {}) {
-  const s = steer(w);
+  const s = steer();
   const at = (p: Player, cx: number) => Math.abs(p.x + p.w / 2 - cx) <= 1 && p.onGround;
   return drive(
     w,
@@ -108,7 +108,7 @@ export function jumpOnto(w: World, p: Player, row: number, dir: 1 | -1 = 1, max 
 
 /** `top` sobe na cabeça de `base` (que fica parado). */
 export function climbOn(w: World, top: Player, base: Player, max = 600) {
-  const s = steer(w);
+  const s = steer();
   const on = () => top.onGround && Math.abs(top.y + top.h - base.y) < 0.01 && top.x < base.x + base.w && base.x < top.x + top.w;
   return drive(w, (p) => (p === top ? { ...s(p, base.x + base.w / 2), jump: !on() && p.onGround && Math.abs(p.x + p.w / 2 - (base.x + base.w / 2)) < 24 } : NO_INPUT), on, max);
 }
@@ -162,4 +162,25 @@ export function rapel(w: World, faller: Player, holder: Player, shaftCol: number
   waitFor(w, () => false, 120);
   drive(w, (p) => (p === holder ? go(-1) : NO_INPUT), () => faller.onGround && Math.abs(faller.y + faller.h - surfaceRow * TILE) < 0.01, 900);
   return faller.onGround && Math.abs(faller.y + faller.h - surfaceRow * TILE) < 0.01;
+}
+
+/**
+ * Revezamento num portão com botões temporizados dos dois lados: `lead` segura o botão da esquerda
+ * (`left`), `runner` passa pelo portão e segura o da direita (`right`), e `lead` passa (até `right + 2`).
+ */
+export function relay(w: World, lead: Player, runner: Player, left: number, right: number) {
+  const s = steer();
+  const center = (col: number) => mid(col);
+  const at = (p: Player, col: number) => Math.abs(p.x + p.w / 2 - center(col)) <= 1;
+  drive(w, (p) => (p === lead && !at(p, left) ? s(p, center(left)) : NO_INPUT), () => at(lead, left), 900);
+  drive(w, (p) => (p === runner && !at(p, right) ? s(p, center(right)) : NO_INPUT), () => at(runner, right), 900);
+  drive(w, (p) => (p === lead && !at(p, right + 2) ? s(p, center(right + 2)) : NO_INPUT), () => at(lead, right + 2), 900);
+  return at(runner, right) && at(lead, right + 2);
+}
+
+/** Espera o bloco que pisca `blink` aparecer com pelo menos `frames` de folga e todos andam `walk` frames. */
+export function crossBlinkBridge(w: World, blinkIndex: number, frames = 70, walkFrames = 70) {
+  const b = w.blinks[blinkIndex];
+  waitFor(w, () => b.visible && b.timer > frames, 900);
+  drive(w, () => ({ ...NO_INPUT, right: true }), () => false, walkFrames);
 }

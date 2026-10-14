@@ -242,54 +242,66 @@ const WORLD_3: LevelDef[] = [
       ],
     },
   ),
-  // 3-3: o portão exige os dois botões ao mesmo tempo; caixas seguram os botões
+  // 3-3 (difícil): revezamento de 1 s, ponte que pisca sobre o buraco, outro revezamento de 1 s e
+  // um corredor de paredes que piscam rápido.
   build(
-    "Caixas nos botões",
-    44,
+    "Relógio",
+    66,
     ROWS,
     (g) => {
       spawns(g);
-      g.set(12, FLOOR, "#");
-      g.set(20, FLOOR, "#");
-      g.set(28, FLOOR, "K");
-      g.set(38, FLOOR, "D");
-    },
-    {
-      boxes: [
-        { col: 7, row: FLOOR, w: 1, h: 1, need: 1 },
-        { col: 16, row: FLOOR, w: 1, h: 1, need: 1 },
-      ],
-      switches: [
-        { col: 11, row: FLOOR, target: "g1" },
-        { col: 19, row: FLOOR, target: "g1" },
-      ],
-      gates: [{ id: "g1", col: 24, row: FLOOR - 4, w: 1, h: 5, needAll: true }],
-    },
-  ),
-  // 3-4: dois revezamentos com paredes que piscam no meio
-  build(
-    "Corrida",
-    54,
-    ROWS,
-    (g) => {
-      spawns(g);
-      g.set(46, FLOOR, "K");
-      g.set(50, FLOOR, "D");
+      g.fill(21, 23, FLOOR + 1, ROWS - 1, ".");
+      g.set(54, FLOOR, "K");
+      g.set(61, FLOOR, "D");
     },
     {
       switches: [
-        { col: 10, row: FLOOR, target: "g1", timer: 2.5 },
-        { col: 18, row: FLOOR, target: "g1", timer: 2.5 },
-        { col: 32, row: FLOOR, target: "g2", timer: 2.5 },
-        { col: 40, row: FLOOR, target: "g2", timer: 2.5 },
+        { col: 9, row: FLOOR, target: "g1", timer: 1 },
+        { col: 15, row: FLOOR, target: "g1", timer: 1 },
+        { col: 30, row: FLOOR, target: "g2", timer: 1 },
+        { col: 36, row: FLOOR, target: "g2", timer: 1 },
       ],
       gates: [
-        { id: "g1", col: 14, row: FLOOR - 4, w: 1, h: 5 },
-        { id: "g2", col: 36, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g1", col: 12, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g2", col: 33, row: FLOOR - 4, w: 1, h: 5 },
       ],
       blinks: [
-        { col: 24, row: FLOOR - 4, w: 1, h: 5, on: 1, off: 1 },
-        { col: 28, row: FLOOR - 4, w: 1, h: 5, on: 1, off: 1, phase: 0.5 },
+        { col: 21, row: FLOOR + 1, w: 3, h: 1, on: 1, off: 1.5 },
+        { col: 42, row: FLOOR - 4, w: 1, h: 5, on: 0.7, off: 0.7 },
+        { col: 45, row: FLOOR - 4, w: 1, h: 5, on: 0.7, off: 0.7, phase: 0.35 },
+        { col: 48, row: FLOOR - 4, w: 1, h: 5, on: 0.7, off: 0.7, phase: 0.7 },
+      ],
+    },
+  ),
+  // 3-4 (difícil): três revezamentos de 0,9 s intercalados com duas pontes que piscam
+  build(
+    "Contra o relógio",
+    76,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(19, 21, FLOOR + 1, ROWS - 1, ".");
+      g.fill(41, 43, FLOOR + 1, ROWS - 1, ".");
+      g.set(68, FLOOR, "K");
+      g.set(72, FLOOR, "D");
+    },
+    {
+      switches: [
+        { col: 8, row: FLOOR, target: "g1", timer: 0.9 },
+        { col: 14, row: FLOOR, target: "g1", timer: 0.9 },
+        { col: 29, row: FLOOR, target: "g2", timer: 0.9 },
+        { col: 35, row: FLOOR, target: "g2", timer: 0.9 },
+        { col: 51, row: FLOOR, target: "g3", timer: 0.9 },
+        { col: 57, row: FLOOR, target: "g3", timer: 0.9 },
+      ],
+      gates: [
+        { id: "g1", col: 11, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g2", col: 32, row: FLOOR - 4, w: 1, h: 5 },
+        { id: "g3", col: 54, row: FLOOR - 4, w: 1, h: 5 },
+      ],
+      blinks: [
+        { col: 19, row: FLOOR + 1, w: 3, h: 1, on: 1, off: 1.2 },
+        { col: 41, row: FLOOR + 1, w: 3, h: 1, on: 0.9, off: 1.4 },
       ],
     },
   ),

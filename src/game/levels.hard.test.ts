@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TILE } from "./engine/constants";
-import { climbOn, finish, goTo, jumpOnto, mid, rapel, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
+import { climbOn, crossBlinkBridge, finish, goTo, jumpOnto, mid, rapel, relay, solo, stackHoist, waitFor, worldAt } from "./testing/bot";
 import { NO_INPUT, step } from "./engine/world";
 
 /** Fases difíceis: cada roteiro compõe trechos (empurrar, empilhar, elevador…) com 2 jogadores. */
@@ -73,6 +73,35 @@ describe("fases difíceis", () => {
     solo(w, [0, 1], () => w.players.every((p) => p.x > 27 * TILE && p.onGround), 1500);
     const [front, back] = a.x > b.x ? [a, b] : [b, a];
     expect(stackHoist(w, front, back, 34, FLOOR - 2)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("3-3: revezamento, ponte que pisca, revezamento e paredes rápidas", () => {
+    const w = createWorld2("3-3");
+    const [a, b] = w.players;
+    expect(relay(w, b, a, 9, 15)).toBe(true);
+    // a está na frente: os dois encostam na beira do buraco e atravessam na ponte
+    goTo(w, [[a, mid(20)], [b, mid(19)]], 900, { unstick: false });
+    crossBlinkBridge(w, 0, 50, 60);
+    expect(w.resets).toBe(0);
+    expect(relay(w, a, b, 30, 36)).toBe(true);
+    expect(finish(w)).toBe("cleared");
+    expect(w.resets).toBe(0);
+  });
+
+  it("3-4: três revezamentos de 0,9 s e duas pontes que piscam", () => {
+    const w = createWorld2("3-4");
+    const [a, b] = w.players;
+    expect(relay(w, b, a, 8, 14)).toBe(true);
+    goTo(w, [[a, mid(18)], [b, mid(17)]], 900, { unstick: false });
+    crossBlinkBridge(w, 0, 50, 60);
+    expect(w.resets).toBe(0);
+    expect(relay(w, a, b, 29, 35)).toBe(true);
+    goTo(w, [[b, mid(40)], [a, mid(39)]], 900, { unstick: false });
+    crossBlinkBridge(w, 1, 45, 60);
+    expect(w.resets).toBe(0);
+    expect(relay(w, b, a, 51, 57)).toBe(true);
     expect(finish(w)).toBe("cleared");
     expect(w.resets).toBe(0);
   });

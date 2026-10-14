@@ -4,11 +4,6 @@ import { isSolidAt, parseLevel } from "./engine/level";
 import { createWorld, NO_INPUT, step, type PlayerInput, type World } from "./engine/world";
 import { LEVELS } from "./levels";
 
-/** Quem está imediatamente embaixo do jogador (para roteiros de teste). */
-function support(w: World, p: World["players"][number]) {
-  return w.players.find((o) => o !== p && Math.abs(o.y - (p.y + p.h)) < 0.01 && o.x < p.x + p.w && p.x < o.x + o.w);
-}
-
 describe("fases", () => {
   it.each(LEVELS.map((l) => [l.name, l] as const))("%s é bem formada", (_, def) => {
     const level = parseLevel(def);
@@ -197,19 +192,7 @@ describe("fases", () => {
       finish(w);
     });
 
-    it("3-3 tem solução: caixas nos dois botões abrem o portão", () => {
-      const w = createWorld(parseLevel(at("3-3")), 2);
-      finish(w);
-      expect(w.switches.every((sw) => sw.on)).toBe(true);
-    });
 
-    it("3-4 tem solução: dois revezamentos e paredes que piscam", () => {
-      const w = createWorld(parseLevel(at("3-4")), 2);
-      const [a, b] = w.players;
-      relay(w, b, a, 10, 18); // depois disso a está à frente
-      relay(w, a, b, 32, 40);
-      finish(w);
-    });
   });
 
   describe("Mundo 4 — chão que cai e espinhos", () => {
