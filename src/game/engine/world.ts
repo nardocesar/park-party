@@ -6,6 +6,7 @@ import {
   DOOR_W,
   GRAVITY,
   GRAVITY_MAX,
+  GATE_SPEED,
   GRAVITY_WEAK,
   JUMP_VELO,
   KEY_EXCLUDE_FRAMES,
@@ -40,6 +41,10 @@ export type Box = Rect & { kind: "box"; index: number; vy: number; need: number;
 type Body = Player | Box;
 type Support = "tile" | Body | null;
 
+export type Switch = Rect & { target: string; on: boolean };
+/** `open` vai de 0 (fechado) a 1 (aberto); a parte sólida é o topo com altura h·(1−open). */
+export type Gate = Rect & { id: string; open: number };
+
 export type Key = Rect & { holder: number | null; excluded: number | null; excludeTimer: number; used: boolean };
 export type Door = Rect & { open: boolean };
 
@@ -47,6 +52,8 @@ export type World = {
   level: Level;
   players: Player[];
   boxes: Box[];
+  switches: Switch[];
+  gates: Gate[];
   key: Key;
   door: Door;
   cameraX: number;
@@ -60,6 +67,8 @@ export function createWorld(level: Level, playerCount: number): World {
     level,
     players: [],
     boxes: level.boxes.map((b, index) => ({ kind: "box", index, x: 0, y: 0, w: b.w, h: b.h, vy: 0, need: b.need, pushers: 0 })),
+    switches: level.switches.map((sw) => ({ ...sw, on: false })),
+    gates: level.gates.map((g) => ({ ...g, open: 0 })),
     key: { x: 0, y: 0, w: KEY_SIZE, h: KEY_SIZE, holder: null, excluded: null, excludeTimer: 0, used: false },
     door: { x: level.door.x, y: level.door.y, w: DOOR_W, h: DOOR_H, open: false },
     cameraX: 0,
@@ -93,6 +102,8 @@ function placeEntities(world: World) {
     Object.assign(p, { x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false });
   }
   for (const b of world.boxes) placeBox(world, b);
+  for (const sw of world.switches) sw.on = false;
+  for (const g of world.gates) g.open = 0;
   Object.assign(world.key, { x: level.key.x, y: level.key.y, holder: null, excluded: null, excludeTimer: 0, used: false });
   world.door.open = false;
   world.status = "playing";
@@ -123,11 +134,13 @@ function tileHit(level: Level, r: Rect): boolean {
 
 const active = (world: World) => world.players.filter((p) => !p.cleared);
 const bodies = (world: World): Body[] => [...active(world), ...world.boxes];
+export const gateRect = (g: Gate): Rect => ({ x: g.x, y: g.y, w: g.w, h: g.h * (1 - g.open) });
+const gateRects = (world: World) => world.gates.map(gateRect).filter((r) => r.h > 0);
 
 /** O que está logo abaixo do corpo: "tile", outro corpo, ou null. */
 function supportOf(world: World, body: Body): Support {
   const probe = { x: body.x, y: body.y + body.h, w: body.w, h: EPS };
-  if (tileHit(world.level, probe)) return "tile";
+  if (tileHit(world.level, probe) || gateRects(world).some((g) => overlaps(probe, g))) return "tile";
   for (const o of bodies(world)) if (o !== body && overlaps(probe, o)) return o;
   return null;
 }
@@ -151,8 +164,8 @@ function moveAxis(world: World, body: Body, d: number, axis: "x" | "y", ignore: 
       body[axis] = delta > 0 ? Math.floor((body[axis] + size) / TILE) * TILE - size : Math.ceil(body[axis] / TILE) * TILE;
       hit = true;
     }
-    for (const o of bodies(world)) {
-      if (o === body || ignore.has(o) || !overlaps(body, o)) continue;
+    for (const o of [...bodies(world), ...gateRects(world)]) {
+      if (o === body || ignore.has(o as Body) || !overlaps(body, o)) continue;
       body[axis] = delta > 0 ? o[axis] - size : o[axis] + (axis === "x" ? o.w : o.h);
       hit = true;
     }
@@ -267,9 +280,25 @@ export function step(world: World, inputs: PlayerInput[]) {
     return;
   }
 
+  updateSwitches(world);
   updateKey(world);
   updateDoor(world);
   updateCamera(world);
+}
+
+function updateSwitches(world: World) {
+  const things = bodies(world);
+  for (const sw of world.switches) sw.on = things.some((b) => overlaps(b, sw));
+  for (const g of world.gates) {
+    const opening = world.switches.some((sw) => sw.on && sw.target === g.id);
+    if (opening) {
+      g.open = Math.min(1, g.open + GATE_SPEED / g.h);
+      continue;
+    }
+    // fecha sem esmagar: não cresce sobre um corpo
+    const next = { ...g, open: Math.max(0, g.open - GATE_SPEED / g.h) };
+    if (!things.some((b) => overlaps(b, gateRect(next)))) g.open = next.open;
+  }
 }
 
 function updateKey(world: World) {

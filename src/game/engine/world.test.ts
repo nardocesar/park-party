@@ -321,3 +321,50 @@ describe("caixa empurrável", () => {
     expect(w.resets).toBe(0);
   });
 });
+
+describe("botão e portão", () => {
+  const GATED = parseLevel({
+    name: "gated",
+    map: [
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#..................#",
+      "#.1.2..............#",
+      "####################",
+    ],
+    switches: [{ col: 6, row: 4, target: "g" }],
+    gates: [{ id: "g", col: 12, row: 2, w: 1, h: 3 }],
+    boxes: [{ col: 15, row: 3, w: 2, h: 2, need: 1 }],
+  });
+
+  it("portão fechado bloqueia a passagem", () => {
+    const w = createWorld(GATED, 2);
+    w.players[1].x = 9 * TILE;
+    run(w, 200, [NO_INPUT, RIGHT]);
+    expect(w.players[1].x + w.players[1].w).toBe(12 * TILE);
+  });
+
+  it("botão liga enquanto alguém está em cima e o portão abre", () => {
+    const w = createWorld(GATED, 2);
+    const [a, b] = w.players;
+    a.x = 6 * TILE + 1;
+    b.x = 9 * TILE;
+    run(w, 5, [NO_INPUT, NO_INPUT]);
+    expect(w.switches[0].on).toBe(true);
+    run(w, 120, [NO_INPUT, RIGHT]);
+    expect(w.gates[0].open).toBe(1);
+    expect(b.x).toBeGreaterThan(12 * TILE);
+  });
+
+  it("portão volta a fechar quando o botão é solto", () => {
+    const w = createWorld(GATED, 2);
+    const a = w.players[0];
+    a.x = 6 * TILE + 1;
+    run(w, 120, [NO_INPUT, NO_INPUT]);
+    expect(w.gates[0].open).toBe(1);
+    run(w, 120, [RIGHT, NO_INPUT]);
+    expect(w.switches[0].on).toBe(false);
+    expect(w.gates[0].open).toBe(0);
+  });
+});

@@ -1,4 +1,4 @@
-import { DOOR_H, DOOR_W, KEY_SIZE, PLAYER_SIZE, TILE } from "./constants";
+import { DOOR_H, DOOR_W, KEY_SIZE, PLAYER_SIZE, SWITCH_H, TILE } from "./constants";
 
 /**
  * Fase em ASCII:
@@ -6,7 +6,11 @@ import { DOOR_H, DOOR_W, KEY_SIZE, PLAYER_SIZE, TILE } from "./constants";
  *   '1'..'8' spawn dos jogadores   'K' chave   'D' porta
  */
 export type BoxDef = { col: number; row: number; w: number; h: number; need: number };
-export type LevelDef = { name: string; map: string[]; boxes?: BoxDef[] };
+/** Botão de pressão: liga enquanto algo está em cima e abre o portão `target`. */
+export type SwitchDef = { col: number; row: number; target: string };
+/** Portão: bloco sólido que encolhe para cima quando aberto. */
+export type GateDef = { id: string; col: number; row: number; w: number; h: number };
+export type LevelDef = { name: string; map: string[]; boxes?: BoxDef[]; switches?: SwitchDef[]; gates?: GateDef[] };
 
 export type Vec = { x: number; y: number };
 
@@ -22,6 +26,8 @@ export type Level = {
   door: Vec;
   /** Caixas em px; `need` é quantos jogadores precisam empurrar juntos. */
   boxes: { x: number; y: number; w: number; h: number; need: number }[];
+  switches: { x: number; y: number; w: number; h: number; target: string }[];
+  gates: { id: string; x: number; y: number; w: number; h: number }[];
 };
 
 export function parseLevel(def: LevelDef): Level {
@@ -66,6 +72,10 @@ export function parseLevel(def: LevelDef): Level {
     key,
     door,
     boxes: (def.boxes ?? []).map((b) => ({ x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE, need: b.need })),
+    switches: (def.switches ?? []).map((s) => ({
+      x: s.col * TILE, y: (s.row + 1) * TILE - SWITCH_H, w: TILE, h: SWITCH_H, target: s.target,
+    })),
+    gates: (def.gates ?? []).map((g) => ({ id: g.id, x: g.col * TILE, y: g.row * TILE, w: g.w * TILE, h: g.h * TILE })),
   };
 }
 

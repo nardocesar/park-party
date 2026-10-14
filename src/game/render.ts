@@ -1,5 +1,5 @@
 import { TILE, VIEW_H, VIEW_W } from "./engine/constants";
-import type { Box, Player, World } from "./engine/world";
+import { gateRect, type Box, type Player, type World } from "./engine/world";
 
 export const PLAYER_COLORS = ["#f97316", "#38bdf8", "#f472b6", "#4ade80"];
 
@@ -24,6 +24,17 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
     for (let c = c0; c <= c1; c++) if (level.solid[r]?.[c]) ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
   }
 
+  for (const g of world.gates) {
+    const r = gateRect(g);
+    ctx.fillStyle = "#57534e";
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = "#a8a29e";
+    for (let y = r.y + 3; y < r.y + r.h - 1; y += 6) ctx.fillRect(r.x + 3, y, r.w - 6, 2);
+  }
+  for (const sw of world.switches) {
+    ctx.fillStyle = sw.on ? "#16a34a" : "#dc2626";
+    ctx.fillRect(sw.x + 2, sw.y + (sw.on ? 2 : 0), sw.w - 4, sw.h - (sw.on ? 2 : 0));
+  }
   drawDoor(ctx, world);
   for (const b of world.boxes) drawBox(ctx, b, Math.min(b.need, world.players.length));
   for (const p of world.players) if (!p.cleared) drawPlayer(ctx, p);
