@@ -566,6 +566,179 @@ const WORLD_7: LevelDef[] = [
   ),
 ];
 
+// Mundo 8 — De ponta-cabeça: inverter a gravidade com "baixo" (PlayerComponent.checkReverseGravity —
+// docs/re/07-gravity-warp.md). Todas as fases têm teto (linhas 0–1).
+const ceiling = (g: Grid, cols: number) => g.fill(0, cols - 1, 0, 1);
+const FLIP = { flipGravity: true };
+
+const WORLD_8: LevelDef[] = [
+  // 8-1: atravessar o poço de espinhos pelo teto; a chave está pendurada no teto
+  build(
+    "Teto",
+    40,
+    ROWS,
+    (g) => {
+      ceiling(g, 40);
+      spawns(g);
+      g.fill(10, 19, FLOOR + 1, ROWS - 1, ".");
+      g.set(15, 2, "K");
+      g.set(34, FLOOR, "D");
+    },
+    { ...FLIP, thorns: [{ col: 10, row: FLOOR + 1, w: 10, h: 1 }] },
+  ),
+  // 8-2: o portão exige o botão do teto e o do chão ao mesmo tempo (temporizados)
+  build(
+    "Espelho",
+    40,
+    ROWS,
+    (g) => {
+      ceiling(g, 40);
+      spawns(g);
+      g.set(28, FLOOR, "K");
+      g.set(35, FLOOR, "D");
+    },
+    {
+      ...FLIP,
+      switches: [
+        { col: 12, row: 2, target: "g1", timer: 3, ceiling: true },
+        { col: 14, row: FLOOR, target: "g1", timer: 3 },
+      ],
+      gates: [{ id: "g1", col: 19, row: 2, w: 1, h: 7, needAll: true }],
+    },
+  ),
+  // 8-3: espinhos alternam entre chão e teto — inverter na hora certa
+  build(
+    "Zigue-zague",
+    46,
+    ROWS,
+    (g) => {
+      ceiling(g, 46);
+      spawns(g);
+      g.fill(10, 15, FLOOR + 1, ROWS - 1, ".");
+      g.fill(30, 33, FLOOR + 1, ROWS - 1, ".");
+      g.set(22, FLOOR, "K");
+      g.set(41, FLOOR, "D");
+    },
+    {
+      ...FLIP,
+      thorns: [
+        { col: 10, row: FLOOR + 1, w: 6, h: 1 },
+        { col: 20, row: 2, w: 6, h: 1, dir: "down" },
+        { col: 30, row: FLOOR + 1, w: 4, h: 1 },
+      ],
+    },
+  ),
+  // 8-4: pelo teto sobre os espinhos até o espelho de botões, e de volta ao chão
+  build(
+    "Avesso",
+    48,
+    ROWS,
+    (g) => {
+      ceiling(g, 48);
+      spawns(g);
+      g.fill(9, 14, FLOOR + 1, ROWS - 1, ".");
+      g.set(36, 2, "K");
+      g.set(43, FLOOR, "D");
+    },
+    {
+      ...FLIP,
+      thorns: [
+        { col: 9, row: FLOOR + 1, w: 6, h: 1 },
+        { col: 30, row: FLOOR, w: 4, h: 1 },
+      ],
+      switches: [
+        { col: 20, row: 2, target: "g1", timer: 3, ceiling: true },
+        { col: 22, row: FLOOR, target: "g1", timer: 3 },
+      ],
+      gates: [{ id: "g1", col: 26, row: 2, w: 1, h: 7, needAll: true }],
+    },
+  ),
+];
+
+// Mundo 9 — Portais (WarpComponent — docs/re/07-gravity-warp.md).
+const sealedWall = (g: Grid, col: number) => g.fill(col, col, 0, FLOOR);
+
+const WORLD_9: LevelDef[] = [
+  // 9-1: o portal atravessa o muro selado
+  build(
+    "Portal",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      sealedWall(g, 18);
+      g.set(26, FLOOR, "K");
+      g.set(34, FLOOR, "D");
+    },
+    { warps: [{ col: 14, row: FLOOR, w: 1, h: 1, to: [21, FLOOR] }] },
+  ),
+  // 9-2: a sala da chave é fechada; o portal de saída leva todos de uma vez até a porta
+  build(
+    "Todos juntos",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      sealedWall(g, 12);
+      sealedWall(g, 22);
+      sealedWall(g, 30);
+      g.set(16, FLOOR, "K");
+      g.set(38, FLOOR, "D");
+    },
+    {
+      warps: [
+        { col: 9, row: FLOOR, w: 1, h: 1, to: [14, FLOOR] },
+        { col: 19, row: FLOOR, w: 1, h: 1, to: [32, FLOOR], all: true },
+      ],
+    },
+  ),
+  // 9-3: um segura o botão temporizado para o outro chegar ao portal; do outro lado, o inverso
+  build(
+    "Ida e volta",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      sealedWall(g, 22);
+      g.set(32, FLOOR, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      switches: [
+        { col: 9, row: FLOOR, target: "g1", timer: 2.5 },
+        { col: 26, row: FLOOR, target: "g1", timer: 2.5 },
+      ],
+      gates: [{ id: "g1", col: 14, row: FLOOR - 4, w: 1, h: 5 }],
+      warps: [{ col: 18, row: FLOOR, w: 1, h: 1, to: [24, FLOOR] }],
+    },
+  ),
+  // 9-4: labirinto de portais — o portal flutuante leva aos espinhos: não pular perto dele
+  build(
+    "Labirinto",
+    52,
+    ROWS,
+    (g) => {
+      spawns(g);
+      sealedWall(g, 10);
+      sealedWall(g, 20);
+      sealedWall(g, 30);
+      sealedWall(g, 40);
+      g.set(17, FLOOR, "#");
+      g.set(34, FLOOR, "K");
+      g.set(46, FLOOR, "D");
+    },
+    {
+      thorns: [{ col: 21, row: FLOOR, w: 8, h: 1 }],
+      warps: [
+        { col: 8, row: FLOOR, w: 1, h: 1, to: [12, FLOOR] },
+        { col: 14, row: FLOOR - 2, w: 1, h: 1, to: [24, FLOOR] },
+        { col: 18, row: FLOOR, w: 1, h: 1, to: [32, FLOOR] },
+        { col: 37, row: FLOOR, w: 1, h: 1, to: [42, FLOOR], all: true },
+      ],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
@@ -574,6 +747,8 @@ export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Engrenagens", levels: WORLD_5 },
   { name: "Ventania", levels: WORLD_6 },
   { name: "Molas", levels: WORLD_7 },
+  { name: "De ponta-cabeça", levels: WORLD_8 },
+  { name: "Portais", levels: WORLD_9 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

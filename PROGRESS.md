@@ -43,8 +43,8 @@ e não são extraídas nem copiadas. Cada mundo reimplementa uma mecânica a par
 | 5 | Plataformas em trilho (`LinePathLift`, `UpDownLift`) + paredes que empurram (`MoveWall`) | verificado | 05-rails |
 | 6 | Vento (`Wind`) | verificado | 06-wind-spring |
 | 7 | Trampolim (`JumpStand`); `JumpSwitch` pendente | verificado | 06-wind-spring |
-| 8 | Gravidade invertida (`PlayerComponent.reverseGravity`) | todo | |
-| 9 | Teletransporte (`Warp`, `WarpAll`) | todo | |
+| 8 | Gravidade invertida (`PlayerComponent.reverseGravity`) | verificado | 07-gravity-warp |
+| 9 | Teletransporte (`Warp`) | verificado | 07-gravity-warp |
 | 10 | Caixas de cor / interruptores de cor (`ColorBox`, `ForceColorBox`) | todo | |
 | 11 | Escuridão e holofote (`DarknessRect`, `SearchLight`, `Blackout`) | todo | |
 | 12 | Maioria (`MajorityController`) / escala (`ScaleSwitch`) | todo | |

@@ -415,7 +415,7 @@ describe("elevador com peso", () => {
     a.x = 9 * TILE;
     b.x = 11 * TILE;
     run(w, 200, [NO_INPUT, NO_INPUT]);
-    a.y = -200;
+    a.y = 6 * TILE - a.h;
     a.x = 2 * TILE;
     run(w, LIFT_WAIT_FRAMES - 5, [NO_INPUT, NO_INPUT]);
     expect(w.lifts[0].y).toBe(liftTop + 2 * TILE);
@@ -428,7 +428,7 @@ describe("elevador com peso", () => {
     b.x = 11 * TILE;
     run(w, 200, [NO_INPUT, NO_INPUT]);
     expect(w.lifts[0].y).toBe(liftTop + 2 * TILE);
-    a.y = -200; // tira um do elevador (teleporte para fora)
+    a.y = 6 * TILE - a.h; // tira um do elevador (teleporte para o chão firme)
     a.x = 2 * TILE;
     run(w, 300, [NO_INPUT, NO_INPUT]);
     expect(w.lifts[0].y).toBe(liftTop);
@@ -859,5 +859,70 @@ describe("Mundos 6 e 7 — vento e trampolim", () => {
       minY = Math.min(minY, b.y);
     }
     expect(minY).toBeLessThan(6 * TILE - b.h - 30);
+  });
+});
+
+describe("Mundos 8 e 9 — gravidade invertida e teletransporte", () => {
+  const box = (extra: object) =>
+    parseLevel({
+      name: "w89",
+      map: [
+        "####################",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "####################",
+      ],
+      ...extra,
+    });
+  const DOWN: PlayerInput = { ...NO_INPUT, down: true };
+
+  it("apertar baixo no chão inverte a gravidade: cai para o teto e anda nele", () => {
+    const w = createWorld(box({ flipGravity: true }), 1);
+    const p = w.players[0];
+    run(w, 5, [NO_INPUT]);
+    step(w, [DOWN]);
+    run(w, 60, [NO_INPUT]);
+    expect(p.gravDir).toBe(-1);
+    expect(p.y).toBe(TILE);
+    expect(p.onGround).toBe(true);
+    const x0 = p.x;
+    run(w, 20, [RIGHT]);
+    expect(p.x).toBeGreaterThan(x0 + 20);
+    // pulo invertido vai para baixo e volta ao teto
+    step(w, [JUMP]);
+    run(w, 3, [NO_INPUT]);
+    expect(p.y).toBeGreaterThan(TILE + 3);
+    run(w, 60, [NO_INPUT]);
+    expect(p.y).toBe(TILE);
+    // inverte de volta
+    step(w, [DOWN]);
+    run(w, 60, [NO_INPUT]);
+    expect(p.gravDir).toBe(1);
+    expect(p.y + p.h).toBe(6 * TILE);
+  });
+
+  it("sem flipGravity na fase, baixo não faz nada", () => {
+    const w = createWorld(box({}), 1);
+    run(w, 5, [NO_INPUT]);
+    run(w, 30, [DOWN]);
+    expect(w.players[0].gravDir).toBe(1);
+  });
+
+  it("portal leva quem toca até o destino", () => {
+    const w = createWorld(box({ warps: [{ col: 8, row: 5, w: 1, h: 1, to: [15, 5] }] }), 2);
+    const b = w.players[1];
+    run(w, 80, [NO_INPUT, RIGHT]);
+    expect(b.x).toBeGreaterThan(14 * TILE);
+    expect(w.players[0].x).toBeLessThan(4 * TILE);
+  });
+
+  it("portal 'all' leva todos juntos, lado a lado", () => {
+    const w = createWorld(box({ warps: [{ col: 8, row: 5, w: 1, h: 1, to: [12, 5], all: true }] }), 2);
+    run(w, 80, [NO_INPUT, RIGHT]);
+    expect(w.players.every((p) => p.x >= 12 * TILE - 1)).toBe(true);
+    expect(Math.abs(w.players[0].x - w.players[1].x)).toBeGreaterThanOrEqual(PLAYER_SIZE);
   });
 });

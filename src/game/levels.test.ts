@@ -506,4 +506,103 @@ describe("fases", () => {
       finish(w);
     });
   });
+
+  describe("Mundos 8 e 9 — gravidade e portais", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    type P = World["players"][number];
+    const finish = (w: World) => {
+      const walk = walker(w);
+      for (let f = 0; f < 4000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    };
+    const drive = (w: World, inputs: (p: P, i: number) => PlayerInput, done: () => boolean, max = 900) => {
+      for (let f = 0; f < max && !done(); f++) step(w, w.players.map((p, i) => inputs(p, i)));
+    };
+    const toward = (p: P, x: number, jumpOver = false): PlayerInput =>
+      Math.abs(p.x - x) <= 1 ? NO_INPUT : { ...NO_INPUT, left: p.x > x, right: p.x < x, jump: jumpOver };
+    const at_ = (p: P, x: number) => Math.abs(p.x - x) <= 1;
+    /** Leva os dois a xs[i]; depois quem `flip` aperta baixo e espera assentar. */
+    const goFlip = (w: World, xs: number[], flip: boolean[]) => {
+      drive(w, (q, i) => toward(q, xs[i]), () => w.players.every((q, i) => at_(q, xs[i]) && q.onGround));
+      expect(w.players.every((q, i) => at_(q, xs[i]))).toBe(true);
+      step(w, w.players.map((_, i) => ({ ...NO_INPUT, down: flip[i] })));
+      drive(w, () => NO_INPUT, () => w.players.every((q) => q.onGround), 120);
+    };
+
+    it("8-1 tem solução: pelo teto sobre os espinhos", () => {
+      const w = createWorld(parseLevel(at("8-1")), 2);
+      goFlip(w, [7 * TILE, 8 * TILE], [true, true]);
+      expect(w.players.every((p) => p.gravDir === -1)).toBe(true);
+      goFlip(w, [21 * TILE, 22 * TILE], [true, true]);
+      expect(w.key.holder).not.toBeNull();
+      finish(w);
+    });
+
+    it("8-2 tem solução: um no teto e outro no chão nos botões", () => {
+      const w = createWorld(parseLevel(at("8-2")), 2);
+      goFlip(w, [6 * TILE, 8 * TILE], [true, false]);
+      drive(w, (q, i) => toward(q, [12 * TILE + 1, 14 * TILE + 1][i]), () => w.gates[0].open === 1, 600);
+      expect(w.gates[0].open).toBe(1);
+      goFlip(w, [22 * TILE, 23 * TILE], [true, false]);
+      expect(w.players.every((p) => p.gravDir === 1)).toBe(true);
+      finish(w);
+    });
+
+    it("8-3 tem solução: inverter entre os espinhos do chão e do teto", () => {
+      const w = createWorld(parseLevel(at("8-3")), 2);
+      goFlip(w, [7 * TILE, 8 * TILE], [true, true]);
+      goFlip(w, [17 * TILE, 18 * TILE], [true, true]);
+      goFlip(w, [27 * TILE, 28 * TILE], [true, true]);
+      goFlip(w, [35 * TILE, 36 * TILE], [true, true]);
+      expect(w.resets).toBe(0);
+      finish(w);
+    });
+
+    it("8-4 tem solução: teto, espelho de botões, teto de novo e chão", () => {
+      const w = createWorld(parseLevel(at("8-4")), 2);
+      goFlip(w, [6 * TILE, 7 * TILE], [true, true]);
+      // a fica no teto no botão; b volta ao chão depois dos espinhos e segura o botão de baixo
+      goFlip(w, [17 * TILE, 18 * TILE], [false, true]);
+      drive(w, (q, i) => toward(q, [20 * TILE + 1, 22 * TILE + 1][i]), () => w.gates[0].open === 1, 600);
+      expect(w.gates[0].open).toBe(1);
+      goFlip(w, [27 * TILE, 28 * TILE], [false, true]);
+      goFlip(w, [38 * TILE, 39 * TILE], [true, true]);
+      expect(w.players.every((p) => p.gravDir === 1)).toBe(true);
+      finish(w);
+    });
+
+    it("9-1 tem solução: pelo portal", () => {
+      finish(createWorld(parseLevel(at("9-1")), 2));
+    });
+
+    it("9-2 tem solução: quem pega a chave leva todos", () => {
+      const w = createWorld(parseLevel(at("9-2")), 2);
+      const b = w.players[1];
+      drive(w, (q) => (q === b ? toward(q, 20 * TILE) : NO_INPUT), () => w.players.every((p) => p.x > 31 * TILE), 900);
+      expect(w.key.holder).toBe(1);
+      finish(w);
+    });
+
+    it("9-3 tem solução: revezamento até o portal", () => {
+      const w = createWorld(parseLevel(at("9-3")), 2);
+      const [a, b] = w.players;
+      drive(w, (q) => (q === b ? toward(q, 9 * TILE + 1) : NO_INPUT), () => at_(b, 9 * TILE + 1), 600);
+      drive(w, (q) => (q === a ? toward(q, 26 * TILE + 1, q.onGround && q.x > 7 * TILE && q.x < 10 * TILE) : NO_INPUT), () => at_(a, 26 * TILE + 1), 900);
+      expect(at_(a, 26 * TILE + 1)).toBe(true);
+      drive(w, (q) => (q === b ? toward(q, 28 * TILE) : NO_INPUT), () => b.x > 27 * TILE, 900);
+      finish(w);
+    });
+
+    it("9-4 tem solução: não pular sob o portal-armadilha", () => {
+      const w = createWorld(parseLevel(at("9-4")), 2);
+      for (const p of [w.players[1], w.players[0]]) {
+        drive(w, (q) => (q === p ? toward(q, 13 * TILE) : NO_INPUT), () => p.x > 11 * TILE && p.onGround && at_(p, 13 * TILE), 900);
+        // não pula sob o portal flutuante; pula o degrau da coluna 17 já depois dele
+        drive(w, (q) => (q === p ? toward(q, 18 * TILE + 1, q.onGround && q.x > 16 * TILE - 4) : NO_INPUT), () => p.x > 31 * TILE, 600);
+        expect(w.resets).toBe(0);
+      }
+      finish(w);
+    });
+  });
 });

@@ -30,8 +30,8 @@ import {
 } from "./constants";
 import { isSolidAt, type Level, type ThornDir } from "./level";
 
-export type PlayerInput = { left: boolean; right: boolean; jump: boolean };
-export const NO_INPUT: PlayerInput = { left: false, right: false, jump: false };
+export type PlayerInput = { left: boolean; right: boolean; jump: boolean; down?: boolean };
+export const NO_INPUT: PlayerInput = { left: false, right: false, jump: false, down: false };
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -45,6 +45,11 @@ export type Player = Rect & {
   jumpHeld: boolean;
   facing: 1 | -1;
   cleared: boolean;
+  /** 1 = gravidade normal, -1 = invertida (anda no teto). */
+  gravDir: 1 | -1;
+  downHeld: boolean;
+  /** Frames sem poder usar portal de novo (evita ida e volta). */
+  warpCooldown: number;
 };
 
 export type Box = Rect & { kind: "box"; index: number; vy: number; need: number; pushers: number };
@@ -153,6 +158,7 @@ export function createWorld(level: Level, playerCount: number): World {
     world.players.push({
       kind: "player", index: i, x: 0, y: 0, w: PLAYER_SIZE, h: PLAYER_SIZE,
       vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, facing: 1, cleared: false,
+      gravDir: 1, downHeld: false, warpCooldown: 0,
     });
   }
   placeEntities(world);
@@ -172,7 +178,10 @@ function placeEntities(world: World) {
       x: level.spawns[level.spawns.length - 1].x + (p.index - level.spawns.length + 1) * TILE,
       y: level.spawns[level.spawns.length - 1].y,
     };
-    Object.assign(p, { x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false });
+    Object.assign(p, {
+      x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false,
+      gravDir: 1, downHeld: false, warpCooldown: 0,
+    });
   }
   for (const b of world.boxes) placeBox(world, b);
   for (const sw of world.switches) Object.assign(sw, { on: false, pressed: false, rest: 0, countdown: 0, latched: false });
@@ -228,7 +237,8 @@ const gateRects = (world: World): Rect[] => [
 
 /** O que está logo abaixo do corpo: "tile", outro corpo, ou null. */
 function supportOf(world: World, body: Body): Support {
-  const probe = { x: body.x, y: body.y + body.h, w: body.w, h: EPS };
+  const up = body.kind === "player" && body.gravDir < 0;
+  const probe = { x: body.x, y: up ? body.y - EPS : body.y + body.h, w: body.w, h: EPS };
   if (tileHit(world.level, probe) || gateRects(world).some((g) => overlaps(probe, g))) return "tile";
   for (const o of bodies(world)) if (o !== body && overlaps(probe, o)) return o;
   return null;
@@ -348,17 +358,26 @@ export function step(world: World, inputs: PlayerInput[]) {
       p.vx = grounded ? 0 : p.vx * AIR_RESISTIVITY;
     }
 
+    // gravidade invertida (PlayerComponent.checkReverseGravity): apoiado + botão inverte
+    if (world.level.flipGravity && input.down && !p.downHeld && grounded) {
+      p.gravDir = p.gravDir > 0 ? -1 : 1;
+      p.vy = 0;
+      p.coyote = 0;
+    }
+    p.downHeld = input.down ?? false;
+
+    const gd = p.gravDir;
     if (input.jump && !p.jumpHeld && p.coyote > 0) {
-      p.vy = JUMP_VELO;
+      p.vy = JUMP_VELO * gd;
       p.coyote = 0;
     }
     p.jumpHeld = input.jump;
-    const g = input.jump && p.vy < 0 ? GRAVITY_WEAK : GRAVITY;
-    p.vy = Math.min(GRAVITY_MAX, p.vy + g);
+    const g = input.jump && p.vy * gd < 0 ? GRAVITY_WEAK : GRAVITY;
+    p.vy = gd > 0 ? Math.min(GRAVITY_MAX, p.vy + g) : Math.max(-GRAVITY_MAX, p.vy - g);
 
     // trampolim (JumpStandComponent.notifyJump): quem está em cima recebe a velocidade de lançamento
     const feet = { x: p.x, y: p.y + p.h, w: p.w, h: EPS };
-    const spring = world.level.springs.find((sp) => powered(sp.target) && overlaps(feet, sp));
+    const spring = gd > 0 && world.level.springs.find((sp) => powered(sp.target) && overlaps(feet, sp));
     if (spring) {
       p.vy = spring.vy;
       if (spring.vx !== 0) p.vx = spring.vx;
@@ -367,7 +386,7 @@ export function step(world: World, inputs: PlayerInput[]) {
     // vento (WindComponent.OnCollided): velocidade externa enquanto estiver na área
     const wv = windOf(p);
     wind.set(p, wv);
-    if (wv.fy < 0) p.vy = Math.min(p.vy, wv.fy);
+    if (wv.fy < 0 && gd > 0) p.vy = Math.min(p.vy, wv.fy);
   }
 
   // 2. Elevadores: o peso é quem está em cima, direta ou indiretamente (empilhado)
@@ -490,7 +509,7 @@ export function step(world: World, inputs: PlayerInput[]) {
       if (carry.dy !== 0) moveAxis(world, p, carry.dy, "y", carry.dy < 0 ? riders : new Set([s as Body]));
     }
     moveAxis(world, p, p.vx + (wind.get(p)?.fx ?? 0), "x", riders, camBounds);
-    const { hit } = moveAxis(world, p, p.vy, "y", p.vy < 0 ? riders : new Set());
+    const { hit } = moveAxis(world, p, p.vy, "y", p.vy * p.gravDir < 0 ? riders : new Set());
     if (hit) p.vy = 0;
     p.onGround = supportOf(world, p) !== null;
     displacement.set(p, { dx: p.x - x0, dy: p.y - y0 });
@@ -501,11 +520,13 @@ export function step(world: World, inputs: PlayerInput[]) {
   // 5. Morte: cair do mapa ou tocar espinho reinicia a fase
   moveThorns(world);
   const deadly = world.thorns.flatMap(thornRects);
-  if (ps.some((p) => p.y > world.level.height + TILE * 2 || deadly.some((d) => overlaps(p, d)))) {
+  const outOfMap = (p: Player) => p.y > world.level.height + TILE * 2 || p.y < -TILE * 2;
+  if (ps.some((p) => outOfMap(p) || deadly.some((d) => overlaps(p, d)))) {
     resetWorld(world);
     return;
   }
 
+  updateWarps(world);
   updateSwitches(world);
   updateKey(world);
   updateDoor(world);
@@ -639,6 +660,20 @@ function applyRope(world: World, length: number, camBounds?: [number, number]) {
   }
 }
 
+/** Portal (WarpComponent.OnCollided): leva quem toca ao destino; `all` leva todos, lado a lado. */
+function updateWarps(world: World) {
+  const ps = active(world);
+  for (const p of ps) if (p.warpCooldown > 0) p.warpCooldown--;
+  for (const wp of world.level.warps) {
+    const toucher = ps.find((p) => p.warpCooldown === 0 && overlaps(p, wp));
+    if (!toucher) continue;
+    const group = wp.all ? ps : [toucher];
+    group.forEach((p, i) => {
+      Object.assign(p, { x: wp.to.x + (TILE - p.w) / 2 + i * TILE, y: wp.to.y + TILE - p.h, vx: 0, vy: 0, warpCooldown: 30 });
+    });
+  }
+}
+
 function updateSwitches(world: World) {
   const things = bodies(world);
   for (const sw of world.switches) {
@@ -700,7 +735,7 @@ function updateKey(world: World) {
   if (key.holder !== null) {
     const h = world.players[key.holder];
     const tx = h.x + h.w / 2 - key.w / 2;
-    const ty = h.y - key.h - 2;
+    const ty = h.gravDir > 0 ? h.y - key.h - 2 : h.y + h.h + 2; // "acima" no referencial do portador
     key.x += (tx - key.x) * 0.3;
     key.y += (ty - key.y) * 0.3;
   }

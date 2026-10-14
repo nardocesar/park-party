@@ -99,6 +99,30 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
     ctx.fillStyle = on ? "#22c55e" : "#d6d3d1";
     ctx.fillRect(sp.x, sp.y, sp.w, 3);
   }
+  // portais: anel na entrada, ponto no destino e linha tracejada entre eles
+  for (const wp of world.level.warps) {
+    const cx = wp.x + wp.w / 2;
+    const cy = wp.y + wp.h / 2;
+    const tx = wp.to.x + TILE / 2;
+    const ty = wp.to.y + TILE / 2;
+    ctx.strokeStyle = wp.all ? "rgba(217, 70, 239, 0.35)" : "rgba(124, 58, 237, 0.3)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = wp.all ? "#d946ef" : "#7c3aed";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, wp.w / 2 - 1, wp.h / 2 - 1, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
   for (const [i, r] of world.rails.entries()) {
     const def = world.level.rails[i];
     // guia do caminho (pela borda superior central)
@@ -184,6 +208,12 @@ function drawDoor(ctx: CanvasRenderingContext2D, { door }: World) {
 function drawPlayer(ctx: CanvasRenderingContext2D, p: Player) {
   const x = Math.round(p.x);
   const y = Math.round(p.y);
+  if (p.gravDir < 0) {
+    // de ponta-cabeça: espelha verticalmente em torno do centro
+    ctx.save();
+    ctx.translate(0, 2 * y + p.h);
+    ctx.scale(1, -1);
+  }
   ctx.fillStyle = PLAYER_COLORS[p.index % PLAYER_COLORS.length];
   ctx.beginPath();
   ctx.roundRect(x, y, p.w, p.h, 3);
@@ -193,6 +223,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: Player) {
   const eye = p.facing > 0 ? x + p.w - 6 : x + 3;
   ctx.fillRect(eye, y + 4, 2, 3);
   ctx.fillRect(eye + 3, y + 4, 2, 3);
+  if (p.gravDir < 0) ctx.restore();
 }
 
 function drawKey(ctx: CanvasRenderingContext2D, x: number, y: number) {
