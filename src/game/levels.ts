@@ -830,6 +830,155 @@ const WORLD_10: LevelDef[] = [
   ),
 ];
 
+// Mundo 11 — Apagão: a luz apaga periodicamente (BlackoutComponent — docs/re/09-blackout-scale.md).
+const WORLD_11: LevelDef[] = [
+  // 11-1: valas com espinho que somem no escuro
+  build(
+    "Luzes apagando",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      for (const c of [9, 15, 21, 27]) g.set(c, FLOOR + 1, ".");
+      g.set(24, FLOOR, "K");
+      g.set(38, FLOOR, "D");
+    },
+    {
+      blackout: { bright: 2, dark: 1.5 },
+      thorns: [9, 15, 21, 27].map((col) => ({ col, row: FLOOR + 1, w: 1, h: 1 })),
+    },
+  ),
+  // 11-2: ponte que cai no escuro
+  build(
+    "No escuro",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(10, 18, FLOOR + 1, ROWS - 1, ".");
+      g.set(24, FLOOR, "K");
+      g.set(34, FLOOR, "D");
+    },
+    { blackout: { bright: 1.5, dark: 2 }, falls: fallBridge(10, 18) },
+  ),
+  // 11-3: amarrados e no escuro
+  build(
+    "Corda no escuro",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(12, 12, FLOOR + 1, ROWS - 1, ".");
+      g.fill(20, 20, FLOOR + 1, ROWS - 1, ".");
+      g.set(26, FLOOR, "#");
+      g.fill(31, 31, FLOOR + 1, ROWS - 1, ".");
+      g.set(28, FLOOR, "K");
+      g.set(39, FLOOR, "D");
+    },
+    { ...ROPE, blackout: { bright: 2, dark: 2 } },
+  ),
+  // 11-4: esmagadores e valas, com mais escuro que claro
+  build(
+    "Breu",
+    46,
+    ROWS,
+    (g) => {
+      spawns(g);
+      for (const c of [9, 30]) g.set(c, FLOOR + 1, ".");
+      g.set(36, FLOOR, "K");
+      g.set(42, FLOOR, "D");
+    },
+    {
+      blackout: { bright: 1.5, dark: 2.5 },
+      thorns: [
+        { col: 9, row: FLOOR + 1, w: 1, h: 1 },
+        { col: 30, row: FLOOR + 1, w: 1, h: 1 },
+        { col: 15, row: FLOOR - 3, w: 1, h: 1, dir: "down", dy: 3, speed: 1 },
+        { col: 22, row: FLOOR - 3, w: 2, h: 1, dir: "down", dy: 3, speed: 0.8 },
+      ],
+    },
+  ),
+];
+
+// Mundo 12 — Tamanho: botões que fazem crescer/encolher (ScaleSwitchComponent — docs/re/09-blackout-scale.md).
+// Maior anda mais rápido e pula mais alto (velocidades × escala, observado em PlayerComponent).
+const tunnel = (g: Grid, c0: number, c1: number) => g.fill(c0, c1, 0, FLOOR - 1); // passagem de 1 tile
+const WORLD_12: LevelDef[] = [
+  // 12-1: crescer no botão para alcançar o platô de 3 tiles
+  build(
+    "Crescer",
+    40,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(13, 38, FLOOR - 2, FLOOR);
+      g.set(24, FLOOR - 3, "K");
+      g.set(34, FLOOR - 3, "D");
+    },
+    { switches: [{ col: 9, row: FLOOR, target: "", scale: 0.015 }] },
+  ),
+  // 12-2: crescer para subir, encolher para passar no túnel de 1 tile
+  build(
+    "Encolher",
+    48,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(13, 46, FLOOR - 2, FLOOR);
+      g.fill(24, 30, 0, FLOOR - 4);
+      g.set(36, FLOOR - 3, "K");
+      g.set(43, FLOOR - 3, "D");
+    },
+    {
+      switches: [
+        { col: 9, row: FLOOR, target: "", scale: 0.015 },
+        { col: 19, row: FLOOR - 3, target: "", scale: -0.015 },
+      ],
+    },
+  ),
+  // 12-3: túnel com espinhos no teto — só passa quem encolheu abaixo da metade (sem chegar ao mínimo)
+  build(
+    "Na medida",
+    44,
+    ROWS,
+    (g) => {
+      spawns(g);
+      tunnel(g, 18, 23);
+      g.set(32, FLOOR, "K");
+      g.set(40, FLOOR, "D");
+    },
+    {
+      thorns: [{ col: 18, row: FLOOR, w: 6, h: 1, dir: "down" }],
+      switches: [
+        { col: 13, row: FLOOR, target: "", scale: -0.006, dieSmall: true },
+        { col: 26, row: FLOOR, target: "", scale: 0.02 },
+      ],
+    },
+  ),
+  // 12-4: crescer, encolher no túnel de espinhos e crescer de novo para o muro final
+  build(
+    "Tamanho certo",
+    56,
+    ROWS,
+    (g) => {
+      spawns(g);
+      g.fill(13, 54, FLOOR - 2, FLOOR);
+      g.fill(28, 33, 0, FLOOR - 4);
+      g.fill(44, 54, FLOOR - 5, FLOOR - 3);
+      g.set(37, FLOOR - 3, "K");
+      g.set(50, FLOOR - 6, "D");
+    },
+    {
+      thorns: [{ col: 28, row: FLOOR - 3, w: 6, h: 1, dir: "down" }],
+      switches: [
+        { col: 9, row: FLOOR, target: "", scale: 0.015 },
+        { col: 22, row: FLOOR - 3, target: "", scale: -0.006, dieSmall: true },
+        { col: 41, row: FLOOR - 3, target: "", scale: 0.015 },
+      ],
+    },
+  ),
+];
+
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "Primeiros passos", levels: WORLD_1 },
   { name: "Amarrados", levels: WORLD_2 },
@@ -841,6 +990,8 @@ export const WORLDS: { name: string; levels: LevelDef[] }[] = [
   { name: "De ponta-cabeça", levels: WORLD_8 },
   { name: "Portais", levels: WORLD_9 },
   { name: "Cores", levels: WORLD_10 },
+  { name: "Apagão", levels: WORLD_11 },
+  { name: "Tamanho", levels: WORLD_12 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */

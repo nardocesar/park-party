@@ -22,6 +22,9 @@ import {
   MOVEWALL_W,
   MOVEWALL_WAIT,
   RAIL_H,
+  BLACKOUT_FADE,
+  SCALE_MAX,
+  SCALE_MIN,
   PLAYER_SIZE,
   ROPE_K,
   ROPE_RESULT_Y_MAX,
@@ -51,6 +54,8 @@ export type Player = Rect & {
   downHeld: boolean;
   /** Frames sem poder usar portal de novo (evita ida e volta). */
   warpCooldown: number;
+  /** Escala (ScaleSwitch): tamanho, caminhada, pulo e gravidade proporcionais. */
+  scale: number;
 };
 
 export type Box = Rect & { kind: "box"; index: number; vy: number; need: number; pushers: number; color: number | null };
@@ -161,7 +166,7 @@ export function createWorld(level: Level, playerCount: number): World {
     world.players.push({
       kind: "player", index: i, x: 0, y: 0, w: PLAYER_SIZE, h: PLAYER_SIZE,
       vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, facing: 1, cleared: false,
-      gravDir: 1, downHeld: false, warpCooldown: 0,
+      gravDir: 1, downHeld: false, warpCooldown: 0, scale: 1,
     });
   }
   placeEntities(world);
@@ -183,7 +188,7 @@ function placeEntities(world: World) {
     };
     Object.assign(p, {
       x: spawn.x, y: spawn.y, vx: 0, vy: 0, onGround: false, coyote: 0, jumpHeld: false, cleared: false,
-      gravDir: 1, downHeld: false, warpCooldown: 0,
+      gravDir: 1, downHeld: false, warpCooldown: 0, scale: 1,
     });
   }
   for (const b of world.boxes) placeBox(world, b);
@@ -357,7 +362,7 @@ export function step(world: World, inputs: PlayerInput[]) {
 
     const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
     if (dir !== 0) {
-      p.vx = dir * WALK_SPEED;
+      p.vx = dir * WALK_SPEED * p.scale;
       p.facing = dir as 1 | -1;
     } else {
       p.vx = grounded ? 0 : p.vx * AIR_RESISTIVITY;
@@ -374,11 +379,11 @@ export function step(world: World, inputs: PlayerInput[]) {
     const gd = p.gravDir;
     if (input.jump && !p.jumpHeld) jumpPressed.add(p.index);
     if (input.jump && !p.jumpHeld && p.coyote > 0) {
-      p.vy = JUMP_VELO * gd;
+      p.vy = JUMP_VELO * gd * p.scale;
       p.coyote = 0;
     }
     p.jumpHeld = input.jump;
-    const g = input.jump && p.vy * gd < 0 ? GRAVITY_WEAK : GRAVITY;
+    const g = (input.jump && p.vy * gd < 0 ? GRAVITY_WEAK : GRAVITY) * p.scale;
     p.vy = gd > 0 ? Math.min(GRAVITY_MAX, p.vy + g) : Math.max(-GRAVITY_MAX, p.vy - g);
 
     // trampolim (JumpStandComponent.notifyJump): quem está em cima recebe a velocidade de lançamento
@@ -529,7 +534,8 @@ export function step(world: World, inputs: PlayerInput[]) {
   moveThorns(world);
   const deadly = world.thorns.flatMap(thornRects);
   const outOfMap = (p: Player) => p.y > world.level.height + TILE * 2 || p.y < -TILE * 2;
-  if (ps.some((p) => outOfMap(p) || deadly.some((d) => overlaps(p, d)))) {
+  const tooSmall = applyScaleSwitches(world);
+  if (tooSmall || ps.some((p) => outOfMap(p) || deadly.some((d) => overlaps(p, d)))) {
     resetWorld(world);
     return;
   }
@@ -666,6 +672,40 @@ function applyRope(world: World, length: number, camBounds?: [number, number]) {
     if (dx !== 0 && Math.sign(dx) !== Math.sign(p.vx) && !p.onGround) p.vx = 0;
     p.onGround = supportOf(world, p) !== null;
   }
+}
+
+/**
+ * Botão de escala (ScaleSwitchComponent): quem está em cima muda de escala a cada frame, crescendo a
+ * partir dos pés; não cresce se o novo tamanho colidir. Retorna true se alguém encolheu até o mínimo
+ * num botão com `dieSmall` (morte).
+ */
+function applyScaleSwitches(world: World): boolean {
+  let died = false;
+  for (const [i, sw] of world.switches.entries()) {
+    const def = world.level.switches[i];
+    if (def.scale === 0) continue;
+    for (const p of active(world)) {
+      if (!overlaps(p, sw)) continue;
+      const scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, p.scale + def.scale));
+      if (def.dieSmall && def.scale < 0 && scale <= SCALE_MIN) died = true;
+      const size = PLAYER_SIZE * scale;
+      const next = { x: p.x + (p.w - size) / 2, y: p.y + p.h - size, w: size, h: size };
+      const blocked = tileHit(world.level, next) || [...bodies(world), ...gateRects(world)].some((o) => o !== p && overlaps(next, o));
+      if (!blocked) Object.assign(p, next, { scale });
+    }
+  }
+  return died;
+}
+
+/** Luz do apagão (BlackoutComponent): 1 = claro, 0 = escuro, com transição de BLACKOUT_FADE. */
+export function lightLevel(world: World): number {
+  const b = world.level.blackout;
+  if (!b) return 1;
+  const t = (world.frame / FPS) % (b.bright + b.dark);
+  if (t < b.bright) return 1;
+  const intoDark = t - b.bright;
+  const toBright = b.bright + b.dark - t;
+  return Math.max(0, 1 - Math.min(intoDark, BLACKOUT_FADE) / BLACKOUT_FADE, 1 - toBright / BLACKOUT_FADE);
 }
 
 /** Portal (WarpComponent.OnCollided): leva quem toca ao destino; `all` leva todos, lado a lado. */

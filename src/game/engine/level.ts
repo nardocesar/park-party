@@ -12,7 +12,17 @@ export type BoxDef = { col: number; row: number; w: number; h: number; need: num
  * `timer`: continua ligado N segundos depois de solto (SwitchComponent.m_TimerAddSecond).
  * `delay`: o efeito chega N segundos depois de pisado e fica (DelaySwitchComponent).
  */
-export type SwitchDef = { col: number; row: number; target: string; timer?: number; delay?: number; ceiling?: boolean };
+/** `scale`: enquanto alguém está em cima, a escala dele muda nesse tanto por frame (ScaleSwitchComponent). */
+export type SwitchDef = {
+  col: number;
+  row: number;
+  target: string;
+  timer?: number;
+  delay?: number;
+  ceiling?: boolean;
+  scale?: number;
+  dieSmall?: boolean;
+};
 /** Portão: bloco sólido que encolhe para cima quando aberto. `needAll`: exige todos os seus botões. */
 export type GateDef = { id: string; col: number; row: number; w: number; h: number; needAll?: boolean };
 /** Bloco que pisca (BlinkBlockComponent): `on`/`off` em segundos; `phase` adianta o ciclo. */
@@ -80,6 +90,8 @@ export type LevelDef = {
   warps?: WarpDef[];
   /** Habilita inverter a gravidade com "baixo" (PlayerComponent.SetEnableReversalGravity). */
   flipGravity?: boolean;
+  /** Apagão periódico (BlackoutComponent): segundos de claro e de escuro. */
+  blackout?: { bright: number; dark: number };
   /** Corda que liga os jogadores em sequência (1–2–3…); comprimento em tiles. */
   rope?: { length: number };
 };
@@ -98,7 +110,9 @@ export type Level = {
   door: Vec;
   /** Caixas em px; `need` é quantos jogadores precisam empurrar juntos. */
   boxes: { x: number; y: number; w: number; h: number; need: number; color: number | null }[];
-  switches: { x: number; y: number; w: number; h: number; target: string; timer: number; delay: number }[];
+  switches: {
+    x: number; y: number; w: number; h: number; target: string; timer: number; delay: number; scale: number; dieSmall: boolean;
+  }[];
   gates: { id: string; x: number; y: number; w: number; h: number; needAll: boolean }[];
   blinks: { x: number; y: number; w: number; h: number; on: number; off: number; startOn: boolean; phase: number }[];
   falls: { x: number; y: number; w: number; h: number; wait: number }[];
@@ -109,6 +123,7 @@ export type Level = {
   springs: { x: number; y: number; w: number; h: number; vx: number; vy: number; target: string | null }[];
   warps: { x: number; y: number; w: number; h: number; to: { x: number; y: number }; all: boolean }[];
   flipGravity: boolean;
+  blackout: { bright: number; dark: number } | null;
   lifts: { x: number; y: number; w: number; h: number; travel: number; need: number }[];
   /** Comprimento da corda em px, ou null sem corda. */
   rope: number | null;
@@ -160,7 +175,7 @@ export function parseLevel(def: LevelDef): Level {
     })),
     switches: (def.switches ?? []).map((s) => ({
       x: s.col * TILE, y: s.ceiling ? s.row * TILE : (s.row + 1) * TILE - SWITCH_H, w: TILE, h: SWITCH_H, target: s.target,
-      timer: s.timer ?? 0, delay: s.delay ?? 0,
+      timer: s.timer ?? 0, delay: s.delay ?? 0, scale: s.scale ?? 0, dieSmall: s.dieSmall ?? false,
     })),
     gates: (def.gates ?? []).map((g) => ({
       id: g.id, x: g.col * TILE, y: g.row * TILE, w: g.w * TILE, h: g.h * TILE, needAll: g.needAll ?? false,
@@ -190,6 +205,7 @@ export function parseLevel(def: LevelDef): Level {
       to: { x: wp.to[0] * TILE, y: wp.to[1] * TILE }, all: wp.all ?? false,
     })),
     flipGravity: def.flipGravity ?? false,
+    blackout: def.blackout ?? null,
     blinks: (def.blinks ?? []).map((b) => ({
       x: b.col * TILE, y: b.row * TILE, w: b.w * TILE, h: b.h * TILE,
       on: b.on, off: b.off, startOn: b.startOn ?? true, phase: b.phase ?? 0,

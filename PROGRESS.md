@@ -46,8 +46,8 @@ e não são extraídas nem copiadas. Cada mundo reimplementa uma mecânica a par
 | 8 | Gravidade invertida (`PlayerComponent.reverseGravity`) | verificado | 07-gravity-warp |
 | 9 | Teletransporte (`Warp`) | verificado | 07-gravity-warp |
 | 10 | Caixas de cor (`ColorBox`) | verificado | 08-color |
-| 11 | Escuridão e holofote (`DarknessRect`, `SearchLight`, `Blackout`) | todo | |
-| 12 | Maioria (`MajorityController`) / escala (`ScaleSwitch`) | todo | |
+| 11 | Apagão (`Blackout`); holofote pendente | verificado | 09-blackout-scale |
+| 12 | Escala (`ScaleSwitch`); maioria pendente | verificado | 09-blackout-scale |
 
 ## Desconhecidos abertos
 

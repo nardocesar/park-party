@@ -59,3 +59,8 @@ export const MOVEWALL_W = 8;
 
 // Observado: ColorBoxComponent.normalProc empurra a 1 unidade/frame (0x10000) → 0,5 px/frame.
 export const COLOR_BOX_SPEED = 0.5;
+
+// Observado: PlayerComponent.SCALE_MIN = QFP._0_40, SCALE_MAX = QFP._3_50; Blackout DROP_CURTAIN_TIME = 0,8.
+export const SCALE_MIN = 0.4;
+export const SCALE_MAX = 3.5;
+export const BLACKOUT_FADE = 0.4;

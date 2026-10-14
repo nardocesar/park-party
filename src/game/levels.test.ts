@@ -66,7 +66,10 @@ describe("fases", () => {
       if (thornAhead && p.onGround) thornJumps.add(i);
       if (p.onGround && !thornAhead) thornJumps.delete(i);
       const rising = thornJumps.has(i) && !p.onGround && p.vy < 0;
-      const jump = !thornAbove && ((stuck && f % 16 < 8) || gap || spikePit || thornAhead || rising);
+      // perto de esmagador, nada de pulo para destravar (a ponta pega a cabeça)
+      const nearCrusher = world.thorns.some((t) => t.dy > 0 && t.x < p.x + p.w + 2 * TILE && t.x + t.w > p.x - TILE);
+      const unstick = stuck && f % 16 < 8 && !nearCrusher;
+      const jump = !thornAbove && (unstick || gap || spikePit || thornAhead || rising);
       return { ...NO_INPUT, right: true, jump };
     };
   }
@@ -681,6 +684,120 @@ describe("fases", () => {
       const w = createWorld(parseLevel(at("10-4")), 2);
       solo(w, 1, () => w.boxes[0].y === 9 * TILE);
       expect(w.boxes[0].y).toBe(9 * TILE);
+      finish(w);
+    });
+  });
+
+  describe("Mundos 11 e 12 — apagão e tamanho", () => {
+    const at = (slug: string) => LEVELS.find((l) => l.slug === slug)!;
+    type P = World["players"][number];
+    const finish = (w: World) => {
+      const walk = walker(w);
+      for (let f = 0; f < 5000 && w.status === "playing"; f++) step(w, [walk(0, f), walk(1, f)]);
+      expect(w.resets).toBe(0);
+      expect(w.status).toBe("cleared");
+    };
+    const drive = (w: World, inputs: (p: P, i: number) => PlayerInput, done: () => boolean, max = 900) => {
+      for (let f = 0; f < max && !done(); f++) step(w, w.players.map((p, i) => inputs(p, i)));
+    };
+    /** Só `p` se move: até o centro dele ficar em `cx` (px), sem pular. */
+    const walkTo = (w: World, p: P, cx: number, max = 900) =>
+      drive(w, (q) => (q !== p || Math.abs(q.x + q.w / 2 - cx) <= 1 ? NO_INPUT : { ...NO_INPUT, left: q.x + q.w / 2 > cx, right: q.x + q.w / 2 < cx }), () => Math.abs(p.x + p.w / 2 - cx) <= 1 && p.onGround, max);
+    const waitFor = (w: World, done: () => boolean, max = 600) => drive(w, () => NO_INPUT, done, max);
+    /** `p` pula (segurando) andando para a direita até pousar com os pés em `row`. */
+    const jumpOnto = (w: World, p: P, row: number) =>
+      drive(w, (q) => (q === p ? { ...NO_INPUT, right: true, jump: q.onGround || q.vy < 0 } : NO_INPUT), () => p.onGround && Math.abs(p.y + p.h - row * TILE) < 0.01, 300);
+    const mid = (col: number) => col * TILE + TILE / 2;
+
+    it("11-1 tem solução no apagão", () => finish(createWorld(parseLevel(at("11-1")), 2)));
+
+    it("11-2 tem solução: ponte que cai no escuro", () => {
+      const w = createWorld(parseLevel(at("11-2")), 2);
+      const [a, b] = w.players;
+      for (let f = 0; f < 300 && b.x + b.w < 10 * TILE - 2; f++) step(w, [a.x + a.w < b.x - 0.5 ? { ...NO_INPUT, right: true } : NO_INPUT, { ...NO_INPUT, right: true }]);
+      for (let f = 0; f < 60 && a.x + a.w < b.x - 0.5; f++) step(w, [{ ...NO_INPUT, right: true }, NO_INPUT]);
+      finish(w);
+    });
+
+    it("11-3 tem solução: corda no escuro", () => finish(createWorld(parseLevel(at("11-3")), 2)));
+    it("11-4 tem solução: esmagadores no breu", () => finish(createWorld(parseLevel(at("11-4")), 2)));
+
+    const growAndClimb = (w: World, p: P, switchCol: number, row: number, target = 2.3) => {
+      walkTo(w, p, mid(switchCol));
+      waitFor(w, () => p.scale >= target);
+      jumpOnto(w, p, row);
+      expect(p.y + p.h).toBeCloseTo(row * TILE, 5);
+    };
+
+    it("12-1 tem solução: crescer para subir", () => {
+      const w = createWorld(parseLevel(at("12-1")), 2);
+      for (const [i, p] of [w.players[1], w.players[0]].entries()) {
+        growAndClimb(w, p, 9, 6);
+        walkTo(w, p, mid(20 - i * 3));
+      }
+      finish(w);
+    });
+
+    it("12-2 tem solução: crescer, encolher e passar no túnel (os dois por etapa)", () => {
+      const w = createWorld(parseLevel(at("12-2")), 2);
+      const order = [w.players[1], w.players[0]];
+      for (const [i, p] of order.entries()) {
+        growAndClimb(w, p, 9, 6);
+        walkTo(w, p, mid(17 - i * 2));
+      }
+      for (const [i, p] of order.entries()) {
+        walkTo(w, p, mid(19));
+        waitFor(w, () => p.scale <= 1.05);
+        walkTo(w, p, mid(34 - i * 2));
+        expect(p.x).toBeGreaterThan(31 * TILE);
+      }
+      finish(w);
+    });
+
+    it("12-3 tem solução: encolher na medida e crescer de volta (os dois por etapa)", () => {
+      const w = createWorld(parseLevel(at("12-3")), 2);
+      const order = [w.players[1], w.players[0]];
+      for (const [i, p] of order.entries()) {
+        walkTo(w, p, 14 * TILE); // centro na borda direita do botão: sai rápido depois de encolher
+        waitFor(w, () => p.scale <= 0.47);
+        walkTo(w, p, mid(17 - i)); // espera ao lado da entrada do túnel
+      }
+      for (const [i, p] of order.entries()) {
+        walkTo(w, p, mid(26));
+        waitFor(w, () => p.scale >= 1);
+        walkTo(w, p, mid(30 - i * 2));
+        expect(w.resets).toBe(0);
+      }
+      finish(w);
+    });
+
+    it("12-4 tem solução: crescer, encolher, atravessar juntos e crescer para o muro", () => {
+      const w = createWorld(parseLevel(at("12-4")), 2);
+      const [a, b] = w.players;
+      for (const [i, p] of [b, a].entries()) {
+        growAndClimb(w, p, 9, 6);
+        walkTo(w, p, mid(19 - i * 3));
+      }
+      // cada um encolhe na borda do botão e espera antes do túnel
+      walkTo(w, b, 23 * TILE);
+      waitFor(w, () => b.scale <= 0.47);
+      walkTo(w, b, mid(26));
+      walkTo(w, a, 23 * TILE);
+      waitFor(w, () => a.scale <= 0.47);
+      // atravessam juntos (a câmera acompanha os dois)
+      const targets = [mid(36), mid(38)];
+      drive(
+        w,
+        (q, i) => (Math.abs(q.x + q.w / 2 - targets[i]) <= 1 ? NO_INPUT : { ...NO_INPUT, left: q.x + q.w / 2 > targets[i], right: q.x + q.w / 2 < targets[i] }),
+        () => w.players.every((q, i) => Math.abs(q.x + q.w / 2 - targets[i]) <= 1),
+        1500,
+      );
+      expect(w.resets).toBe(0);
+      // o da frente cresce e sobe primeiro, depois o outro
+      for (const [i, p] of [b, a].entries()) {
+        growAndClimb(w, p, 41, 3);
+        walkTo(w, p, mid(49 - i * 2));
+      }
       finish(w);
     });
   });

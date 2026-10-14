@@ -1,5 +1,5 @@
 import { TILE, VIEW_H, VIEW_W } from "./engine/constants";
-import { gateRect, type Box, type Player, type World } from "./engine/world";
+import { gateRect, lightLevel, type Box, type Player, type World } from "./engine/world";
 
 export const PLAYER_COLORS = ["#f97316", "#38bdf8", "#f472b6", "#4ade80"];
 
@@ -43,7 +43,26 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
       ctx.setLineDash([]);
     }
   }
-  for (const sw of world.switches) {
+  for (const [i, sw] of world.switches.entries()) {
+    const grow = world.level.switches[i].scale;
+    if (grow !== 0) {
+      // botão de escala: seta para cima (cresce) ou para baixo (encolhe)
+      ctx.fillStyle = grow > 0 ? "#0d9488" : "#9333ea";
+      ctx.fillRect(sw.x + 1, sw.y, sw.w - 2, sw.h);
+      ctx.beginPath();
+      const cx = sw.x + sw.w / 2;
+      if (grow > 0) {
+        ctx.moveTo(cx - 4, sw.y - 2);
+        ctx.lineTo(cx, sw.y - 7);
+        ctx.lineTo(cx + 4, sw.y - 2);
+      } else {
+        ctx.moveTo(cx - 4, sw.y - 7);
+        ctx.lineTo(cx, sw.y - 2);
+        ctx.lineTo(cx + 4, sw.y - 7);
+      }
+      ctx.fill();
+      continue;
+    }
     ctx.fillStyle = sw.on ? "#16a34a" : sw.delay > 0 ? "#2563eb" : sw.timer > 0 ? "#d97706" : "#dc2626";
     const down = sw.pressed || sw.on;
     ctx.fillRect(sw.x + 2, sw.y + (down ? 2 : 0), sw.w - 4, sw.h - (down ? 2 : 0));
@@ -191,7 +210,35 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
   if (world.level.rope !== null) drawRope(ctx, world);
   for (const p of world.players) if (!p.cleared) drawPlayer(ctx, p);
   if (!world.key.used) drawKey(ctx, world.key.x, world.key.y);
+  drawBlackout(ctx, world, cam);
   ctx.restore();
+}
+
+/** Apagão: escurece tudo, menos um halo em volta de cada jogador (só se enxerga onde está). */
+let darkLayer: HTMLCanvasElement | null = null;
+function drawBlackout(ctx: CanvasRenderingContext2D, world: World, cam: number) {
+  const dark = 1 - lightLevel(world);
+  if (dark <= 0) return;
+  // camada própria: pinta o escuro e recorta os halos (destination-out une os buracos corretamente)
+  darkLayer ??= document.createElement("canvas");
+  darkLayer.width = VIEW_W;
+  darkLayer.height = VIEW_H;
+  const d = darkLayer.getContext("2d");
+  if (!d) return;
+  const offsetY = VIEW_H - world.level.height;
+  d.clearRect(0, 0, VIEW_W, VIEW_H);
+  d.globalCompositeOperation = "source-over";
+  d.fillStyle = `rgba(12, 10, 9, ${0.96 * dark})`;
+  d.fillRect(0, 0, VIEW_W, VIEW_H);
+  d.globalCompositeOperation = "destination-out";
+  d.fillStyle = "#000";
+  for (const p of world.players) {
+    if (p.cleared) continue;
+    d.beginPath();
+    d.arc(p.x + p.w / 2 - cam, p.y + p.h / 2 + offsetY, 16 * p.scale, 0, Math.PI * 2);
+    d.fill();
+  }
+  ctx.drawImage(darkLayer, cam, -offsetY);
 }
 
 function drawDoor(ctx: CanvasRenderingContext2D, { door }: World) {
@@ -220,9 +267,10 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: Player) {
   ctx.fill();
   // olhos para o lado em que anda
   ctx.fillStyle = "#1c1917";
-  const eye = p.facing > 0 ? x + p.w - 6 : x + 3;
-  ctx.fillRect(eye, y + 4, 2, 3);
-  ctx.fillRect(eye + 3, y + 4, 2, 3);
+  const k = p.w / 14; // olhos acompanham a escala
+  const eye = p.facing > 0 ? x + p.w - 6 * k : x + 3 * k;
+  ctx.fillRect(eye, y + 4 * k, 2 * k, 3 * k);
+  ctx.fillRect(eye + 3 * k, y + 4 * k, 2 * k, 3 * k);
   if (p.gravDir < 0) ctx.restore();
 }
 

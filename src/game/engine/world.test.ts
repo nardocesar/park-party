@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { COLOR_BOX_SPEED, FALL_WAIT, GRAVITY, JUMP_VELO, LIFT_WAIT_FRAMES, MOVEWALL_IDLE, PLAYER_SIZE, TILE, VIEW_W, WALK_SPEED } from "./constants";
 import { parseLevel } from "./level";
-import { createWorld, NO_INPUT, step, type PlayerInput } from "./world";
+import { createWorld, lightLevel, NO_INPUT, step, type PlayerInput } from "./world";
 
 const RIGHT: PlayerInput = { ...NO_INPUT, right: true };
 const LEFT: PlayerInput = { ...NO_INPUT, left: true };
@@ -974,5 +974,57 @@ describe("Mundo 10 — caixas coloridas", () => {
     expect(4 * TILE - a.h - minA).toBeGreaterThan(15);
     run(w, 60, [NO_INPUT, NO_INPUT]);
     expect(w.boxes[0].y).toBe(4 * TILE);
+  });
+});
+
+describe("Mundos 11 e 12 — apagão e tamanho", () => {
+  const room = (extra: object) =>
+    parseLevel({
+      name: "w1112",
+      map: [
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#..................#",
+        "#.1.2..............#",
+        "####################",
+      ],
+      ...extra,
+    });
+
+  it("apagão alterna claro e escuro no ciclo da fase", () => {
+    const w = createWorld(room({ blackout: { bright: 1, dark: 1 } }), 1);
+    expect(lightLevel(w)).toBe(1);
+    run(w, 90, [NO_INPUT]); // 1 s claro + 0,4 s de transição
+    expect(lightLevel(w)).toBe(0);
+    run(w, 50, [NO_INPUT]);
+    expect(lightLevel(w)).toBe(1);
+  });
+
+  it("botão de escala faz crescer quem está em cima, e maior pula mais alto", () => {
+    const w = createWorld(room({ switches: [{ col: 8, row: 5, target: "", scale: 0.02 }] }), 1);
+    const p = w.players[0];
+    p.x = 8 * TILE + 1;
+    run(w, 60, [NO_INPUT]);
+    expect(p.scale).toBeGreaterThan(1.5);
+    expect(p.h).toBeCloseTo(PLAYER_SIZE * p.scale, 5);
+    expect(p.y + p.h).toBeCloseTo(6 * TILE, 5); // cresce a partir dos pés
+    p.x = 13 * TILE;
+    run(w, 5, [NO_INPUT]);
+    const y0 = p.y;
+    let minY = y0;
+    for (let f = 0; f < 60; f++) {
+      step(w, [f === 0 ? JUMP : NO_INPUT]);
+      minY = Math.min(minY, p.y);
+    }
+    expect(y0 - minY).toBeGreaterThan(18.6 * 1.5);
+  });
+
+  it("encolher demais em botão com dieSmall mata", () => {
+    const w = createWorld(room({ switches: [{ col: 8, row: 5, target: "", scale: -0.05, dieSmall: true }] }), 1);
+    w.players[0].x = 8 * TILE + 1;
+    run(w, 60, [NO_INPUT]);
+    expect(w.resets).toBeGreaterThan(0);
   });
 });
