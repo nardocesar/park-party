@@ -19,11 +19,12 @@ the rope tying the group together drags whoever falls behind. If one dies, every
 
 The art is 16-bit Wild West pixel art, in the spirit of 90s arcade run-and-guns: a sunset,
 a town on the horizon, cacti, crates and saloon doors. The eight cowboys are original
-characters, and each one wears their player's color on their clothes and on the little arrow
-above their head.
+characters, each with their own color on their clothes and on the little arrow above their head.
+Every player picks one in the lobby before the game starts.
 
 - **65 levels** across **16 worlds**, each world introducing a new mechanic
 - **2 to 8 players**: up to 4 on a shared keyboard, plus up to 4 gamepads
+- **Title screen and lobby**: each player joins with their own jump button and picks a cowboy
 - **Chiptune sound effects** synthesized live in the browser (no audio files), with a mute toggle
 - Everything that needs "everyone" (heavy crates, platforms, portals) **scales with the group size**
 - Progress, level unlocks and **best times per player count** saved in Postgres
@@ -65,14 +66,22 @@ above their head.
     <td><b>Up to 8 players</b> — players 5–8 start on the heads of players 1–4.</td>
   </tr>
   <tr>
-    <td colspan="2"><img src="docs/screenshots/menu.png" alt="Level select menu with worlds, cleared levels and 2P to 8P buttons"></td>
+    <td><img src="docs/screenshots/title.png" alt="Title screen: Park Party in western lettering over a pixel art sunset and a town on the horizon, with the prompt to press any key"></td>
+    <td><img src="docs/screenshots/lobby.png" alt="Lobby with four cards filled (the Sheriff, the Preacher, the Prospector and the Cowboy) and four empty slots waiting for players"></td>
   </tr>
   <tr>
-    <td colspan="2"><b>Level select</b> — pick how many are playing (2 to 8); the next level unlocks when you clear the previous one.</td>
+    <td><b>Title screen</b> — press any key to start.</td>
+    <td><b>Lobby</b> — each player joins with their own jump button and picks a cowboy with ← →; nobody can take a cowboy already picked.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/menu.png" alt="Level select with the chosen team at the top, the worlds and the cleared levels"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>Level select</b> — shows the team you picked; the next level unlocks when you clear the previous one.</td>
   </tr>
 </table>
 
-<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-worlds-dark.png"><img src="docs/readme/title-worlds-light.png" alt="The 15 worlds" height="32"></picture></h3>
+<h3><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-worlds-dark.png"><img src="docs/readme/title-worlds-light.png" alt="The 16 worlds" height="32"></picture></h3>
 
 | | World | Mechanic |
 |---|---|---|
@@ -97,18 +106,18 @@ alone, so someone always has to hold the button for the others.
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-controls-dark.png"><img src="docs/readme/title-controls-light.png" alt="Controls" height="40"></picture></h2>
 
-| Player | Move | Jump | Action (gravity, etc.) |
+| Controls | Move | Jump (joins in the lobby) | Action (gravity, etc.) / leave the lobby |
 |---|---|---|---|
-| 🟧 P1 | `A` `D` | `W` | `S` |
-| 🟦 P2 | `←` `→` | `↑` | `↓` |
-| 🩷 P3 | `J` `L` | `I` | `K` |
-| 🟩 P4 | `Num 4` `Num 6` | `Num 8` | `Num 5` |
-| 🟪 P5 · 🟨 P6 · 🟥 P7 · ⬜ P8 | Gamepads 1–4: stick or d-pad | `A` button | Stick or d-pad down |
+| Keyboard 1 | `A` `D` | `W` | `S` |
+| Keyboard 2 | `←` `→` | `↑` | `↓` |
+| Keyboard 3 | `J` `L` | `I` | `K` |
+| Keyboard 4 | `Num 4` `Num 6` | `Num 8` | `Num 5` |
+| Gamepads 1–4 | Stick or d-pad | `A` button | Stick or d-pad down |
 
-With up to 4 players, gamepad N also controls player N. With 5 to 8 players, the keyboard runs
-players 1–4 and gamepads 1–4 become players 5–8 (one keyboard can't take 8 people). `R` restarts
-the level, `M` toggles sound, `Esc` goes back to the menu and `Enter` moves on to the next level
-once you clear one.
+In the lobby, whoever presses a jump button joins with that set of keys or that gamepad, and keeps
+it in every level. `←` `→` pick a cowboy, down leaves, and `Enter` (or `Start` on a gamepad) goes
+to level select once at least 2 have joined. In a level, `R` restarts, `M` toggles sound, `Esc`
+goes back to level select and `Enter` moves on to the next level once you clear one.
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-running-locally-dark.png"><img src="docs/readme/title-running-locally-light.png" alt="Running locally" height="40"></picture></h2>
 
@@ -138,7 +147,7 @@ npm run dev              # http://localhost:3000
 
 ```bash
 npm test             # unit tests + every level solved by a bot
-npm run test:e2e     # browser: menu, keyboard and restart
+npm run test:e2e     # browser: title, lobby, keyboard and restart
 npm run typecheck && npm run lint
 ```
 
