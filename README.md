@@ -2,7 +2,7 @@
 
 <h1><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-park-party-dark.png"><img src="docs/readme/title-park-party-light.png" alt="Park Party" height="90"></picture></h1>
 
-**A Wild West co-op platformer for 2 to 4 players on one keyboard.**
+**A Wild West co-op platformer for 2 to 8 players: one keyboard plus controllers.**
 Grab the key, open the saloon and walk in together — nobody makes it alone.
 
 ![Four cowboys flip gravity, walk along the ceiling over the cacti, grab the key and drop back down to enter the saloon](docs/screenshots/gameplay.gif)
@@ -18,12 +18,13 @@ be solved as a team. One player climbs on another's shoulders, everyone pushes t
 the rope tying the group together drags whoever falls behind. If one dies, everyone restarts.
 
 The art is 16-bit Wild West pixel art, in the spirit of 90s arcade run-and-guns: a sunset,
-a town on the horizon, cacti, crates and saloon doors. The four cowboys are original
+a town on the horizon, cacti, crates and saloon doors. The eight cowboys are original
 characters, and each one wears their player's color on their clothes and on the little arrow
 above their head.
 
-- **61 levels** across **15 worlds**, each world introducing a new mechanic
-- **2 to 4 players** on a shared keyboard or gamepads
+- **65 levels** across **16 worlds**, each world introducing a new mechanic
+- **2 to 8 players**: up to 4 on a shared keyboard, plus up to 4 gamepads
+- **Chiptune sound effects** synthesized live in the browser (no audio files), with a mute toggle
 - Everything that needs "everyone" (heavy crates, platforms, portals) **scales with the group size**
 - Progress, level unlocks and **best times per player count** saved in Postgres
 - The in-game text is in Brazilian Portuguese
@@ -49,11 +50,25 @@ above their head.
   </tr>
   <tr>
     <td><img src="docs/screenshots/rail.png" alt="Four cowboys on a mine cart marked 4/4 crossing a gap"></td>
-    <td><img src="docs/screenshots/menu.png" alt="Level select menu with worlds, cleared levels and 2P, 3P and 4P buttons"></td>
+    <td><img src="docs/screenshots/cage.png" alt="Two cowboys in a valley below a key locked inside an iron cage floating in the air"></td>
   </tr>
   <tr>
     <td><b>Gears</b> — the mine cart only leaves with everyone on board (4/4).</td>
-    <td><b>Level select</b> — pick how many are playing; the next level unlocks when you clear the previous one.</td>
+    <td><b>Caged key</b> — a button somewhere else unlocks the cage; then you still have to reach it.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/countdown.png" alt="Two cowboys crossing a wooden bridge over a chasm while a big number 2 counts down above the button they left"></td>
+    <td><img src="docs/screenshots/eight.png" alt="Eight cowboys in two rows, the back four standing on the heads of the front four"></td>
+  </tr>
+  <tr>
+    <td><b>Countdown bridge</b> — the bridge only exists while someone holds the button; let go and the big number counts down.</td>
+    <td><b>Up to 8 players</b> — players 5–8 start on the heads of players 1–4.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/menu.png" alt="Level select menu with worlds, cleared levels and 2P to 8P buttons"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>Level select</b> — pick how many are playing (2 to 8); the next level unlocks when you clear the previous one.</td>
   </tr>
 </table>
 
@@ -74,9 +89,11 @@ above their head.
 | 11 | Blackout | The lights go out periodically |
 | 12 | Size | Shrinking and growing |
 | 13–15 | Mix · Challenge · Grand finale | Everything at once, ending with level 15-4 "Park Party" |
+| 16 | Gold rush | Long levels in the rhythm of PICO PARK 2: caged key, countdown buttons and bridges that only exist while someone holds the button |
 
 Levels 3 and 4 of each world are the hard ones: they chain several sections together and mix
-the world's mechanic with the earlier ones.
+the world's mechanic with the earlier ones. In world 16 the countdowns are too short to cross
+alone, so someone always has to hold the button for the others.
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-controls-dark.png"><img src="docs/readme/title-controls-light.png" alt="Controls" height="40"></picture></h2>
 
@@ -86,9 +103,12 @@ the world's mechanic with the earlier ones.
 | 🟦 P2 | `←` `→` | `↑` | `↓` |
 | 🩷 P3 | `J` `L` | `I` | `K` |
 | 🟩 P4 | `Num 4` `Num 6` | `Num 8` | `Num 5` |
+| 🟪 P5 · 🟨 P6 · 🟥 P7 · ⬜ P8 | Gamepads 1–4: stick or d-pad | `A` button | Stick or d-pad down |
 
-Gamepads work too: gamepad N controls player N. `R` restarts the level, `Esc` goes back to the
-menu and `Enter` moves on to the next level once you clear one.
+With up to 4 players, gamepad N also controls player N. With 5 to 8 players, the keyboard runs
+players 1–4 and gamepads 1–4 become players 5–8 (one keyboard can't take 8 people). `R` restarts
+the level, `M` toggles sound, `Esc` goes back to the menu and `Enter` moves on to the next level
+once you clear one.
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-running-locally-dark.png"><img src="docs/readme/title-running-locally-light.png" alt="Running locally" height="40"></picture></h2>
 
@@ -99,7 +119,7 @@ npm install
 cp .env.example .env     # local Postgres DATABASE_URL (port 5434)
 npm run db:up            # starts Postgres with docker compose
 npm run db:migrate       # creates the tables
-npm run db:seed          # writes the 61 levels to the database
+npm run db:seed          # writes the 65 levels to the database (run again after pulling new levels)
 npm run dev              # http://localhost:3000
 ```
 
@@ -110,6 +130,8 @@ npm run dev              # http://localhost:3000
   grids (`src/game/render/sprites.ts`), and the map and background are drawn once per level
 - **Custom fixed-step engine** in TypeScript (`src/game/engine/`): tile and AABB collision,
   players carrying each other, rope, flipped gravity, portals, scaling…
+- **Web Audio** for the sound effects: each one is a short sequence of synthesized notes
+  (`src/game/audio.ts`), triggered by events the engine emits every frame
 - **Postgres + Drizzle** for levels, progress and best times
 - **Vitest + Playwright**: every level has a test where a bot solves it with 2 players, so no
   impossible level ever ships
