@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Game from "@/components/Game";
 import { clearedLevelIds, getBestTime, listLevels } from "@/db/queries";
 import { unlockedIds } from "@/game/progress";
-import { MAX_PLAYERS } from "@/game/engine/constants";
+import { teamFromQuery } from "@/game/lobby";
 
 export default function PlayPage(props: PageProps<"/play/[slug]">) {
   return (
@@ -19,24 +19,25 @@ export default function PlayPage(props: PageProps<"/play/[slug]">) {
 async function PlayLevel(props: PageProps<"/play/[slug]">) {
   await connection();
   const { slug } = await props.params;
-  const { players } = await props.searchParams;
-  const playerCount = Math.min(MAX_PLAYERS, Math.max(1, Number(players) || 2));
+  const { team, query } = teamFromQuery(await props.searchParams);
+  const playerCount = team.length;
 
   const [levels, cleared] = await Promise.all([listLevels(), clearedLevelIds()]);
   const i = levels.findIndex((l) => l.slug === slug);
   if (i < 0) notFound();
-  if (!unlockedIds(levels, cleared).has(levels[i].id)) redirect("/");
+  if (!unlockedIds(levels, cleared).has(levels[i].id)) redirect(`/fases?${query}`);
   const level = levels[i];
   const next = levels[i + 1];
 
   return (
     <Game
-      key={`${slug}-${playerCount}`}
+      key={`${slug}-${query}`}
       levelId={level.id}
       name={`${level.slug} · ${level.name}`}
       def={level.data}
-      playerCount={playerCount}
-      nextHref={next ? `/play/${next.slug}?players=${playerCount}` : null}
+      team={team}
+      menuHref={`/fases?${query}`}
+      nextHref={next ? `/play/${next.slug}?${query}` : null}
       bestMs={await getBestTime(level.id, playerCount)}
     />
   );

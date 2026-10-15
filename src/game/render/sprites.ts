@@ -6,6 +6,8 @@
 export type Sprite = { rows: string[]; pal: Record<string, string> };
 
 export const PLAYER_COLORS = ["#f97316", "#38bdf8", "#f472b6", "#4ade80", "#a78bfa", "#facc15", "#ef4444", "#e5e7eb"];
+/** Nome de cada cowboy, na ordem das cores. */
+export const COWBOY_NAMES = ["Cowboy", "Pistoleiro", "Grandalhão", "El Sombrero", "Pregador", "Xerife", "Apostador", "Garimpeiro"];
 const PLAYER_SHADES = ["#c2410c", "#0284c7", "#db2777", "#16a34a", "#7c3aed", "#ca8a04", "#b91c1c", "#9ca3af"];
 
 const BODY: Record<string, string> = {

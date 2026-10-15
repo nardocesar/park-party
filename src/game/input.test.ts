@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { inputLabel, readInputs } from "./input";
+import { deviceLabel, inputLabel, readInputs } from "./input";
 
 const pad = (axes: number[], pressed: number[]) => ({
   axes,
@@ -52,5 +52,17 @@ describe("entrada", () => {
     expect(inputLabel(0, 6)).toBe("A D + W (S)");
     expect(inputLabel(4, 6)).toBe("controle 1");
     expect(inputLabel(7, 8)).toBe("controle 4");
+  });
+
+  it("dispositivos explícitos (vindos do lobby): cada jogador ouve só o seu", () => {
+    vi.stubGlobal("navigator", { getGamepads: () => [pad([0], [0])] });
+    const inputs = readInputs(new Set(["KeyD", "ArrowLeft"]), [["g0"], ["k0"]]);
+    expect(inputs[0]).toEqual({ left: false, right: false, jump: true, down: false });
+    expect(inputs[1]).toEqual({ left: false, right: true, jump: false, down: false });
+  });
+
+  it("legenda por dispositivo", () => {
+    expect(deviceLabel("k1")).toBe("← → + ↑ (↓)");
+    expect(deviceLabel("g2")).toBe("controle 3");
   });
 });

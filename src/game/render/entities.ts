@@ -4,6 +4,10 @@ import { countdownSeconds, gateRect, type Box, type Player, type World } from ".
 import { hash, pixelText, px, spriteImage } from "./pixel";
 import { CACTUS, COWBOYS, COWBOYS_WALK, KEY_SPRITE, PLAYER_COLORS } from "./sprites";
 
+/** Cowboy (0–7) de cada jogador; sem escolha, o jogador N é o cowboy N. */
+export type Looks = readonly number[];
+const lookOf = (looks: Looks, i: number) => (looks[i] ?? i) % COWBOYS.length;
+
 const OUTLINE = "#21130c";
 const WOOD = "#8a5426";
 const WOOD_DARK = "#5a3214";
@@ -294,12 +298,12 @@ export function drawDoor(ctx: CanvasRenderingContext2D, { door }: World) {
   pixelText(ctx, "SALOON", x - 4, y - 8, "#ffd06a");
 }
 
-export function drawBox(ctx: CanvasRenderingContext2D, b: Box, need: number) {
+export function drawBox(ctx: CanvasRenderingContext2D, b: Box, need: number, looks: Looks) {
   const x = Math.round(b.x);
   const y = Math.round(b.y);
   if (b.color !== null) {
     // caixote pintado na cor do dono, sem número (só ele empurra)
-    px(ctx, x, y, b.w, b.h, PLAYER_COLORS[b.color % PLAYER_COLORS.length]);
+    px(ctx, x, y, b.w, b.h, PLAYER_COLORS[lookOf(looks, b.color)]);
     for (let k = y + 5; k < y + b.h - 1; k += 5) px(ctx, x + 1, k, b.w - 2, 1, "rgba(0,0,0,0.25)");
     px(ctx, x + b.w / 2 - 1, y + 3, 2, b.h - 6, OUTLINE);
     ctx.strokeStyle = OUTLINE;
@@ -419,11 +423,11 @@ export function drawRope(ctx: CanvasRenderingContext2D, world: World) {
 }
 
 /** Setinha na cor do jogador acima do chapéu: identifica cada um no meio do grupo. */
-export function drawMarker(ctx: CanvasRenderingContext2D, p: Player) {
+export function drawMarker(ctx: CanvasRenderingContext2D, p: Player, looks: Looks) {
   const k = p.h / PLAYER_SIZE;
   const cx = Math.round(p.x + p.w / 2);
   const top = Math.round(p.y - 2 * k);
-  const color = PLAYER_COLORS[p.index % PLAYER_COLORS.length];
+  const color = PLAYER_COLORS[lookOf(looks, p.index)];
   ctx.save();
   if (p.gravDir < 0) {
     ctx.translate(0, 2 * Math.round(p.y) + p.h);
@@ -437,9 +441,9 @@ export function drawMarker(ctx: CanvasRenderingContext2D, p: Player) {
   ctx.restore();
 }
 
-export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: number) {
+export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, frame: number, looks: Looks) {
   const walking = p.onGround && Math.abs(p.vx) > 0.2 && Math.floor(frame / 6) % 2 === 1;
-  const img = spriteImage((walking ? COWBOYS_WALK : COWBOYS)[p.index % COWBOYS.length]);
+  const img = spriteImage((walking ? COWBOYS_WALK : COWBOYS)[lookOf(looks, p.index)]);
   const x = Math.round(p.x);
   const y = Math.round(p.y);
   const k = p.h / PLAYER_SIZE;
