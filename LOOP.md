@@ -31,7 +31,7 @@ Stack fixa (não trocar sem perguntar ao Carlos):
   de fase) nem código decompilado. Reimplemente a partir do comportamento
   observado, com arte e áudio próprios (formas geométricas simples bastam).
 - O projeto não usa o nome "Pico Park" nem a marca na UI; nome de trabalho:
-  **"Park Party"**.
+  **"Sunset Park"**.
 - Não execute ações destrutivas fora deste repositório.
 
 ## Estado do loop

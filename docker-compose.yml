@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_USER: park
       POSTGRES_PASSWORD: park
-      POSTGRES_DB: park_party
+      POSTGRES_DB: sunset_park
     ports:
       - "5434:5432"
     volumes:

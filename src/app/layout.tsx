@@ -20,7 +20,7 @@ const rye = Rye({
 });
 
 export const metadata: Metadata = {
-  title: "Park Party",
+  title: "Sunset Park",
   description: "A Wild West co-op platformer in the browser for 2 to 8 players.",
 };
 

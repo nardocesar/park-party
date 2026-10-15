@@ -1454,7 +1454,7 @@ const WORLD_15: LevelDef[] = [
   // 15-4: a festa inteira — caixa de todos, revezamento, cores, pistões, portal de todos, ponte que
   // cai, esmagador e elevador de todos
   build(
-    "Park Party",
+    "Sunset Park",
     106,
     ROWS + 1,
     (g) => {

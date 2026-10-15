@@ -28,7 +28,7 @@ type Props = {
 
 declare global {
   interface Window {
-    __parkParty?: { world: World };
+    __sunsetPark?: { world: World };
   }
 }
 
@@ -58,7 +58,7 @@ export default function Game({ levelId, name, def, team, menuHref, nextHref, bes
     ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
 
     const world = createWorld(parseLevel(def), playerCount);
-    window.__parkParty = { world };
+    window.__sunsetPark = { world };
     const keyboard = createKeyboard(window);
     const devices = team.map((s) => s.devices);
     const looks = team.map((s) => s.cowboy);
@@ -120,7 +120,7 @@ export default function Game({ levelId, name, def, team, menuHref, nextHref, bes
       cancelAnimationFrame(raf);
       keyboard.dispose();
       window.removeEventListener("keydown", onKey);
-      delete window.__parkParty;
+      delete window.__sunsetPark;
     };
   }, [def, team, playerCount, levelId, menuHref, nextHref, router]);
 

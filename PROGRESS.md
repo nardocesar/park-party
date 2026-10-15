@@ -50,7 +50,7 @@ e não são extraídas nem copiadas. Cada mundo reimplementa uma mecânica a par
 | 12 | Escala (`ScaleSwitch`); maioria pendente | verificado | 09-blackout-scale |
 | 13 | Mistura: mecânicas anteriores combinadas | verificado | — |
 | 14 | Desafio: combinações mais longas | verificado | — |
-| 15 | Grande final: fases longas que encadeiam quase tudo (15-4 "Park Party") | verificado | — |
+| 15 | Grande final: fases longas que encadeiam quase tudo (15-4 "Sunset Park") | verificado | — |
 
 ### Dificuldade
 

@@ -134,7 +134,7 @@ export default function Lobby() {
         className="absolute inset-0 h-full w-full object-cover opacity-70 [image-rendering:pixelated]"
       />
       <div className="relative text-center drop-shadow-[0_3px_0_#1d1118]">
-        <h1 className={`font-western text-gold ${phase === "title" ? "text-7xl sm:text-8xl" : "text-5xl"}`}>Park Party</h1>
+        <h1 className={`font-western text-gold ${phase === "title" ? "text-7xl sm:text-8xl" : "text-5xl"}`}>Sunset Park</h1>
         <p className="mt-2 text-sand">Grab the key, open the door and walk in together.</p>
       </div>
 
