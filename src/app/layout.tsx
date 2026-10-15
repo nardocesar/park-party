@@ -21,7 +21,7 @@ const rye = Rye({
 
 export const metadata: Metadata = {
   title: "Park Party",
-  description: "Plataforma cooperativa no navegador para 2 a 4 jogadores.",
+  description: "Plataforma cooperativa no navegador para 2 a 8 jogadores.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MAX_PLAYERS } from "../engine/constants";
-import { CACTUS, COWBOYS, COWBOYS_WALK, KEY_SPRITE, PLAYER_COLORS, type Sprite } from "./sprites";
+import { CACTUS, COWBOY_NAMES, COWBOYS, COWBOYS_WALK, KEY_SPRITE, PLAYER_COLORS, type Sprite } from "./sprites";
 
 const all: [string, Sprite][] = [
   ...COWBOYS.map((s, i) => [`cowboy ${i + 1}`, s] as [string, Sprite]),
@@ -26,6 +26,10 @@ describe("sprites", () => {
       expect(s.rows).toHaveLength(16);
       expect(s.rows[0]).toHaveLength(14);
     }
+  });
+
+  it("cada cowboy tem um nome", () => {
+    expect(COWBOY_NAMES).toHaveLength(COWBOYS.length);
   });
 
   it("a roupa de cada cowboy usa a cor do jogador", () => {

@@ -4,7 +4,8 @@ import type { GameEvent } from "./engine/world";
  * Efeitos sonoros sintetizados (Web Audio), no estilo chiptune: nada de arquivos de áudio.
  * Cada som é uma sequência de notas; `at` posiciona a nota no tempo (padrão: logo após a anterior).
  */
-export type Sfx = GameEvent | "restart";
+/** Além dos eventos do jogo: reinício e os sons do lobby. */
+export type Sfx = GameEvent | "restart" | "start" | "join" | "leave" | "pick";
 
 type Note = {
   /** Frequência inicial (Hz); com `to`, desliza até ela. */
@@ -51,6 +52,15 @@ export const SOUNDS: Record<Sfx, Note[]> = {
     { f: 300, d: 0.2, wave: "noise", v: 0.35, at: 0 },
   ],
   restart: [{ f: 330, to: 200, d: 0.12, wave: "square", v: 0.4 }],
+  // jingle da tela título: arpejo subindo e um acorde de saloon
+  start: [
+    ...[G4, C5, E5, G5].map((f, i) => ({ f, d: 0.08, wave: "square" as const, v: 0.45, at: i * 0.08 })),
+    { f: C6, d: 0.45, wave: "triangle", v: 0.7, at: 0.32 },
+    { f: E6, d: 0.45, wave: "triangle", v: 0.35, at: 0.32 },
+  ],
+  join: [C5, G5].map((f, i) => ({ f, d: 0.06, wave: "square" as const, v: 0.45, at: i * 0.06 })),
+  leave: [G5, C5].map((f, i) => ({ f, d: 0.06, wave: "square" as const, v: 0.4, at: i * 0.06 })),
+  pick: [{ f: 900, d: 0.03, wave: "square", v: 0.35 }],
 };
 
 export const soundLength = (notes: Note[]) => {
@@ -164,3 +174,7 @@ export function createAudio(): Audio {
     },
   };
 }
+
+// um só contexto de áudio para o app inteiro (o navegador só o libera após um gesto)
+let shared: Audio | null = null;
+export const sharedAudio = () => (shared ??= createAudio());

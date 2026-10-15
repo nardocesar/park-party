@@ -5,9 +5,12 @@ import * as e from "./entities";
 import { canvas } from "./pixel";
 import { tileLayer } from "./tiles";
 
-export { PLAYER_COLORS } from "./sprites";
+export { COWBOY_NAMES, COWBOYS, COWBOYS_WALK, PLAYER_COLORS } from "./sprites";
+export { drawBackground } from "./background";
+export { spriteImage } from "./pixel";
+export type { Looks } from "./entities";
 
-export function render(ctx: CanvasRenderingContext2D, world: World) {
+export function render(ctx: CanvasRenderingContext2D, world: World, looks: e.Looks = []) {
   const { level } = world;
   const cam = Math.round(world.cameraX);
   ctx.save();
@@ -26,14 +29,14 @@ export function render(ctx: CanvasRenderingContext2D, world: World) {
   e.drawPushers(ctx, world);
   e.drawLifts(ctx, world);
   e.drawDoor(ctx, world);
-  for (const b of world.boxes) e.drawBox(ctx, b, Math.min(b.need, world.players.length));
+  for (const b of world.boxes) e.drawBox(ctx, b, Math.min(b.need, world.players.length), looks);
   e.drawFalls(ctx, world);
   e.drawThorns(ctx, world);
   if (level.rope !== null) e.drawRope(ctx, world);
   const active = world.players.filter((p) => !p.cleared);
   // marcadores antes dos jogadores: numa torre, quem está em cima cobre o marcador de baixo
-  for (const p of active) e.drawMarker(ctx, p);
-  for (const p of active) e.drawPlayer(ctx, p, world.frame);
+  for (const p of active) e.drawMarker(ctx, p, looks);
+  for (const p of active) e.drawPlayer(ctx, p, world.frame, looks);
   if (!world.key.used) {
     e.drawKey(ctx, world.key.x, world.key.y, world.frame);
     if (world.key.locked) e.drawCage(ctx, world.key.x, world.key.y);

@@ -6,9 +6,9 @@ const player = (page: Page, i: number) =>
     return { x: p.x, y: p.y, onGround: p.onGround };
   }, i);
 
-test("menu abre a fase 1-1 com 2 jogadores e o teclado controla cada um", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("link", { name: "2P" }).first().click();
+test("lista de fases sem lobby abre a fase 1-1 com 2 jogadores e o teclado controla cada um", async ({ page }) => {
+  await page.goto("/fases?players=2");
+  await page.getByRole("link", { name: /^1-1/ }).click();
   await expect(page).toHaveURL(/\/play\/1-1\?players=2/);
   await expect(page.getByTestId("game-canvas")).toBeVisible();
   await page.waitForFunction(() => window.__parkParty?.world.players.every((p) => p.onGround));
@@ -32,4 +32,34 @@ test("menu abre a fase 1-1 com 2 jogadores e o teclado controla cada um", async 
   await page.keyboard.press("KeyR");
   await page.waitForFunction(() => window.__parkParty!.world.resets === 1);
   expect((await player(page, 0)).x).toBeCloseTo(p1.x, 0);
+});
+
+test("título → lobby: cada um entra com o próprio pulo, escolhe o cowboy e joga com ele", async ({ page }) => {
+  await page.goto("/");
+  // a página pode chegar antes da hidratação: repete a tecla até o lobby abrir
+  await expect(async () => {
+    await page.keyboard.press("Space");
+    await expect(page.getByText("Precisa de 2 jogadores")).toBeVisible({ timeout: 500 });
+  }).toPass();
+
+  // J1 entra pela seta (↑), J2 pelo W; o J1 troca de cowboy com →
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("KeyW");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByTestId("seat-0")).toContainText("Grandalhão"); // pula o Pistoleiro, que é do J2
+  await expect(page.getByTestId("seat-1")).toContainText("Pistoleiro");
+
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/fases\?team=k1:2,k0:1/);
+  await page.getByRole("link", { name: /^1-1/ }).click();
+  await expect(page).toHaveURL(/\/play\/1-1\?team=k1:2,k0:1/);
+  await page.waitForFunction(() => window.__parkParty?.world.players.every((p) => p.onGround));
+
+  // a seta agora comanda o J1 (só ela), e o W o J2
+  const before = await player(page, 0);
+  await page.keyboard.down("ArrowUp");
+  await page.waitForTimeout(150);
+  expect((await player(page, 0)).y).toBeLessThan(before.y);
+  expect((await player(page, 1)).onGround).toBe(true);
+  await page.keyboard.up("ArrowUp");
 });
