@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-park-party-dark.png"><img src="docs/readme/title-park-party-light.png" alt="Park Party" height="90"></picture></h1>
+<h1><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-sunset-park-dark.png"><img src="docs/readme/title-sunset-park-light.png" alt="Sunset Park" height="90"></picture></h1>
 
 **A Wild West co-op platformer for 2 to 8 players: one keyboard plus controllers.**
 Grab the key, open the saloon and walk in together — nobody makes it alone.
@@ -13,7 +13,7 @@ Grab the key, open the saloon and walk in together — nobody makes it alone.
 
 ---
 
-Park Party is a browser game inspired by **PICO PARK**: every level is a puzzle that can only
+Sunset Park is a browser game inspired by **PICO PARK**: every level is a puzzle that can only
 be solved as a team. One player climbs on another's shoulders, everyone pushes the same crate,
 the rope tying the group together drags whoever falls behind. If one dies, everyone restarts.
 
@@ -66,7 +66,7 @@ Every player picks one in the lobby before the game starts.
     <td><b>Up to 8 players</b> — players 5–8 start on the heads of players 1–4.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/title.png" alt="Title screen: Park Party in western lettering over a pixel art sunset and a town on the horizon, with the prompt to press any key"></td>
+    <td><img src="docs/screenshots/title.png" alt="Title screen: Sunset Park in western lettering over a pixel art sunset and a town on the horizon, with the prompt to press any key"></td>
     <td><img src="docs/screenshots/lobby.png" alt="Lobby with four cards filled (the Sheriff, the Preacher, the Prospector and the Cowboy) and four empty slots waiting for players"></td>
   </tr>
   <tr>
@@ -97,7 +97,7 @@ Every player picks one in the lobby before the game starts.
 | 10 | Colors | Colored crates |
 | 11 | Blackout | The lights go out periodically |
 | 12 | Size | Shrinking and growing |
-| 13–15 | Mix · Challenge · Grand finale | Everything at once, ending with level 15-4 "Park Party" |
+| 13–15 | Mix · Challenge · Grand finale | Everything at once, ending with level 15-4 "Sunset Park" |
 | 16 | Gold rush | Long levels in the rhythm of PICO PARK 2: caged key, countdown buttons and bridges that only exist while someone holds the button |
 
 Levels 3 and 4 of each world are the hard ones: they chain several sections together and mix

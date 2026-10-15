@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const player = (page: Page, i: number) =>
   page.evaluate((i) => {
-    const p = window.__parkParty!.world.players[i];
+    const p = window.__sunsetPark!.world.players[i];
     return { x: p.x, y: p.y, onGround: p.onGround };
   }, i);
 
@@ -11,7 +11,7 @@ test("lista de fases sem lobby abre a fase 1-1 com 2 jogadores e o teclado contr
   await page.getByRole("link", { name: /^1-1/ }).click();
   await expect(page).toHaveURL(/\/play\/1-1\?players=2/);
   await expect(page.getByTestId("game-canvas")).toBeVisible();
-  await page.waitForFunction(() => window.__parkParty?.world.players.every((p) => p.onGround));
+  await page.waitForFunction(() => window.__sunsetPark?.world.players.every((p) => p.onGround));
 
   const p1 = await player(page, 0);
   const p2 = await player(page, 1);
@@ -30,7 +30,7 @@ test("lista de fases sem lobby abre a fase 1-1 com 2 jogadores e o teclado contr
 
   // R reinicia todos
   await page.keyboard.press("KeyR");
-  await page.waitForFunction(() => window.__parkParty!.world.resets === 1);
+  await page.waitForFunction(() => window.__sunsetPark!.world.resets === 1);
   expect((await player(page, 0)).x).toBeCloseTo(p1.x, 0);
 });
 
@@ -53,7 +53,7 @@ test("título → lobby: cada um entra com o próprio pulo, escolhe o cowboy e j
   await expect(page).toHaveURL(/\/levels\?team=k1:2,k0:1/);
   await page.getByRole("link", { name: /^1-1/ }).click();
   await expect(page).toHaveURL(/\/play\/1-1\?team=k1:2,k0:1/);
-  await page.waitForFunction(() => window.__parkParty?.world.players.every((p) => p.onGround));
+  await page.waitForFunction(() => window.__sunsetPark?.world.players.every((p) => p.onGround));
 
   // a seta agora comanda o J1 (só ela), e o W o J2
   const before = await player(page, 0);

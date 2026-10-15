@@ -703,7 +703,7 @@ describe("fases difíceis", () => {
     expect(w.resets).toBe(0);
   });
 
-  it("15-4: Park Party — a festa inteira", () => {
+  it("15-4: Sunset Park — a festa inteira", () => {
     const w = createWorld2("15-4");
     const [a, b] = w.players;
     solo(w, [0, 1], () => w.players.every((p) => p.x > 16 * TILE && p.onGround), 3000);

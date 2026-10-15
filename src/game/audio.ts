@@ -74,7 +74,9 @@ export const soundLength = (notes: Note[]) => {
   return end;
 };
 
-const MUTE_KEY = "park-party:muted";
+const MUTE_KEY = "sunset-park:muted";
+/** Chave antiga (antes de o jogo se chamar Sunset Park). */
+const OLD_MUTE_KEY = "park-party:muted";
 /** Intervalo mínimo entre repetições do mesmo som (evita metralhar em quadros seguidos). */
 const MIN_GAP = 0.05;
 
@@ -96,7 +98,7 @@ export function createAudio(): Audio {
   // depois do gesto, o contexto pode levar alguns ms para sair de "suspended"; notas agendadas tocam ao retomar
   let unlocked = false;
   try {
-    muted = localStorage.getItem(MUTE_KEY) === "1";
+    muted = (localStorage.getItem(MUTE_KEY) ?? localStorage.getItem(OLD_MUTE_KEY)) === "1";
   } catch {}
 
   const ensure = () => {
