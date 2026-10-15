@@ -48,10 +48,10 @@ describe("entrada", () => {
   });
 
   it("legenda de cada jogador segue a mesma regra", () => {
-    expect(inputLabel(0, 4)).toBe("A D + W (S) ou controle 1");
+    expect(inputLabel(0, 4)).toBe("A D + W (S) or gamepad 1");
     expect(inputLabel(0, 6)).toBe("A D + W (S)");
-    expect(inputLabel(4, 6)).toBe("controle 1");
-    expect(inputLabel(7, 8)).toBe("controle 4");
+    expect(inputLabel(4, 6)).toBe("gamepad 1");
+    expect(inputLabel(7, 8)).toBe("gamepad 4");
   });
 
   it("dispositivos explícitos (vindos do lobby): cada jogador ouve só o seu", () => {
@@ -63,6 +63,6 @@ describe("entrada", () => {
 
   it("legenda por dispositivo", () => {
     expect(deviceLabel("k1")).toBe("← → + ↑ (↓)");
-    expect(deviceLabel("g2")).toBe("controle 3");
+    expect(deviceLabel("g2")).toBe("gamepad 3");
   });
 });

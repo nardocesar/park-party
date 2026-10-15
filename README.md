@@ -28,7 +28,7 @@ Every player picks one in the lobby before the game starts.
 - **Chiptune sound effects** synthesized live in the browser (no audio files), with a mute toggle
 - Everything that needs "everyone" (heavy crates, platforms, portals) **scales with the group size**
 - Progress, level unlocks and **best times per player count** saved in Postgres
-- The in-game text is in Brazilian Portuguese
+- All in-game text is in English
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-mechanics-dark.png"><img src="docs/readme/title-mechanics-light.png" alt="Mechanics" height="40"></picture></h2>
 

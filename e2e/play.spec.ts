@@ -7,7 +7,7 @@ const player = (page: Page, i: number) =>
   }, i);
 
 test("lista de fases sem lobby abre a fase 1-1 com 2 jogadores e o teclado controla cada um", async ({ page }) => {
-  await page.goto("/fases?players=2");
+  await page.goto("/levels?players=2");
   await page.getByRole("link", { name: /^1-1/ }).click();
   await expect(page).toHaveURL(/\/play\/1-1\?players=2/);
   await expect(page.getByTestId("game-canvas")).toBeVisible();
@@ -39,18 +39,18 @@ test("título → lobby: cada um entra com o próprio pulo, escolhe o cowboy e j
   // a página pode chegar antes da hidratação: repete a tecla até o lobby abrir
   await expect(async () => {
     await page.keyboard.press("Space");
-    await expect(page.getByText("Precisa de 2 jogadores")).toBeVisible({ timeout: 500 });
+    await expect(page.getByText("Needs 2 players")).toBeVisible({ timeout: 500 });
   }).toPass();
 
   // J1 entra pela seta (↑), J2 pelo W; o J1 troca de cowboy com →
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("KeyW");
   await page.keyboard.press("ArrowRight");
-  await expect(page.getByTestId("seat-0")).toContainText("Grandalhão"); // pula o Pistoleiro, que é do J2
-  await expect(page.getByTestId("seat-1")).toContainText("Pistoleiro");
+  await expect(page.getByTestId("seat-0")).toContainText("Bruiser"); // pula o Gunslinger, que é do J2
+  await expect(page.getByTestId("seat-1")).toContainText("Gunslinger");
 
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/fases\?team=k1:2,k0:1/);
+  await expect(page).toHaveURL(/\/levels\?team=k1:2,k0:1/);
   await page.getByRole("link", { name: /^1-1/ }).click();
   await expect(page).toHaveURL(/\/play\/1-1\?team=k1:2,k0:1/);
   await page.waitForFunction(() => window.__parkParty?.world.players.every((p) => p.onGround));
