@@ -7,17 +7,17 @@ import { teamFromQuery, type Team } from "@/game/lobby";
 import { unlockedIds } from "@/game/progress";
 import { COWBOY_NAMES, PLAYER_COLORS } from "@/game/render/sprites";
 
-export default function LevelsPage(props: PageProps<"/fases">) {
+export default function LevelsPage(props: PageProps<"/levels">) {
   return (
     <main className="flex min-h-screen flex-col items-center gap-8 bg-dusk bg-[linear-gradient(to_bottom,#2b1846,#1d1118_420px)] p-6 text-sand">
-      <Suspense fallback={<p className="text-dust">Carregando fases…</p>}>
+      <Suspense fallback={<p className="text-dust">Loading levels…</p>}>
         <LevelList {...props} />
       </Suspense>
     </main>
   );
 }
 
-async function LevelList(props: PageProps<"/fases">) {
+async function LevelList(props: PageProps<"/levels">) {
   await connection();
   const { team, query } = teamFromQuery(await props.searchParams);
   const [levels, cleared] = await Promise.all([listLevels(), clearedLevelIds()]);
@@ -26,13 +26,13 @@ async function LevelList(props: PageProps<"/fases">) {
   return (
     <div className="grid w-full max-w-2xl gap-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-western text-4xl text-gold">Escolha a fase</h1>
+        <h1 className="font-western text-4xl text-gold">Pick a level</h1>
         <TeamBar team={team} />
       </header>
       {[...byWorld].map(([world, worldLevels]) => (
         <section key={world} className="grid gap-3">
           <h2 className="font-western text-lg text-gold">
-            Mundo {world} · {WORLDS[world - 1]?.name}
+            World {world} · {WORLDS[world - 1]?.name}
           </h2>
           {worldLevels.map((level) =>
             unlocked.has(level.id) ? (
@@ -45,14 +45,14 @@ async function LevelList(props: PageProps<"/fases">) {
                   {level.slug} · {level.name}
                   {cleared.has(level.id) && <span className="ml-2 text-green-400">✓</span>}
                 </span>
-                <span className="rounded bg-gold px-2.5 py-1 text-sm text-dusk">Jogar</span>
+                <span className="rounded bg-gold px-2.5 py-1 text-sm text-dusk">Play</span>
               </Link>
             ) : (
               <div key={level.slug} className="flex items-center justify-between rounded-lg border-2 border-plank-edge/60 bg-plank/60 p-4 font-semibold">
                 <span className="text-sand/60">
                   {level.slug} · {level.name}
                 </span>
-                <span className="text-sm text-dust/70">bloqueada</span>
+                <span className="text-sm text-dust/70">locked</span>
               </div>
             ),
           )}
@@ -72,7 +72,7 @@ function TeamBar({ team }: { team: Team }) {
         </span>
       ))}
       <Link href="/" className="text-gold hover:underline">
-        trocar time
+        change team
       </Link>
     </div>
   );

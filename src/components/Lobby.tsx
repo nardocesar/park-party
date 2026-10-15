@@ -52,7 +52,7 @@ export default function Lobby() {
     const go = () => {
       if (teamRef.current.length < 2) return;
       audio.play("enter");
-      router.push(`/fases?team=${formatTeam(teamRef.current)}`);
+      router.push(`/levels?team=${formatTeam(teamRef.current)}`);
     };
     goRef.current = go;
 
@@ -135,15 +135,15 @@ export default function Lobby() {
       />
       <div className="relative text-center drop-shadow-[0_3px_0_#1d1118]">
         <h1 className={`font-western text-gold ${phase === "title" ? "text-7xl sm:text-8xl" : "text-5xl"}`}>Park Party</h1>
-        <p className="mt-2 text-sand">Peguem a chave, abram a porta e entrem juntos.</p>
+        <p className="mt-2 text-sand">Grab the key, open the door and walk in together.</p>
       </div>
 
       {phase === "title" ? (
         <p className="relative animate-pulse font-western text-2xl text-sand drop-shadow-[0_2px_0_#1d1118]">
-          aperte qualquer tecla
+          press any key
         </p>
       ) : (
-        <section aria-label="Escolha dos cowboys" className="relative grid w-full max-w-4xl gap-5">
+        <section aria-label="Pick your cowboys" className="relative grid w-full max-w-4xl gap-5">
           <ol className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {Array.from({ length: MAX_PLAYERS }, (_, i) => (
               <SeatCard key={i} index={i} seat={team[i]} />
@@ -151,9 +151,9 @@ export default function Lobby() {
           </ol>
           <div className="grid gap-2 rounded-lg bg-dusk/80 p-3 text-center text-sm text-dust">
             <p>
-              Entre apertando seu pulo: <b className="text-sand">W · ↑ · I · Num 8</b> ou o <b className="text-sand">botão A</b> do controle
+              Join by pressing your jump: <b className="text-sand">W · ↑ · I · Num 8</b> or the <b className="text-sand">A button</b> on a gamepad
             </p>
-            <p>← → troca de cowboy · baixo sai · Esc volta</p>
+            <p>← → change cowboy · down leaves · Esc goes back</p>
           </div>
           <button
             type="button"
@@ -161,7 +161,7 @@ export default function Lobby() {
             disabled={team.length < 2}
             className="mx-auto rounded bg-gold px-6 py-2 font-western text-xl text-dusk disabled:opacity-40"
           >
-            {team.length < 2 ? "Precisa de 2 jogadores" : "Escolher fase (Enter)"}
+            {team.length < 2 ? "Needs 2 players" : "Pick a level (Enter)"}
           </button>
         </section>
       )}
@@ -173,8 +173,8 @@ function SeatCard({ index, seat }: { index: number; seat: Team[number] | undefin
   if (!seat)
     return (
       <li className="flex h-48 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-plank-edge bg-dusk/70 text-dust">
-        <span className="font-western text-lg">J{index + 1}</span>
-        <span className="text-xs">aperte pulo</span>
+        <span className="font-western text-lg">P{index + 1}</span>
+        <span className="text-xs">press jump</span>
       </li>
     );
   const color = PLAYER_COLORS[seat.cowboy];
@@ -185,7 +185,7 @@ function SeatCard({ index, seat }: { index: number; seat: Team[number] | undefin
       style={{ borderColor: color }}
     >
       <span className="font-western text-sm" style={{ color }}>
-        J{index + 1}
+        P{index + 1}
       </span>
       <Portrait cowboy={seat.cowboy} />
       <span className="flex w-full items-center justify-between font-western text-base">
@@ -193,7 +193,7 @@ function SeatCard({ index, seat }: { index: number; seat: Team[number] | undefin
         {COWBOY_NAMES[seat.cowboy]}
         <span className="text-dust">▶</span>
       </span>
-      <span className="text-[11px] text-dust">{seat.devices.map(deviceLabel).join(" ou ")}</span>
+      <span className="text-[11px] text-dust">{seat.devices.map(deviceLabel).join(" or ")}</span>
     </li>
   );
 }

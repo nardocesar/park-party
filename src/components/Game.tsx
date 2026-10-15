@@ -128,22 +128,22 @@ export default function Game({ levelId, name, def, team, menuHref, nextHref, bes
     <div className="flex w-full max-w-[960px] flex-col gap-3">
       <div className="flex items-center justify-between text-sm text-sand">
         <Link href={menuHref} className="font-semibold hover:underline">
-          ← Fases
+          ← Levels
         </Link>
         <span className="font-western text-base text-gold">{name}</span>
         <span className="flex items-center gap-3">
           <span className="tabular-nums">
-            {formatTime(elapsed)} · mortes {resets}
-            {bestMs !== null && ` · recorde ${formatTime(bestMs)}`}
+            {formatTime(elapsed)} · deaths {resets}
+            {bestMs !== null && ` · best ${formatTime(bestMs)}`}
           </span>
           <button
             type="button"
             onClick={toggleMute}
-            aria-label={muted ? "Ligar o som" : "Desligar o som"}
+            aria-label={muted ? "Turn sound on" : "Turn sound off"}
             aria-pressed={muted}
             className="rounded border border-plank-edge bg-plank px-2 py-0.5 text-xs hover:bg-plank-edge"
           >
-            {muted ? "🔇 som" : "🔊 som"}
+            {muted ? "🔇 sound" : "🔊 sound"}
           </button>
         </span>
       </div>
@@ -158,17 +158,17 @@ export default function Game({ levelId, name, def, team, menuHref, nextHref, bes
         />
         {clearedMs !== null && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg bg-dusk/75 text-sand">
-            <p className="font-western text-4xl text-gold">Fase concluída!</p>
+            <p className="font-western text-4xl text-gold">Level clear!</p>
             <p className="tabular-nums">{formatTime(clearedMs)}</p>
             {!saved ? (
-              <p className="text-sm text-dust">Salvando…</p>
+              <p className="text-sm text-dust">Saving…</p>
             ) : nextHref ? (
               <Link href={nextHref} className="rounded bg-gold px-4 py-2 font-semibold text-dusk">
-                Próxima fase (Enter)
+                Next level (Enter)
               </Link>
             ) : (
               <Link href={menuHref} className="rounded bg-gold px-4 py-2 font-semibold text-dusk">
-                Voltar às fases
+                Back to levels
               </Link>
             )}
           </div>
@@ -179,10 +179,10 @@ export default function Game({ levelId, name, def, team, menuHref, nextHref, bes
         {team.map((s, i) => (
           <li key={i} className="flex items-center gap-1">
             <span className="inline-block h-3 w-3 rounded-sm" style={{ background: PLAYER_COLORS[s.cowboy] }} />
-            {COWBOY_NAMES[s.cowboy]}: {s.devices.map(deviceLabel).join(" ou ")}
+            {COWBOY_NAMES[s.cowboy]}: {s.devices.map(deviceLabel).join(" or ")}
           </li>
         ))}
-        <li>R reinicia · M som · Esc fases</li>
+        <li>R restart · M sound · Esc levels</li>
       </ul>
     </div>
   );

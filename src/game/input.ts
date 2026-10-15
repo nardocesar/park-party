@@ -77,9 +77,9 @@ export function readInputs(down: Set<string>, players: number | Device[][]): Pla
   );
 }
 
-export const deviceLabel = (d: Device) => (d[0] === "k" ? KEY_LABELS[Number(d[1])] : `controle ${Number(d[1]) + 1}`);
+export const deviceLabel = (d: Device) => (d[0] === "k" ? KEY_LABELS[Number(d[1])] : `gamepad ${Number(d[1]) + 1}`);
 
 /** Legenda dos controles do jogador `i` numa partida de `playerCount`. */
 export function inputLabel(i: number, playerCount: number) {
-  return defaultDevices(i, playerCount).map(deviceLabel).join(" ou ");
+  return defaultDevices(i, playerCount).map(deviceLabel).join(" or ");
 }

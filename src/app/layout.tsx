@@ -21,7 +21,7 @@ const rye = Rye({
 
 export const metadata: Metadata = {
   title: "Park Party",
-  description: "Plataforma cooperativa no navegador para 2 a 8 jogadores.",
+  description: "A Wild West co-op platformer in the browser for 2 to 8 players.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     // suppressHydrationWarning: extensões do navegador (modo leitura, temas) alteram <html>/<body>
     // antes da hidratação; só vale para atributos destes dois elementos, não para os filhos.
     <html
-      lang="pt-BR"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${rye.variable} h-full antialiased`}
       suppressHydrationWarning
     >

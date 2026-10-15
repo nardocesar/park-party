@@ -44,7 +44,7 @@ const spawns = (g: Grid) => "1234".split("").forEach((d, i) => g.set(2 + i, FLOO
 
 const WORLD_1: LevelDef[] = [
   // 1-1: um degrau sobe sozinho; a chave fica numa plataforma de 2 tiles que exige empilhar
-  build("Primeiros passos", 40, ROWS, (g) => {
+  build("First steps", 40, ROWS, (g) => {
     spawns(g);
     g.set(11, FLOOR, "#");
     g.fill(20, 24, FLOOR - 1, FLOOR - 1);
@@ -54,7 +54,7 @@ const WORLD_1: LevelDef[] = [
   }),
   // 1-2: buracos de 1 tile (cair reinicia todos) e chave acima de um degrau largo
   // (o degrau tem 2 tiles para caberem os dois jogadores do empilhamento)
-  build("Cuidado com o buraco", 46, ROWS, (g) => {
+  build("Mind the gap", 46, ROWS, (g) => {
     spawns(g);
     g.fill(14, 14, FLOOR + 1, ROWS - 1, ".");
     g.fill(21, 22, FLOOR, FLOOR);
@@ -64,7 +64,7 @@ const WORLD_1: LevelDef[] = [
     g.set(41, FLOOR, "D");
   }),
   // 1-3: chave alta, buraco e escada até a porta no platô
-  build("Escada para a porta", 48, ROWS, (g) => {
+  build("Stairway to the door", 48, ROWS, (g) => {
     spawns(g);
     g.fill(10, 10, FLOOR + 1, ROWS - 1, ".");
     g.fill(18, 21, FLOOR - 1, FLOOR - 1);
@@ -78,7 +78,7 @@ const WORLD_1: LevelDef[] = [
   // 1-4 (difícil): caixa que exige todos vira ponte; duas caixas seguram os botões do portão;
   // a chave fica num platô que exige torre; o elevador final só sobe com todos.
   build(
-    "Ponte, botões e torre",
+    "Bridge, buttons and tower",
     58,
     ROWS + 1,
     (g) => {
@@ -109,7 +109,7 @@ const WORLD_1: LevelDef[] = [
   // 1-5 (difícil): dois elevadores que exigem todos, em níveis diferentes; a chave flutua acima do
   // último nível e exige torre.
   build(
-    "Elevadores em série",
+    "Elevators in a row",
     44,
     ROWS + 1,
     (g) => {
@@ -138,7 +138,7 @@ const DEEP = 14; // fases com poço: chão mais grosso para quem está pendurado
 const WORLD_2: LevelDef[] = [
   // 2-1: a corda arrasta quem fica para trás; buracos de 1 tile matam
   build(
-    "Amarrados",
+    "Tied together",
     40,
     ROWS,
     (g) => {
@@ -153,7 +153,7 @@ const WORLD_2: LevelDef[] = [
   ),
   // 2-2: a chave está no fundo de um poço; um desce pendurado e o outro o iça de volta
   build(
-    "Rapel",
+    "Rappel",
     40,
     DEEP,
     (g) => {
@@ -167,7 +167,7 @@ const WORLD_2: LevelDef[] = [
   // 2-3 (difícil): dois paredões (torre no degrau duplo + içar pela corda) com um rapel no meio
   // até a chave e uma vala com espinho antes do segundo paredão.
   build(
-    "Paredão duplo",
+    "Double wall",
     52,
     DEEP,
     (g) => {
@@ -185,7 +185,7 @@ const WORLD_2: LevelDef[] = [
   ),
   // 2-4 (difícil): ponte que cai atravessada amarrados, rapel no poço pela chave e paredão no fim
   build(
-    "Corda bamba",
+    "Tightrope",
     52,
     DEEP,
     (g) => {
@@ -206,7 +206,7 @@ const WORLD_2: LevelDef[] = [
 const WORLD_3: LevelDef[] = [
   // 3-1: um segura o botão temporizado, o outro passa e segura o do outro lado
   build(
-    "Revezamento",
+    "Relay",
     44,
     ROWS,
     (g) => {
@@ -224,7 +224,7 @@ const WORLD_3: LevelDef[] = [
   ),
   // 3-2: paredes que piscam fora de fase e uma ponte que pisca sobre o poço
   build(
-    "Pisca-pisca",
+    "Blinkers",
     44,
     ROWS,
     (g) => {
@@ -245,7 +245,7 @@ const WORLD_3: LevelDef[] = [
   // 3-3 (difícil): revezamento de 1 s, ponte que pisca sobre o buraco, outro revezamento de 1 s e
   // um corredor de paredes que piscam rápido.
   build(
-    "Relógio",
+    "Clockwork",
     66,
     ROWS,
     (g) => {
@@ -275,7 +275,7 @@ const WORLD_3: LevelDef[] = [
   ),
   // 3-4 (difícil): três revezamentos de 0,9 s intercalados com duas pontes que piscam
   build(
-    "Contra o relógio",
+    "Race the clock",
     76,
     ROWS,
     (g) => {
@@ -312,7 +312,7 @@ const WORLD_3: LevelDef[] = [
 const WORLD_4: LevelDef[] = [
   // 4-1: ponte de blocos que caem sobre o poço — atravessar juntos, sem parar
   build(
-    "Ponte que cai",
+    "Falling bridge",
     40,
     ROWS,
     (g) => {
@@ -325,7 +325,7 @@ const WORLD_4: LevelDef[] = [
   ),
   // 4-2: valas com espinho no fundo (pular) e um trecho com espinhos no teto (não pular)
   build(
-    "Espinhos",
+    "Spikes",
     44,
     ROWS,
     (g) => {
@@ -347,7 +347,7 @@ const WORLD_4: LevelDef[] = [
   ),
   // 4-3 (difícil): valas, esmagadores de velocidades diferentes, ponte que cai e mais esmagadores
   build(
-    "Moedor",
+    "Grinder",
     70,
     ROWS,
     (g) => {
@@ -371,7 +371,7 @@ const WORLD_4: LevelDef[] = [
   ),
   // 4-4 (difícil): ponte longa que cai com espinho móvel baixo (pular mata), depois valas e esmagadores
   build(
-    "Sem volta",
+    "No way back",
     62,
     ROWS,
     (g) => {
@@ -400,7 +400,7 @@ const WORLD_4: LevelDef[] = [
 const WORLD_5: LevelDef[] = [
   // 5-1: o trilho só cruza o poço com todos em cima
   build(
-    "Trilho",
+    "Rails",
     40,
     ROWS,
     (g) => {
@@ -413,7 +413,7 @@ const WORLD_5: LevelDef[] = [
   ),
   // 5-2: paredão alto demais; a plataforma sobe e desce sozinha ao lado
   build(
-    "Sobe e desce",
+    "Up and down",
     40,
     ROWS,
     (g) => {
@@ -428,7 +428,7 @@ const WORLD_5: LevelDef[] = [
   // 5-3 (difícil): quatro pistões com valas de espinho e uma plataforma automática sobre espinhos
   // que é preciso pegar e largar na hora certa.
   build(
-    "Linha de pistões",
+    "Piston row",
     72,
     ROWS,
     (g) => {
@@ -455,7 +455,7 @@ const WORLD_5: LevelDef[] = [
   // 5-4 (difícil): trilho em L que exige todos sob espinhos no teto, dois pistões e um elevador de
   // todos até a porta.
   build(
-    "Linha de montagem",
+    "Assembly line",
     66,
     ROWS + 1,
     (g) => {
@@ -488,7 +488,7 @@ const WORLD_5: LevelDef[] = [
 const WORLD_6: LevelDef[] = [
   // 6-1: a corrente de ar leva ao alto do paredão
   build(
-    "Corrente de ar",
+    "Draft",
     40,
     ROWS,
     (g) => {
@@ -501,7 +501,7 @@ const WORLD_6: LevelDef[] = [
   ),
   // 6-2: vento contrário empurra para a vala com espinho — parar é cair
   build(
-    "Contra o vento",
+    "Against the wind",
     44,
     ROWS,
     (g) => {
@@ -519,7 +519,7 @@ const WORLD_6: LevelDef[] = [
   ),
   // 6-3 (difícil): vento contrário forte sobre três valas e, no fim, o ventilador de revezamento
   build(
-    "Vendaval",
+    "Gale force",
     62,
     ROWS,
     (g) => {
@@ -544,7 +544,7 @@ const WORLD_6: LevelDef[] = [
   // 6-4 (difícil): corrente + faixa lateral sobre espinhos até o patamar, depois vento contrário com
   // esmagadores e valas.
   build(
-    "Tempestade",
+    "Storm",
     70,
     ROWS,
     (g) => {
@@ -575,7 +575,7 @@ const WORLD_6: LevelDef[] = [
 const WORLD_7: LevelDef[] = [
   // 7-1: o trampolim leva ao platô
   build(
-    "Trampolim",
+    "Trampoline",
     40,
     ROWS,
     (g) => {
@@ -588,7 +588,7 @@ const WORLD_7: LevelDef[] = [
   ),
   // 7-2: o trampolim só funciona com um botão pressionado — embaixo ou em cima
   build(
-    "Mola com botão",
+    "Spring switch",
     40,
     ROWS,
     (g) => {
@@ -608,7 +608,7 @@ const WORLD_7: LevelDef[] = [
   // 7-3 (difícil): corrente de trampolins diagonais sobre um campo de espinhos; cada um pousa num
   // pilar de 3 tiles onde está o próximo. Segurar direção no ar estraga o salto.
   build(
-    "Saltos em cadeia",
+    "Chain jumps",
     52,
     ROWS,
     (g) => {
@@ -627,7 +627,7 @@ const WORLD_7: LevelDef[] = [
   // 7-4 (difícil): torre de dois andares com botões e um terceiro trampolim, ligado por botões no topo
   // ou na plataforma da porta, que lança por cima de um corredor de espinhos.
   build(
-    "Torre de molas",
+    "Spring tower",
     54,
     ROWS + 2,
     (g) => {
@@ -663,7 +663,7 @@ const FLIP = { flipGravity: true };
 const WORLD_8: LevelDef[] = [
   // 8-1: atravessar o poço de espinhos pelo teto; a chave está pendurada no teto
   build(
-    "Teto",
+    "Ceiling",
     40,
     ROWS,
     (g) => {
@@ -677,7 +677,7 @@ const WORLD_8: LevelDef[] = [
   ),
   // 8-2: o portão exige o botão do teto e o do chão ao mesmo tempo (temporizados)
   build(
-    "Espelho",
+    "Mirror",
     40,
     ROWS,
     (g) => {
@@ -698,7 +698,7 @@ const WORLD_8: LevelDef[] = [
   // 8-3 (difícil): seis inversões — espinhos alternam entre chão e teto; a chave está pendurada no
   // meio do caminho pelo teto.
   build(
-    "Zigue-zague",
+    "Zigzag",
     66,
     ROWS,
     (g) => {
@@ -720,7 +720,7 @@ const WORLD_8: LevelDef[] = [
   // 8-4 (difícil): dois espelhos de botões (teto + chão ao mesmo tempo) com espinhos entre eles que
   // obrigam cada um a trocar de lado, e um poço final atravessado pelo teto.
   build(
-    "Avesso",
+    "Inside out",
     70,
     ROWS,
     (g) => {
@@ -772,7 +772,7 @@ const WORLD_9: LevelDef[] = [
   ),
   // 9-2: a sala da chave é fechada; o portal de saída leva todos de uma vez até a porta
   build(
-    "Todos juntos",
+    "All together",
     44,
     ROWS,
     (g) => {
@@ -793,7 +793,7 @@ const WORLD_9: LevelDef[] = [
   // 9-3 (difícil): revezamento de 1,2 s em que o segundo botão fica do outro lado do portal; sala
   // selada com ponte que cai até o segundo portal; esmagadores pela chave e portal de todos até a porta.
   build(
-    "Ida e volta",
+    "There and back",
     62,
     ROWS,
     (g) => {
@@ -823,7 +823,7 @@ const WORLD_9: LevelDef[] = [
   // 9-4 (difícil): labirinto de cinco salas; portais-armadilha flutuantes perto de degraus (pular cedo
   // leva aos espinhos), valas pela chave e o portal de todos no fim.
   build(
-    "Labirinto",
+    "Maze",
     72,
     ROWS,
     (g) => {
@@ -855,7 +855,7 @@ const WORLD_9: LevelDef[] = [
 const WORLD_10: LevelDef[] = [
   // 10-1: caixas altas de cada cor viram ponte em buracos fundos — só o dono empurra
   build(
-    "Sua cor",
+    "Your color",
     46,
     ROWS + 1,
     (g) => {
@@ -874,7 +874,7 @@ const WORLD_10: LevelDef[] = [
   ),
   // 10-2: o azul pula e a caixa azul leva o laranja até o platô; lá em cima, o botão liga a mola
   build(
-    "Caixa saltadora",
+    "Jumping crate",
     40,
     ROWS,
     (g) => {
@@ -891,7 +891,7 @@ const WORLD_10: LevelDef[] = [
   ),
   // 10-3: cada caixa no seu botão; depois ponte que cai, esmagador e a chave no alto
   build(
-    "Cada um no seu botão",
+    "To each their button",
     54,
     ROWS,
     (g) => {
@@ -919,7 +919,7 @@ const WORLD_10: LevelDef[] = [
   ),
   // 10-4: ponte da cor certa, caixas nos botões e a caixa azul que lança o laranja ao paredão
   build(
-    "Arco-íris",
+    "Rainbow",
     70,
     ROWS + 1,
     (g) => {
@@ -953,7 +953,7 @@ const WORLD_10: LevelDef[] = [
 const WORLD_11: LevelDef[] = [
   // 11-1: valas com espinho que somem no escuro
   build(
-    "Luzes apagando",
+    "Lights out",
     44,
     ROWS,
     (g) => {
@@ -969,7 +969,7 @@ const WORLD_11: LevelDef[] = [
   ),
   // 11-2: ponte que cai no escuro
   build(
-    "No escuro",
+    "In the dark",
     40,
     ROWS,
     (g) => {
@@ -982,7 +982,7 @@ const WORLD_11: LevelDef[] = [
   ),
   // 11-3: amarrados no escuro — paredão, rapel pela chave, esmagador, valas e outro paredão
   build(
-    "Corda no escuro",
+    "Rope in the dark",
     60,
     DEEP,
     (g) => {
@@ -1007,7 +1007,7 @@ const WORLD_11: LevelDef[] = [
   ),
   // 11-4: no breu — valas e esmagadores, ponte que pisca, ponte que cai e mais esmagadores
   build(
-    "Breu",
+    "Pitch black",
     68,
     ROWS,
     (g) => {
@@ -1039,7 +1039,7 @@ const tunnel = (g: Grid, c0: number, c1: number) => g.fill(c0, c1, 0, FLOOR - 1)
 const WORLD_12: LevelDef[] = [
   // 12-1: crescer no botão para alcançar o platô de 3 tiles
   build(
-    "Crescer",
+    "Grow",
     40,
     ROWS,
     (g) => {
@@ -1052,7 +1052,7 @@ const WORLD_12: LevelDef[] = [
   ),
   // 12-2: crescer para subir, encolher para passar no túnel de 1 tile
   build(
-    "Encolher",
+    "Shrink",
     48,
     ROWS,
     (g) => {
@@ -1071,7 +1071,7 @@ const WORLD_12: LevelDef[] = [
   ),
   // 12-3: encolher na medida, túnel de espinhos, crescer para o platô e outro túnel lá em cima
   build(
-    "Na medida",
+    "Just right",
     60,
     ROWS,
     (g) => {
@@ -1096,7 +1096,7 @@ const WORLD_12: LevelDef[] = [
   ),
   // 12-4: crescer, encolher no túnel, crescer para o muro e encolher de novo para o último túnel
   build(
-    "Tamanho certo",
+    "Right size",
     72,
     ROWS,
     (g) => {
@@ -1127,7 +1127,7 @@ const WORLD_12: LevelDef[] = [
 const WORLD_13: LevelDef[] = [
   // 13-1: ponte de caixa de todos, revezamento de 1 s, caixas nos botões e elevador de todos
   build(
-    "Tudo junto",
+    "All at once",
     66,
     ROWS + 1,
     (g) => {
@@ -1161,7 +1161,7 @@ const WORLD_13: LevelDef[] = [
   ),
   // 13-2: vento contrário sobre valas, dois pistões, ponte que cai e esmagador
   build(
-    "Contra tudo",
+    "Against all odds",
     70,
     ROWS,
     (g) => {
@@ -1186,7 +1186,7 @@ const WORLD_13: LevelDef[] = [
   ),
   // 13-3: trampolins sobre espinhos, portal de todos através do muro e esmagadores
   build(
-    "Saltos e portais",
+    "Jumps and portals",
     66,
     ROWS,
     (g) => {
@@ -1210,7 +1210,7 @@ const WORLD_13: LevelDef[] = [
   ),
   // 13-4: zigue-zague de ponta-cabeça no apagão
   build(
-    "Avesso no escuro",
+    "Inside out in the dark",
     86,
     ROWS,
     (g) => {
@@ -1235,7 +1235,7 @@ const WORLD_13: LevelDef[] = [
 const WORLD_14: LevelDef[] = [
   // 14-1: revezamento através do portal, ponte que pisca, revezamento de 0,9 s e portal de todos
   build(
-    "Relógio de portais",
+    "Portal clock",
     74,
     ROWS,
     (g) => {
@@ -1267,7 +1267,7 @@ const WORLD_14: LevelDef[] = [
   ),
   // 14-2: caixas coloridas nos botões, dois pistões, torre pela chave e ponte que cai
   build(
-    "Cores e pistões",
+    "Colors and pistons",
     72,
     ROWS,
     (g) => {
@@ -1300,7 +1300,7 @@ const WORLD_14: LevelDef[] = [
   ),
   // 14-3: trilho de todos sob espinhos, pistões e elevador de todos — no apagão
   build(
-    "Montagem no escuro",
+    "Assembly in the dark",
     66,
     ROWS + 1,
     (g) => {
@@ -1330,7 +1330,7 @@ const WORLD_14: LevelDef[] = [
   ),
   // 14-4: encolher para o túnel de espinhos, crescer para o platô e voltar ao normal sob as armadilhas
   build(
-    "Tamanho e portais",
+    "Size and portals",
     66,
     ROWS,
     (g) => {
@@ -1357,7 +1357,7 @@ const WORLD_15: LevelDef[] = [
   // 15-1: ponte de caixa de todos, revezamento de 0,9 s, ponte que pisca, pistões, elevador de todos
   // e esmagador no alto
   build(
-    "Maratona",
+    "Marathon",
     80,
     ROWS + 1,
     (g) => {
@@ -1391,7 +1391,7 @@ const WORLD_15: LevelDef[] = [
   ),
   // 15-2: trampolins sobre espinhos, vento contrário sobre valas e revezamento no ventilador
   build(
-    "Tempestade final",
+    "Final storm",
     90,
     ROWS,
     (g) => {
@@ -1422,7 +1422,7 @@ const WORLD_15: LevelDef[] = [
   ),
   // 15-3: revezamento, valas e esmagadores, ponte que pisca e ponte que cai — quase sempre no escuro
   build(
-    "Tudo no escuro",
+    "All in the dark",
     82,
     ROWS,
     (g) => {
@@ -1510,7 +1510,7 @@ const WORLD_16: LevelDef[] = [
   // 16-1: morro com o botão que solta a chave; chave flutuando no vale (torre); escadaria e
   // ponte com contagem de 1,5 s (curta demais para atravessar sozinho) e botão do outro lado
   build(
-    "Cidade-fantasma",
+    "Ghost town",
     64,
     ROWS,
     (g) => {
@@ -1546,7 +1546,7 @@ const WORLD_16: LevelDef[] = [
   // 16-2: revezamento na ponte (dois botões de 2,5 s), torre até a plataforma do botão da
   // jaula, e o caixote de todos vira degrau para o patamar da porta
   build(
-    "Desfiladeiro",
+    "The gorge",
     64,
     ROWS,
     (g) => {
@@ -1571,7 +1571,7 @@ const WORLD_16: LevelDef[] = [
   // 16-3 (difícil): amarrados — o caixote de todos fica em cima do botão para segurar a ponte;
   // paredão com corda; botão da jaula, chave e porta lá em cima
   build(
-    "Laço no cânion",
+    "Canyon lasso",
     48,
     ROWS,
     (g) => {
@@ -1596,7 +1596,7 @@ const WORLD_16: LevelDef[] = [
   // 16-4 (difícil): a corrida inteira — revezamento na ponte, vagonete de todos, torre até o
   // botão com atraso que solta a chave, escadaria e a ponte com contagem até a porta
   build(
-    "Corrida do ouro",
+    "Gold rush",
     86,
     ROWS,
     (g) => {
@@ -1630,22 +1630,22 @@ const WORLD_16: LevelDef[] = [
 ];
 
 export const WORLDS: { name: string; levels: LevelDef[] }[] = [
-  { name: "Primeiros passos", levels: WORLD_1 },
-  { name: "Amarrados", levels: WORLD_2 },
-  { name: "Contra o tempo", levels: WORLD_3 },
-  { name: "Chão traiçoeiro", levels: WORLD_4 },
-  { name: "Engrenagens", levels: WORLD_5 },
-  { name: "Ventania", levels: WORLD_6 },
-  { name: "Molas", levels: WORLD_7 },
-  { name: "De ponta-cabeça", levels: WORLD_8 },
-  { name: "Portais", levels: WORLD_9 },
-  { name: "Cores", levels: WORLD_10 },
-  { name: "Apagão", levels: WORLD_11 },
-  { name: "Tamanho", levels: WORLD_12 },
-  { name: "Mistura", levels: WORLD_13 },
-  { name: "Desafio", levels: WORLD_14 },
-  { name: "Grande final", levels: WORLD_15 },
-  { name: "Corrida do ouro", levels: WORLD_16 },
+  { name: "First steps", levels: WORLD_1 },
+  { name: "Tied together", levels: WORLD_2 },
+  { name: "Against the clock", levels: WORLD_3 },
+  { name: "Treacherous ground", levels: WORLD_4 },
+  { name: "Gears", levels: WORLD_5 },
+  { name: "Gale", levels: WORLD_6 },
+  { name: "Springs", levels: WORLD_7 },
+  { name: "Upside down", levels: WORLD_8 },
+  { name: "Portals", levels: WORLD_9 },
+  { name: "Colors", levels: WORLD_10 },
+  { name: "Blackout", levels: WORLD_11 },
+  { name: "Size", levels: WORLD_12 },
+  { name: "Mix", levels: WORLD_13 },
+  { name: "Challenge", levels: WORLD_14 },
+  { name: "Grand finale", levels: WORLD_15 },
+  { name: "Gold rush", levels: WORLD_16 },
 ];
 
 /** Todas as fases em ordem, com slug "mundo-fase". */
