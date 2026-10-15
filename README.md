@@ -18,7 +18,7 @@ be solved as a team. One player climbs on another's shoulders, everyone pushes t
 the rope tying the group together drags whoever falls behind. If one dies, everyone restarts.
 
 The art is 16-bit Wild West pixel art, in the spirit of 90s arcade run-and-guns: a sunset,
-a town on the horizon, cacti, crates and saloon doors. The four cowboys are original
+a town on the horizon, cacti, crates and saloon doors. The eight cowboys are original
 characters, and each one wears their player's color on their clothes and on the little arrow
 above their head.
 
