@@ -14,6 +14,8 @@ const PADS: Device[] = ["g0", "g1", "g2", "g3"];
 const KEY_ACTIONS = new Map(
   KEYMAPS.flatMap((m, k) => ACTIONS.map((a) => [m[a], [`k${k}` as Device, a]] as const)),
 );
+/** Ampliação do canvas do fundo. */
+const BG_SCALE = 4;
 /** Botão Start do controle (layout padrão). */
 const START = 9;
 
@@ -82,7 +84,9 @@ export default function Lobby() {
     const loop = (now: number) => {
       if (ctx) {
         ctx.imageSmoothingEnabled = false;
-        drawBackground(ctx, now / 40);
+        // canvas 4× maior com camadas em posição fracionária: rola 1 px de tela por vez (sem pulos de 4 px)
+        ctx.setTransform(BG_SCALE, 0, 0, BG_SCALE, 0, 0);
+        drawBackground(ctx, now / 40, true);
       }
       const anyPad = anyPadButton();
       if (phaseRef.current === "title") {
@@ -124,8 +128,8 @@ export default function Lobby() {
     <main className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden bg-dusk p-6 text-sand">
       <canvas
         ref={bgRef}
-        width={VIEW_W}
-        height={VIEW_H}
+        width={VIEW_W * BG_SCALE}
+        height={VIEW_H * BG_SCALE}
         aria-hidden
         className="absolute inset-0 h-full w-full object-cover opacity-70 [image-rendering:pixelated]"
       />

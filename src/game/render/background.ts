@@ -102,10 +102,15 @@ function tiled(ctx: CanvasRenderingContext2D, img: HTMLCanvasElement, offset: nu
   ctx.drawImage(img, x + VIEW_W, 0);
 }
 
-/** Desenha o fundo em coordenadas de tela, antes da translação da câmera. */
-export function drawBackground(ctx: CanvasRenderingContext2D, cam: number) {
+/**
+ * Desenha o fundo em coordenadas de tela, antes da translação da câmera.
+ * `subpixel`: camadas em posição fracionária, para rolagem lisa num canvas ampliado (tela título);
+ * no jogo, posições inteiras deixam o pixel art alinhado à câmera.
+ */
+export function drawBackground(ctx: CanvasRenderingContext2D, cam: number, subpixel = false) {
   layers ??= { sky: sky(), mesas: mesas(), town: town() };
+  const at = subpixel ? (x: number) => x : Math.round;
   ctx.drawImage(layers.sky, 0, 0);
-  tiled(ctx, layers.mesas, Math.round(cam * 0.1));
-  tiled(ctx, layers.town, Math.round(cam * 0.3));
+  tiled(ctx, layers.mesas, at(cam * 0.1));
+  tiled(ctx, layers.town, at(cam * 0.3));
 }
