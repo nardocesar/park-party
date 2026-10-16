@@ -1475,12 +1475,12 @@ git commit -m "feat(server): hub WebSocket com códigos de sala e rate limit"
 **Interfaces:**
 - Consome: `createHub` (Tarefa 6), `LEVELS`
 
-- [ ] **Passo 1: ler a documentação do Next 16**
+- [x] **Passo 1: ler a documentação do Next 16**
 
 Leia `node_modules/next/dist/docs/01-app/02-guides/custom-server.md`. Confirme que
 `getUpgradeHandler()` existe em `node_modules/next/dist/server/next.d.ts`.
 
-- [ ] **Passo 2: escrever `server.ts`**
+- [x] **Passo 2: escrever `server.ts`**
 
 ```ts
 import { createServer } from "node:http";
@@ -1507,7 +1507,7 @@ app.prepare().then(() => {
 });
 ```
 
-- [ ] **Passo 3: scripts**
+- [x] **Passo 3: scripts**
 
 Em `package.json`:
 
@@ -1518,7 +1518,7 @@ Em `package.json`:
 
 (`tsx` já está em `dependencies`, então existe na imagem do Railway.)
 
-- [ ] **Passo 4: verificar no navegador e por WebSocket**
+- [x] **Passo 4: verificar no navegador e por WebSocket**
 
 ```bash
 npm run dev   # em segundo plano
@@ -1531,7 +1531,7 @@ a tela título renderiza com estilos (Tailwind). Se os estilos sumirem, troque
 `turbopack: true` por `{ dev }` e confira de novo. Edite um texto em `Lobby.tsx` e confirme
 que o HMR atualiza a página (upgrade repassado ao Next).
 
-- [ ] **Passo 5: build de produção**
+- [x] **Passo 5: build de produção**
 
 ```bash
 npm run build && PORT=3100 npm start   # em segundo plano; depois:
@@ -1540,7 +1540,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/   # 200
 
 Pare os servidores.
 
-- [ ] **Passo 6: verificação padrão, e2e atual e commit**
+- [x] **Passo 6: verificação padrão, e2e atual e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test && npm run test:e2e

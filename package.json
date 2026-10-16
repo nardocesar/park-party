@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx --env-file-if-exists=.env server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production tsx --env-file-if-exists=.env server.ts",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
