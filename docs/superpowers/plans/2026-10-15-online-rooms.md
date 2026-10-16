@@ -3481,4 +3481,4 @@ Anote o link do PR no "Registro".
 | 1 | https://github.com/nardocesar/sunset-park/pull/14 | inclui spec, plano e loop |
 | 2 | https://github.com/nardocesar/sunset-park/pull/15 | lint React 19: useSyncExternalStore no título/sala |
 | 3 | https://github.com/nardocesar/sunset-park/pull/16 | bug da contagem corrigido; 4-1 jogada de ponta a ponta |
-| 4 | | |
+| 4 | https://github.com/nardocesar/sunset-park/pull/17 | README com capturas novas |
