@@ -2209,13 +2209,13 @@ Anote o link do PR no "Registro".
   - `join(nick, token, send, now)` e `handle(id, msg, now)` (agora com `now`)
   - `TINY: LevelDef & { slug: "99-1" }`
 
-- [ ] **Passo 1: criar a branch da etapa**
+- [x] **Passo 1: criar a branch da etapa**
 
 ```bash
 git checkout feat/online-2-lobby && git checkout -b feat/online-3-match
 ```
 
-- [ ] **Passo 2: fase mínima de teste**
+- [x] **Passo 2: fase mínima de teste**
 
 `src/server/testing/tiny.ts`:
 
@@ -2236,7 +2236,7 @@ export const TINY: LevelDef & { slug: string } = {
 };
 ```
 
-- [ ] **Passo 3: testes da partida**
+- [x] **Passo 3: testes da partida**
 
 `src/server/match.test.ts`:
 
@@ -2342,13 +2342,13 @@ describe("partida autoritativa", () => {
 });
 ```
 
-- [ ] **Passo 4: rodar e ver falhar**
+- [x] **Passo 4: rodar e ver falhar**
 
 Run: `npx vitest run src/server/match.test.ts`
 Esperado: FAIL com "Failed to resolve import ./match". (Se só o primeiro teste falhar por causa
 do mapa da `TINY`, ajuste o mapa até a fase concluir; ele é a base dos outros.)
 
-- [ ] **Passo 5: implementar `match.ts`**
+- [x] **Passo 5: implementar `match.ts`**
 
 ```ts
 import type { Level } from "@/game/engine/level";
@@ -2448,7 +2448,7 @@ export function createMatch(level: Level, players: number, now: number) {
 Run: `npx vitest run src/server/match.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 6: testes novos da sala**
+- [x] **Passo 6: testes novos da sala**
 
 Em `src/server/room.test.ts`: troque o `setup` para receber `onCleared` e incluir a `TINY`,
 passe `now` em todo `join`/`handle` (use `0` nos testes de lobby) e acrescente:
@@ -2578,12 +2578,12 @@ describe("sala — partida", () => {
 });
 ```
 
-- [ ] **Passo 7: rodar e ver falhar**
+- [x] **Passo 7: rodar e ver falhar**
 
 Run: `npx vitest run src/server/room.test.ts`
 Esperado: FAIL (sala ainda não tem partida; `onCleared` e `now` não existem).
 
-- [ ] **Passo 8: substituir `room.ts` pela versão completa**
+- [x] **Passo 8: substituir `room.ts` pela versão completa**
 
 ```ts
 import { MAX_PLAYERS } from "@/game/engine/constants";
@@ -2795,7 +2795,7 @@ export function createRoom(code: string, deps: RoomDeps, now: number) {
 Atenção ao `cleared` da partida: `toSeats` roda depois do `.then`; se a sala já voltou ao
 lobby (`seats = []`), ninguém recebe. Por isso `CLEARED_MS` (5 s) é bem maior que a gravação.
 
-- [ ] **Passo 9: hub passa `now` e `onCleared`**
+- [x] **Passo 9: hub passa `now` e `onCleared`**
 
 Em `src/server/hub.ts`: `room.join(msg.nick, msg.token, send, now)` e
 `bound.room.handle(bound.id, msg, Date.now())`. O tipo de `deps` continua
@@ -2803,12 +2803,12 @@ Em `src/server/hub.ts`: `room.join(msg.nick, msg.token, send, now)` e
 `beforeEach` passa `onCleared: async () => null`. Em `server.ts`, passe
 `onCleared: async () => null` por enquanto (a Tarefa 10 liga ao banco).
 
-- [ ] **Passo 10: rodar e ver passar**
+- [x] **Passo 10: rodar e ver passar**
 
 Run: `npx vitest run src/server`
 Esperado: PASS.
 
-- [ ] **Passo 11: verificação padrão e commit**
+- [x] **Passo 11: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test

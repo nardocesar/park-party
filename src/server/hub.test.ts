@@ -10,7 +10,7 @@ let hub: Hub;
 let url: string;
 
 beforeEach(async () => {
-  hub = createHub({ random: () => 0, levels: LEVELS });
+  hub = createHub({ random: () => 0, levels: LEVELS, onCleared: async () => null });
   server = createServer();
   server.on("upgrade", (req, socket, head) => hub.handleUpgrade(req, socket, head));
   await new Promise<void>((resolve) => server.listen(0, resolve));

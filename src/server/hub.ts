@@ -53,7 +53,7 @@ export function createHub(deps: Omit<RoomDeps, "newId">) {
           room = createRoom(newCode(), { ...deps, newId: randomUUID }, now);
           rooms.set(room.code, room);
         }
-        const res = room.join(msg.nick, msg.token, send);
+        const res = room.join(msg.nick, msg.token, send, now);
         if (!res.ok) {
           send({ t: "error", code: res.code });
           return ws.close(1000);
@@ -62,7 +62,7 @@ export function createHub(deps: Omit<RoomDeps, "newId">) {
         return;
       }
 
-      const err = bound.room.handle(bound.id, msg);
+      const err = bound.room.handle(bound.id, msg, now);
       if (err === "drop") return ws.close(1008, "invalid");
       if (err) send({ t: "error", code: err });
     });

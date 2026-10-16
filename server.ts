@@ -10,7 +10,7 @@ const app = next({ dev });
 app.prepare().then(() => {
   const handle = app.getRequestHandler();
   const upgradeNext = app.getUpgradeHandler();
-  const hub = createHub({ random: Math.random, levels: LEVELS });
+  const hub = createHub({ random: Math.random, levels: LEVELS, onCleared: async () => null });
 
   const server = createServer((req, res) => handle(req, res));
   // /ws é das salas; o resto (HMR em dev) continua com o Next
