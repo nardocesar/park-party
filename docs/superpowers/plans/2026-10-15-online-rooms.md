@@ -3354,20 +3354,20 @@ Anote o link do PR no "Registro".
 - Modificar: `src/game/input.ts`, `src/game/input.test.ts`, `src/db/queries.ts`,
   `README.md`, `PROGRESS.md`
 
-- [ ] **Passo 1: criar a branch da etapa**
+- [x] **Passo 1: criar a branch da etapa**
 
 ```bash
 git checkout feat/online-3-match && git checkout -b feat/online-4-cleanup
 ```
 
-- [ ] **Passo 2: apagar o modo local**
+- [x] **Passo 2: apagar o modo local**
 
 ```bash
 git rm -r src/app/levels src/app/play src/app/local src/components/Game.tsx src/components/Lobby.tsx \
   src/game/lobby.ts src/game/lobby.test.ts src/game/progress.ts src/game/progress.test.ts e2e/play.spec.ts
 ```
 
-- [ ] **Passo 3: `input.ts` só com o necessário**
+- [x] **Passo 3: `input.ts` só com o necessário**
 
 Substitua `src/game/input.ts` por:
 
@@ -3424,7 +3424,7 @@ export function readSoloInput(down: Set<string>): PlayerInput {
 Em `src/game/input.test.ts`, apague os testes de `readInputs`, `deviceLabel` e `inputLabel`
 e mantenha o de `readSoloInput` (Tarefa 11) e os de gamepad adaptados a `readSoloInput`.
 
-- [ ] **Passo 4: consultas antigas**
+- [x] **Passo 4: consultas antigas**
 
 Em `src/db/queries.ts`, apague `listLevels`, `getBestTime`, `insertTime`, `clearedLevelIds`
 e o tipo `LevelRow` se ficarem sem uso. Confirme com:
@@ -3435,7 +3435,7 @@ grep -rn "listLevels\|clearedLevelIds\|insertTime(\|getBestTime(\|game/lobby\|ga
 
 Esperado: só `getBestTime` da server action em `src/app/room/[code]/actions.ts` e o uso em `OnlineGame.tsx`.
 
-- [ ] **Passo 5: rodar tudo**
+- [x] **Passo 5: rodar tudo**
 
 ```bash
 npm run lint && npm run typecheck && npm test && npm run test:e2e
@@ -3443,7 +3443,7 @@ npm run lint && npm run typecheck && npm test && npm run test:e2e
 
 Esperado: PASS (`smoke.spec.ts` e `online.spec.ts`).
 
-- [ ] **Passo 6: README e PROGRESS**
+- [x] **Passo 6: README e PROGRESS**
 
 No `README.md`: o subtítulo vira "A Wild West co-op platformer for 2 to 8 players, online with
 your friends."; a lista de features troca "2 to 8 players: up to 4 on a shared keyboard, plus
@@ -3459,7 +3459,7 @@ No `PROGRESS.md`: item 3 vira "Multiplayer local (substituído pelo online)" com
 tempos (todas liberadas)"; item 12 vira `verificado` com testes
 `timeline.test.ts`, `match.test.ts`, `room.test.ts`, `hub.test.ts`, e2e `online.spec.ts`.
 
-- [ ] **Passo 7: commit, push e PR da Etapa 4**
+- [x] **Passo 7: commit, push e PR da Etapa 4**
 
 ```bash
 git add -A
@@ -3481,4 +3481,4 @@ Anote o link do PR no "Registro".
 | 1 | https://github.com/nardocesar/sunset-park/pull/14 | inclui spec, plano e loop |
 | 2 | https://github.com/nardocesar/sunset-park/pull/15 | lint React 19: useSyncExternalStore no título/sala |
 | 3 | https://github.com/nardocesar/sunset-park/pull/16 | bug da contagem corrigido; 4-1 jogada de ponta a ponta |
-| 4 | | |
+| 4 | https://github.com/nardocesar/sunset-park/pull/17 | README com capturas novas |
