@@ -600,7 +600,7 @@ git commit -m "feat(net): linha do tempo com rollback"
   `ready(): boolean`, `clear(): void`, `sample(sentAt: number, receivedAt: number, serverFrame: number): void`,
   `rtt(): number`, `serverFrame(now: number): number`, `target(now: number): number`
 
-- [ ] **Passo 1: escrever os testes**
+- [x] **Passo 1: escrever os testes**
 
 `src/net/clock.test.ts`:
 
@@ -641,12 +641,12 @@ describe("relógio da partida", () => {
 });
 ```
 
-- [ ] **Passo 2: rodar e ver falhar**
+- [x] **Passo 2: rodar e ver falhar**
 
 Run: `npx vitest run src/net/clock.test.ts`
 Esperado: FAIL com "Failed to resolve import ./clock".
 
-- [ ] **Passo 3: implementar**
+- [x] **Passo 3: implementar**
 
 `src/net/clock.ts`:
 
@@ -687,12 +687,12 @@ export function createClock() {
 }
 ```
 
-- [ ] **Passo 4: rodar e ver passar**
+- [x] **Passo 4: rodar e ver passar**
 
 Run: `npx vitest run src/net/clock.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 5: verificação, commit, push e PR da Etapa 1**
+- [x] **Passo 5: verificação, commit, push e PR da Etapa 1**
 
 ```bash
 npm run lint && npm run typecheck && npm test
