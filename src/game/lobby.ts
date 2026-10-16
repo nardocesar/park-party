@@ -1,4 +1,5 @@
 import { MAX_PLAYERS } from "./engine/constants";
+import { nextFreeCowboy } from "./cowboys";
 import { defaultDevices, DEVICES, type Device } from "./input";
 
 /** Um jogador do time: quem o controla e qual cowboy (0–7) ele escolheu. */
@@ -8,16 +9,6 @@ export type LobbyAction = "jump" | "left" | "right" | "down";
 
 const COWBOYS = MAX_PLAYERS;
 
-/** Próximo cowboy livre a partir de `from`, andando `dir` (dá a volta); null se não houver. */
-function nextFree(team: Team, from: number, dir: 1 | -1): number | null {
-  const taken = new Set(team.map((s) => s.cowboy));
-  for (let k = 1; k <= COWBOYS; k++) {
-    const c = (((from + dir * k) % COWBOYS) + COWBOYS) % COWBOYS;
-    if (!taken.has(c)) return c;
-  }
-  return null;
-}
-
 /**
  * Lobby estilo PICO PARK: pulo entra (com o primeiro cowboy livre), ← → trocam de cowboy
  * sem repetir o de ninguém, baixo sai. Devolve o mesmo time quando nada muda.
@@ -26,11 +17,11 @@ export function lobbyPress(team: Team, device: Device, action: LobbyAction): Tea
   const i = team.findIndex((s) => s.devices.includes(device));
   if (i < 0) {
     if (action !== "jump" || team.length >= MAX_PLAYERS) return team;
-    return [...team, { devices: [device], cowboy: nextFree(team, -1, 1)! }];
+    return [...team, { devices: [device], cowboy: nextFreeCowboy(team.map((s) => s.cowboy), -1, 1)! }];
   }
   if (action === "down") return team.filter((_, k) => k !== i);
   if (action === "jump") return team;
-  const cowboy = nextFree(team, team[i].cowboy, action === "right" ? 1 : -1);
+  const cowboy = nextFreeCowboy(team.map((s) => s.cowboy), team[i].cowboy, action === "right" ? 1 : -1);
   if (cowboy === null) return team;
   return team.map((s, k) => (k === i ? { ...s, cowboy } : s));
 }

@@ -908,7 +908,7 @@ git commit -m "feat(net): protocolo cliente-servidor com validação"
     `tick(now: number): void`, `isDead(now: number): boolean`, `view(): RoomView`
   - (A Tarefa 9 acrescenta `now` em `join` e `handle`.)
 
-- [ ] **Passo 1: testes de `nextFreeCowboy`**
+- [x] **Passo 1: testes de `nextFreeCowboy`**
 
 `src/game/cowboys.test.ts`:
 
@@ -928,7 +928,7 @@ describe("próximo cowboy livre", () => {
 });
 ```
 
-- [ ] **Passo 2: implementar `cowboys.ts` e usar em `lobby.ts`**
+- [x] **Passo 2: implementar `cowboys.ts` e usar em `lobby.ts`**
 
 `src/game/cowboys.ts`:
 
@@ -960,7 +960,7 @@ const cowboy = nextFreeCowboy(team.map((s) => s.cowboy), team[i].cowboy, action 
 Run: `npx vitest run src/game/cowboys.test.ts src/game/lobby.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 3: testes da sala**
+- [x] **Passo 3: testes da sala**
 
 `src/server/room.test.ts`:
 
@@ -1078,12 +1078,12 @@ describe("sala — lobby", () => {
 });
 ```
 
-- [ ] **Passo 4: rodar e ver falhar**
+- [x] **Passo 4: rodar e ver falhar**
 
 Run: `npx vitest run src/server/room.test.ts`
 Esperado: FAIL com "Failed to resolve import ./room".
 
-- [ ] **Passo 5: implementar**
+- [x] **Passo 5: implementar**
 
 `src/server/room.ts`:
 
@@ -1194,12 +1194,12 @@ export function createRoom(code: string, deps: RoomDeps, now: number) {
 }
 ```
 
-- [ ] **Passo 6: rodar e ver passar**
+- [x] **Passo 6: rodar e ver passar**
 
 Run: `npx vitest run src/server src/game/cowboys.test.ts src/game/lobby.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 7: verificação padrão e commit**
+- [x] **Passo 7: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
