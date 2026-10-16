@@ -722,13 +722,13 @@ Anote o link do PR na tabela "Registro" no fim deste plano.
   `MAX_NICK = 16`, `MAX_MSG = 512`, `CODE_RE`; funções `cleanNick(raw: string): string | null`,
   `parseClientMsg(raw: string): ClientMsg | null`
 
-- [ ] **Passo 1: criar a branch da etapa**
+- [x] **Passo 1: criar a branch da etapa**
 
 ```bash
 git checkout feat/online-1-rollback && git checkout -b feat/online-2-lobby
 ```
 
-- [ ] **Passo 2: escrever os testes**
+- [x] **Passo 2: escrever os testes**
 
 `src/net/protocol.test.ts`:
 
@@ -776,12 +776,12 @@ describe("protocolo", () => {
 });
 ```
 
-- [ ] **Passo 3: rodar e ver falhar**
+- [x] **Passo 3: rodar e ver falhar**
 
 Run: `npx vitest run src/net/protocol.test.ts`
 Esperado: FAIL com "Failed to resolve import ./protocol".
 
-- [ ] **Passo 4: implementar**
+- [x] **Passo 4: implementar**
 
 `src/net/protocol.ts`:
 
@@ -873,12 +873,12 @@ export function parseClientMsg(raw: string): ClientMsg | null {
 }
 ```
 
-- [ ] **Passo 5: rodar e ver passar**
+- [x] **Passo 5: rodar e ver passar**
 
 Run: `npx vitest run src/net/protocol.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 6: verificação padrão e commit**
+- [x] **Passo 6: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
