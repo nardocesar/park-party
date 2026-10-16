@@ -369,7 +369,7 @@ git commit -m "feat(net): engine determinística, snapshot e hash do mundo"
     `predict(target: number): { world: World; frame: number; events: GameEvent[] }`
   - `mySeat = -1` = sem jogador local (uso do servidor)
 
-- [ ] **Passo 1: escrever os testes**
+- [x] **Passo 1: escrever os testes**
 
 `src/net/timeline.test.ts`:
 
@@ -481,12 +481,12 @@ describe("linha do tempo (rollback)", () => {
 });
 ```
 
-- [ ] **Passo 2: rodar e ver falhar**
+- [x] **Passo 2: rodar e ver falhar**
 
 Run: `npx vitest run src/net/timeline.test.ts`
 Esperado: FAIL com "Failed to resolve import ./timeline".
 
-- [ ] **Passo 3: implementar**
+- [x] **Passo 3: implementar**
 
 `src/net/timeline.ts`:
 
@@ -575,13 +575,13 @@ export function createTimeline(level: Level, players: number, mySeat: number) {
 }
 ```
 
-- [ ] **Passo 4: rodar e ver passar**
+- [x] **Passo 4: rodar e ver passar**
 
 Run: `npx vitest run src/net/timeline.test.ts`
 Esperado: PASS. Se o primeiro teste falhar só com 8 jogadores, investigue antes de seguir:
 é divergência real de determinismo (ex.: estado fora do `World`), não tolerância de teste.
 
-- [ ] **Passo 5: verificação padrão e commit**
+- [x] **Passo 5: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
