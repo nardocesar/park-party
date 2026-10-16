@@ -3478,7 +3478,7 @@ Anote o link do PR no "Registro".
 
 | Etapa | PR | Observações |
 |---|---|---|
-| 1 | | |
+| 1 | https://github.com/nardocesar/sunset-park/pull/14 | inclui spec, plano e loop |
 | 2 | | |
 | 3 | | |
 | 4 | | |
