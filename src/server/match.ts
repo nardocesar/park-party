@@ -38,7 +38,8 @@ export function createMatch(level: Level, players: number, now: number) {
     virtualFrame,
 
     input(seat: number, f: number, bits: number, now: number): boolean {
-      if (f > virtualFrame(now) + MAX_FUTURE) return false;
+      // na contagem o quadro virtual é negativo: o limite parte do confirmado
+      if (f > Math.max(virtualFrame(now), tl.frame()) + MAX_FUTURE) return false;
       // nunca no passado e nunca antes de um input anterior do mesmo assento
       const fAt = Math.max(f, tl.frame() + 1, lastAt[seat]);
       lastAt[seat] = fAt;

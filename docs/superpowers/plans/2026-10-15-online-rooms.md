@@ -2827,7 +2827,7 @@ git commit -m "feat(server): partida autoritativa com pausa, reconexão e conclu
   `insertTimeBySlug(slug: string, playerCount: number, timeMs: number): Promise<void>`,
   server action `getBestTime(slug: string, playerCount: number): Promise<number | null>`
 
-- [ ] **Passo 1: teste de integração com latências diferentes**
+- [x] **Passo 1: teste de integração com latências diferentes**
 
 Em `src/server/hub.test.ts`, mude o `beforeEach` para
 `createHub({ random: () => 0, levels: [TINY, ...LEVELS], onCleared: async (...a) => (cleared.push(a), 999) })`,
@@ -2890,7 +2890,7 @@ Run: `npx vitest run src/server/hub.test.ts`
 Esperado: PASS (a lógica já existe; este teste prova o caminho real por socket). Se falhar,
 o defeito está na Tarefa 9: corrija lá, não afrouxe o teste.
 
-- [ ] **Passo 2: consultas por slug**
+- [x] **Passo 2: consultas por slug**
 
 Em `src/db/queries.ts`, acrescente (mantenha as antigas até a Etapa 4):
 
@@ -2924,7 +2924,7 @@ export async function getBestTime(slug: string, playerCount: number): Promise<nu
 }
 ```
 
-- [ ] **Passo 3: `server.ts` grava no banco**
+- [x] **Passo 3: `server.ts` grava no banco**
 
 ```ts
 import { bestTimeBySlug, insertTimeBySlug } from "./src/db/queries";
@@ -2942,7 +2942,7 @@ const hub = createHub({
 Verifique: `npm run db:up`, `npm run dev`, e no `psql` (ou `npx tsx --env-file=.env -e`) que
 `bestTimeBySlug("1-1", 2)` responde sem erro.
 
-- [ ] **Passo 4: verificação padrão e commit**
+- [x] **Passo 4: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test

@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import next from "next";
+import { bestTimeBySlug, insertTimeBySlug } from "./src/db/queries";
 import { LEVELS } from "./src/game/levels";
 import { createHub } from "./src/server/hub";
 
@@ -10,7 +11,14 @@ const app = next({ dev });
 app.prepare().then(() => {
   const handle = app.getRequestHandler();
   const upgradeNext = app.getUpgradeHandler();
-  const hub = createHub({ random: Math.random, levels: LEVELS, onCleared: async () => null });
+  const hub = createHub({
+    random: Math.random,
+    levels: LEVELS,
+    onCleared: async (slug, players, timeMs) => {
+      await insertTimeBySlug(slug, players, timeMs);
+      return bestTimeBySlug(slug, players);
+    },
+  });
 
   const server = createServer((req, res) => handle(req, res));
   // /ws é das salas; o resto (HMR em dev) continua com o Next

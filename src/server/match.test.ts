@@ -72,6 +72,16 @@ describe("partida autoritativa", () => {
     expect(m.frame()).toBe(11);
   });
 
+  it("input enviado durante a contagem é aceito (quem já segura uma tecla ao começar)", () => {
+    const m = createMatch(level, 2, 0);
+    expect(m.input(0, 1, RIGHT, 30)).toBe(true);
+    // e na contagem da volta de uma pausa (quadro virtual abaixo do confirmado)
+    m.tick(at(200));
+    m.pause();
+    m.resume(50_000);
+    expect(m.input(0, m.frame() + 1, RIGHT, 50_010)).toBe(true);
+  });
+
   it("input carimbado longe demais no futuro é recusado", () => {
     const m = createMatch(level, 2, 0);
     expect(m.input(0, MAX_FUTURE + 5, RIGHT, at(0))).toBe(false);
