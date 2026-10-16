@@ -83,3 +83,16 @@ export const deviceLabel = (d: Device) => (d[0] === "k" ? KEY_LABELS[Number(d[1]
 export function inputLabel(i: number, playerCount: number) {
   return defaultDevices(i, playerCount).map(deviceLabel).join(" or ");
 }
+
+/** Online: um jogador por dispositivo. Setas ou WASD, mais qualquer controle conectado. */
+export function readSoloInput(down: Set<string>): PlayerInput {
+  const key = (...codes: string[]) => codes.some((c) => down.has(c));
+  const pads = [0, 1, 2, 3].map(readGamepad);
+  const pad = (k: keyof PlayerInput) => pads.some((p) => p[k]);
+  return {
+    left: key("ArrowLeft", "KeyA") || pad("left"),
+    right: key("ArrowRight", "KeyD") || pad("right"),
+    jump: key("ArrowUp", "KeyW") || pad("jump"),
+    down: key("ArrowDown", "KeyS") || pad("down"),
+  };
+}

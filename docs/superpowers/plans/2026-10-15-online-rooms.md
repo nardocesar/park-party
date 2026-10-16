@@ -2963,7 +2963,7 @@ git commit -m "feat(server): recordes por slug e teste de integração com latê
 - Produz: `readSoloInput(down: Set<string>): PlayerInput`;
   `OnlineGame({ start, you, isHost, nicks, send, subscribe })`
 
-- [ ] **Passo 1: teste de `readSoloInput`**
+- [x] **Passo 1: teste de `readSoloInput`**
 
 Em `src/game/input.test.ts`:
 
@@ -2980,7 +2980,7 @@ it("um jogador por dispositivo: setas ou WASD, mais qualquer controle", () => {
 
 Run: `npx vitest run src/game/input.test.ts` → FAIL (`readSoloInput` não existe).
 
-- [ ] **Passo 2: implementar `readSoloInput`**
+- [x] **Passo 2: implementar `readSoloInput`**
 
 Em `src/game/input.ts`:
 
@@ -3001,7 +3001,7 @@ export function readSoloInput(down: Set<string>): PlayerInput {
 
 Run: `npx vitest run src/game/input.test.ts` → PASS.
 
-- [ ] **Passo 3: e2e da partida (falha: não há jogo na sala)**
+- [x] **Passo 3: e2e da partida (falha: não há jogo na sala)**
 
 Acrescente em `e2e/online.spec.ts`:
 
@@ -3063,7 +3063,7 @@ test("partida online: cada aba move o próprio cowboy e a outra vê", async ({ c
 
 Run: `npm run test:e2e -- online.spec.ts` → FAIL (a sala não mostra o jogo).
 
-- [ ] **Passo 4: `OnlineGame.tsx`**
+- [x] **Passo 4: `OnlineGame.tsx`**
 
 ```tsx
 "use client";
@@ -3304,7 +3304,7 @@ export default function OnlineGame({ start, you, isHost, nicks, send, subscribe 
 O `declare global` de `window.__sunsetPark` repete o de `Game.tsx` com o mesmo tipo (o
 TypeScript aceita declarações idênticas); o de `Game.tsx` sai na Etapa 4.
 
-- [ ] **Passo 5: `RoomScreen` mostra a partida**
+- [x] **Passo 5: `RoomScreen` mostra a partida**
 
 Em `Connected` (`src/components/RoomScreen.tsx`), pegue `start` e `subscribe` do `useRoom`
 e, antes do `return <RoomLobby …/>`:
@@ -3319,7 +3319,7 @@ if (start && room.state !== "lobby" && me?.playing) {
 
 com `import OnlineGame from "./OnlineGame";`.
 
-- [ ] **Passo 6: rodar o e2e e ver passar; conferir no navegador**
+- [x] **Passo 6: rodar o e2e e ver passar; conferir no navegador**
 
 Run: `npm run test:e2e`
 Esperado: PASS. Depois, manualmente, abra duas janelas em `http://localhost:3000`, jogue a 1-1
@@ -3327,7 +3327,7 @@ até o fim e confira: contagem 3-2-1, seu cowboy responde na hora, o outro se mo
 uma vez só, "Level clear!" com tempo e recorde, volta à sala. Teste também F5 no meio da fase:
 a outra janela mostra "Paused", e a partida retoma após a contagem.
 
-- [ ] **Passo 7: verificação, commit, push e PR da Etapa 3**
+- [x] **Passo 7: verificação, commit, push e PR da Etapa 3**
 
 ```bash
 npm run lint && npm run typecheck && npm test

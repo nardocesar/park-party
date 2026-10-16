@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { deviceLabel, inputLabel, readInputs } from "./input";
+import { deviceLabel, inputLabel, readInputs, readSoloInput } from "./input";
 
 const pad = (axes: number[], pressed: number[]) => ({
   axes,
@@ -8,6 +8,13 @@ const pad = (axes: number[], pressed: number[]) => ({
 
 describe("entrada", () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it("um jogador por dispositivo: setas ou WASD, mais qualquer controle", () => {
+    vi.stubGlobal("navigator", { getGamepads: () => [null, pad([0.9, 0], [0])] });
+    expect(readSoloInput(new Set(["KeyA"]))).toEqual({ left: true, right: true, jump: true, down: false });
+    vi.stubGlobal("navigator", { getGamepads: () => [] });
+    expect(readSoloInput(new Set(["ArrowUp", "ArrowDown"]))).toEqual({ left: false, right: false, jump: true, down: true });
+  });
 
   it("teclado: cada jogador tem suas teclas", () => {
     vi.stubGlobal("navigator", { getGamepads: () => [] });

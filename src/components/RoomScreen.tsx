@@ -5,6 +5,7 @@ import { useState, useSyncExternalStore } from "react";
 import { hasAutoJoin, loadNick, loadToken, saveNick } from "@/client/nick";
 import { useRoom } from "@/client/useRoom";
 import { cleanNick } from "@/net/protocol";
+import OnlineGame from "./OnlineGame";
 import RoomLobby from "./RoomLobby";
 
 /** Armazenamento do navegador não avisa mudanças nesta aba: só a leitura importa. */
@@ -60,7 +61,7 @@ export default function RoomScreen({ code }: { code: string }) {
 }
 
 function Connected({ code, nick }: { code: string; nick: string }) {
-  const { room, you, error, send } = useRoom(code, nick);
+  const { room, you, error, start, send, subscribe } = useRoom(code, nick);
   if (error === "not_found" || error === "full")
     return (
       <Shell>
@@ -77,6 +78,21 @@ function Connected({ code, nick }: { code: string; nick: string }) {
         <p className="text-dust">Connecting…</p>
       </Shell>
     );
+  const me = room.members.find((m) => m.id === you);
+  if (start && room.state !== "lobby" && me?.playing) {
+    const nicks = Object.fromEntries(room.members.map((m) => [m.id, m.nick]));
+    return (
+      <OnlineGame
+        key={start.slug + start.seats.map((s) => s.id).join()}
+        start={start}
+        you={you}
+        isHost={me.host}
+        nicks={nicks}
+        send={send}
+        subscribe={subscribe}
+      />
+    );
+  }
   return <RoomLobby room={room} you={you} send={send} />;
 }
 
