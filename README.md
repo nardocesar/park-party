@@ -2,7 +2,7 @@
 
 <h1><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-sunset-park-dark.png"><img src="docs/readme/title-sunset-park-light.png" alt="Sunset Park" height="90"></picture></h1>
 
-**A Wild West co-op platformer for 2 to 8 players: one keyboard plus controllers.**
+**A Wild West co-op platformer for 2 to 8 players, online with your friends.**
 Grab the key, open the saloon and walk in together — nobody makes it alone.
 
 ![Four cowboys flip gravity, walk along the ceiling over the cacti, grab the key and drop back down to enter the saloon](docs/screenshots/gameplay.gif)
@@ -20,14 +20,15 @@ the rope tying the group together drags whoever falls behind. If one dies, every
 The art is 16-bit Wild West pixel art, in the spirit of 90s arcade run-and-guns: a sunset,
 a town on the horizon, cacti, crates and saloon doors. The eight cowboys are original
 characters, each with their own color on their clothes and on the little arrow above their head.
-Every player picks one in the lobby before the game starts.
+Every player picks one in the room before the game starts.
 
 - **65 levels** across **16 worlds**, each world introducing a new mechanic
-- **2 to 8 players**: up to 4 on a shared keyboard, plus up to 4 gamepads
-- **Title screen and lobby**: each player joins with their own jump button and picks a cowboy
+- **2 to 8 players online**: create a room, share the link, everyone plays from their own browser
+- **Rooms**: pick a nickname and a cowboy; the host picks the level (or hits **Random**) and starts
 - **Chiptune sound effects** synthesized live in the browser (no audio files), with a mute toggle
 - Everything that needs "everyone" (heavy crates, platforms, portals) **scales with the group size**
-- Progress, level unlocks and **best times per player count** saved in Postgres
+- All levels open from the start; **best times per player count** saved in Postgres
+- **Rollback netcode**: your cowboy reacts instantly, even with friends in another country
 - All in-game text is in English
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-mechanics-dark.png"><img src="docs/readme/title-mechanics-light.png" alt="Mechanics" height="40"></picture></h2>
@@ -66,18 +67,18 @@ Every player picks one in the lobby before the game starts.
     <td><b>Up to 8 players</b> — players 5–8 start on the heads of players 1–4.</td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/title.png" alt="Title screen: Sunset Park in western lettering over a pixel art sunset and a town on the horizon, with the prompt to press any key"></td>
-    <td><img src="docs/screenshots/lobby.png" alt="Lobby with four cards filled (the Sheriff, the Preacher, the Prospector and the Cowboy) and four empty slots waiting for players"></td>
+    <td><img src="docs/screenshots/title.png" alt="Title screen: Sunset Park in western lettering over a pixel art sunset, with a nickname field, a Create room button and a room code field to join"></td>
+    <td><img src="docs/screenshots/lobby.png" alt="Room UXBN with four players (Sheriff Ana as host, Bia, Caio and Duda), each with a different cowboy, and four empty slots"></td>
   </tr>
   <tr>
-    <td><b>Title screen</b> — press any key to start.</td>
-    <td><b>Lobby</b> — each player joins with their own jump button and picks a cowboy with ← →; nobody can take a cowboy already picked.</td>
+    <td><b>Title screen</b> — pick a nickname, then create a room or join one with its code.</td>
+    <td><b>Room</b> — friends join through the invite link and pick a cowboy with ← →; nobody can take a cowboy already picked.</td>
   </tr>
   <tr>
-    <td colspan="2"><img src="docs/screenshots/menu.png" alt="Level select with the chosen team at the top, the worlds and the cleared levels"></td>
+    <td colspan="2"><img src="docs/screenshots/menu.png" alt="The host's level picker: Random and Start buttons above every world and level, with 2-1 selected"></td>
   </tr>
   <tr>
-    <td colspan="2"><b>Level select</b> — shows the team you picked; the next level unlocks when you clear the previous one.</td>
+    <td colspan="2"><b>Level picker</b> — every level is open; the host picks one or hits Random, then starts for everyone.</td>
   </tr>
 </table>
 
@@ -106,18 +107,14 @@ alone, so someone always has to hold the button for the others.
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-controls-dark.png"><img src="docs/readme/title-controls-light.png" alt="Controls" height="40"></picture></h2>
 
-| Controls | Move | Jump (joins in the lobby) | Action (gravity, etc.) / leave the lobby |
+| Controls | Move | Jump | Action (gravity, etc.) |
 |---|---|---|---|
-| Keyboard 1 | `A` `D` | `W` | `S` |
-| Keyboard 2 | `←` `→` | `↑` | `↓` |
-| Keyboard 3 | `J` `L` | `I` | `K` |
-| Keyboard 4 | `Num 4` `Num 6` | `Num 8` | `Num 5` |
-| Gamepads 1–4 | Stick or d-pad | `A` button | Stick or d-pad down |
+| Keyboard | `←` `→` or `A` `D` | `↑` or `W` | `↓` or `S` |
+| Gamepad | Stick or d-pad | `A` button | Stick or d-pad down |
 
-In the lobby, whoever presses a jump button joins with that set of keys or that gamepad, and keeps
-it in every level. `←` `→` pick a cowboy, down leaves, and `Enter` (or `Start` on a gamepad) goes
-to level select once at least 2 have joined. In a level, `R` restarts, `M` toggles sound, `Esc`
-goes back to level select and `Enter` moves on to the next level once you clear one.
+Each player plays from their own browser. In a level, `R` restarts for everyone, `M` toggles sound
+and `Esc` (host only) takes everyone back to the room. If someone drops, the level pauses for up to
+30 s while they reconnect.
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-running-locally-dark.png"><img src="docs/readme/title-running-locally-light.png" alt="Running locally" height="40"></picture></h2>
 
@@ -129,7 +126,7 @@ cp .env.example .env     # local Postgres DATABASE_URL (port 5434)
 npm run db:up            # starts Postgres with docker compose
 npm run db:migrate       # creates the tables
 npm run db:seed          # writes the 65 levels to the database (run again after pulling new levels)
-npm run dev              # http://localhost:3000
+npm run dev              # http://localhost:3000 (Next + WebSocket rooms in server.ts)
 ```
 
 <h2><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/title-how-its-made-dark.png"><img src="docs/readme/title-how-its-made-light.png" alt="How it's made" height="40"></picture></h2>
@@ -141,13 +138,16 @@ npm run dev              # http://localhost:3000
   players carrying each other, rope, flipped gravity, portals, scaling…
 - **Web Audio** for the sound effects: each one is a short sequence of synthesized notes
   (`src/game/audio.ts`), triggered by events the engine emits every frame
-- **Postgres + Drizzle** for levels, progress and best times
+- **Postgres + Drizzle** for levels and best times
+- **WebSocket rooms** (`ws`) in the same Node process as Next (`server.ts`); rooms live in memory.
+  The engine is deterministic, so every browser and the server run the same simulation: your input
+  applies at once, the others are predicted and corrected (rollback), and the server has the final word
 - **Vitest + Playwright**: every level has a test where a bot solves it with 2 players, so no
   impossible level ever ships
 
 ```bash
 npm test             # unit tests + every level solved by a bot
-npm run test:e2e     # browser: title, lobby, keyboard and restart
+npm run test:e2e     # browser: two tabs create and join a room, then play a level together
 npm run typecheck && npm run lint
 ```
 

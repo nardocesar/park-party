@@ -1,5 +1,5 @@
-import Lobby from "@/components/Lobby";
+import Title from "@/components/Title";
 
 export default function Home() {
-  return <Lobby />;
+  return <Title />;
 }

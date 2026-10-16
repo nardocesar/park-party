@@ -722,13 +722,13 @@ Anote o link do PR na tabela "Registro" no fim deste plano.
   `MAX_NICK = 16`, `MAX_MSG = 512`, `CODE_RE`; funções `cleanNick(raw: string): string | null`,
   `parseClientMsg(raw: string): ClientMsg | null`
 
-- [ ] **Passo 1: criar a branch da etapa**
+- [x] **Passo 1: criar a branch da etapa**
 
 ```bash
 git checkout feat/online-1-rollback && git checkout -b feat/online-2-lobby
 ```
 
-- [ ] **Passo 2: escrever os testes**
+- [x] **Passo 2: escrever os testes**
 
 `src/net/protocol.test.ts`:
 
@@ -776,12 +776,12 @@ describe("protocolo", () => {
 });
 ```
 
-- [ ] **Passo 3: rodar e ver falhar**
+- [x] **Passo 3: rodar e ver falhar**
 
 Run: `npx vitest run src/net/protocol.test.ts`
 Esperado: FAIL com "Failed to resolve import ./protocol".
 
-- [ ] **Passo 4: implementar**
+- [x] **Passo 4: implementar**
 
 `src/net/protocol.ts`:
 
@@ -873,12 +873,12 @@ export function parseClientMsg(raw: string): ClientMsg | null {
 }
 ```
 
-- [ ] **Passo 5: rodar e ver passar**
+- [x] **Passo 5: rodar e ver passar**
 
 Run: `npx vitest run src/net/protocol.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 6: verificação padrão e commit**
+- [x] **Passo 6: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
@@ -908,7 +908,7 @@ git commit -m "feat(net): protocolo cliente-servidor com validação"
     `tick(now: number): void`, `isDead(now: number): boolean`, `view(): RoomView`
   - (A Tarefa 9 acrescenta `now` em `join` e `handle`.)
 
-- [ ] **Passo 1: testes de `nextFreeCowboy`**
+- [x] **Passo 1: testes de `nextFreeCowboy`**
 
 `src/game/cowboys.test.ts`:
 
@@ -928,7 +928,7 @@ describe("próximo cowboy livre", () => {
 });
 ```
 
-- [ ] **Passo 2: implementar `cowboys.ts` e usar em `lobby.ts`**
+- [x] **Passo 2: implementar `cowboys.ts` e usar em `lobby.ts`**
 
 `src/game/cowboys.ts`:
 
@@ -960,7 +960,7 @@ const cowboy = nextFreeCowboy(team.map((s) => s.cowboy), team[i].cowboy, action 
 Run: `npx vitest run src/game/cowboys.test.ts src/game/lobby.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 3: testes da sala**
+- [x] **Passo 3: testes da sala**
 
 `src/server/room.test.ts`:
 
@@ -1078,12 +1078,12 @@ describe("sala — lobby", () => {
 });
 ```
 
-- [ ] **Passo 4: rodar e ver falhar**
+- [x] **Passo 4: rodar e ver falhar**
 
 Run: `npx vitest run src/server/room.test.ts`
 Esperado: FAIL com "Failed to resolve import ./room".
 
-- [ ] **Passo 5: implementar**
+- [x] **Passo 5: implementar**
 
 `src/server/room.ts`:
 
@@ -1194,12 +1194,12 @@ export function createRoom(code: string, deps: RoomDeps, now: number) {
 }
 ```
 
-- [ ] **Passo 6: rodar e ver passar**
+- [x] **Passo 6: rodar e ver passar**
 
 Run: `npx vitest run src/server src/game/cowboys.test.ts src/game/lobby.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 7: verificação padrão e commit**
+- [x] **Passo 7: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
@@ -1220,13 +1220,13 @@ git commit -m "feat(server): sala com anfitrião, cowboys e escolha de fase"
   `handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer): void`, `rooms: Map<string, Room>`, `close(): void`;
   `testClient(url: string)` com `send(msg: ClientMsg, delayMs?: number)`, `next(t, timeoutMs?)`, `inbox`, `closed: Promise<number>`
 
-- [ ] **Passo 1: instalar `ws`**
+- [x] **Passo 1: instalar `ws`**
 
 ```bash
 npm install ws && npm install -D @types/ws
 ```
 
-- [ ] **Passo 2: cliente de teste**
+- [x] **Passo 2: cliente de teste**
 
 `src/server/testing/client.ts`:
 
@@ -1267,7 +1267,7 @@ export async function testClient(url: string) {
 }
 ```
 
-- [ ] **Passo 3: testes de integração do hub**
+- [x] **Passo 3: testes de integração do hub**
 
 `src/server/hub.test.ts`:
 
@@ -1349,12 +1349,12 @@ describe("hub", () => {
 });
 ```
 
-- [ ] **Passo 4: rodar e ver falhar**
+- [x] **Passo 4: rodar e ver falhar**
 
 Run: `npx vitest run src/server/hub.test.ts`
 Esperado: FAIL com "Failed to resolve import ./hub".
 
-- [ ] **Passo 5: implementar**
+- [x] **Passo 5: implementar**
 
 `src/server/hub.ts`:
 
@@ -1453,12 +1453,12 @@ export function createHub(deps: Omit<RoomDeps, "newId">) {
 }
 ```
 
-- [ ] **Passo 6: rodar e ver passar**
+- [x] **Passo 6: rodar e ver passar**
 
 Run: `npx vitest run src/server`
 Esperado: PASS.
 
-- [ ] **Passo 7: verificação padrão e commit**
+- [x] **Passo 7: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
@@ -1475,12 +1475,12 @@ git commit -m "feat(server): hub WebSocket com códigos de sala e rate limit"
 **Interfaces:**
 - Consome: `createHub` (Tarefa 6), `LEVELS`
 
-- [ ] **Passo 1: ler a documentação do Next 16**
+- [x] **Passo 1: ler a documentação do Next 16**
 
 Leia `node_modules/next/dist/docs/01-app/02-guides/custom-server.md`. Confirme que
 `getUpgradeHandler()` existe em `node_modules/next/dist/server/next.d.ts`.
 
-- [ ] **Passo 2: escrever `server.ts`**
+- [x] **Passo 2: escrever `server.ts`**
 
 ```ts
 import { createServer } from "node:http";
@@ -1507,7 +1507,7 @@ app.prepare().then(() => {
 });
 ```
 
-- [ ] **Passo 3: scripts**
+- [x] **Passo 3: scripts**
 
 Em `package.json`:
 
@@ -1518,7 +1518,7 @@ Em `package.json`:
 
 (`tsx` já está em `dependencies`, então existe na imagem do Railway.)
 
-- [ ] **Passo 4: verificar no navegador e por WebSocket**
+- [x] **Passo 4: verificar no navegador e por WebSocket**
 
 ```bash
 npm run dev   # em segundo plano
@@ -1531,7 +1531,7 @@ a tela título renderiza com estilos (Tailwind). Se os estilos sumirem, troque
 `turbopack: true` por `{ dev }` e confira de novo. Edite um texto em `Lobby.tsx` e confirme
 que o HMR atualiza a página (upgrade repassado ao Next).
 
-- [ ] **Passo 5: build de produção**
+- [x] **Passo 5: build de produção**
 
 ```bash
 npm run build && PORT=3100 npm start   # em segundo plano; depois:
@@ -1540,7 +1540,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/   # 200
 
 Pare os servidores.
 
-- [ ] **Passo 6: verificação padrão, e2e atual e commit**
+- [x] **Passo 6: verificação padrão, e2e atual e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test && npm run test:e2e
@@ -1568,7 +1568,7 @@ git commit -m "feat(server): Next e WebSocket no mesmo processo"
   - `loadNick(): string`, `saveNick(nick: string): void`, `markAutoJoin(code: string)`, `takeAutoJoin(code: string): boolean`
   - `RoomScreen({ code })`; `RoomLobby({ room, you, send })`
 
-- [ ] **Passo 1: e2e do lobby (falha: rota não existe)**
+- [x] **Passo 1: e2e do lobby (falha: rota não existe)**
 
 `e2e/online.spec.ts`:
 
@@ -1606,7 +1606,7 @@ test("duas abas: criar sala, entrar pelo link, trocar cowboy e escolher fase", a
 Run: `npm run test:e2e -- online.spec.ts`
 Esperado: FAIL (não existe "Nickname" na home).
 
-- [ ] **Passo 2: `nick.ts` e `connection.ts`**
+- [x] **Passo 2: `nick.ts` e `connection.ts`**
 
 `src/client/nick.ts`:
 
@@ -1691,7 +1691,7 @@ export function connect(opts: {
 }
 ```
 
-- [ ] **Passo 3: `useRoom.ts`**
+- [x] **Passo 3: `useRoom.ts`**
 
 ```ts
 "use client";
@@ -1776,14 +1776,14 @@ export function useRoom(code: string, nick: string) {
 }
 ```
 
-- [ ] **Passo 4: `Portrait.tsx` (extraído de `Lobby.tsx`)**
+- [x] **Passo 4: `Portrait.tsx` (extraído de `Lobby.tsx`)**
 
 Mova a função `Portrait` de `src/components/Lobby.tsx` para `src/components/Portrait.tsx`
 como `export default function Portrait`, com os imports `useEffect`, `useRef`,
 `COWBOYS`, `COWBOYS_WALK`, `spriteImage` e `"use client"` no topo. Em `Lobby.tsx`,
 `import Portrait from "./Portrait";` e remova os imports que ficarem sem uso.
 
-- [ ] **Passo 5: `Title.tsx` e home**
+- [x] **Passo 5: `Title.tsx` e home**
 
 `src/components/Title.tsx`:
 
@@ -1908,7 +1908,7 @@ export default function LocalPlay() {
 
 Em `e2e/play.spec.ts`, no teste "título → lobby", troque `page.goto("/")` por `page.goto("/local")`.
 
-- [ ] **Passo 6: `RoomScreen.tsx`, `RoomLobby.tsx` e a rota**
+- [x] **Passo 6: `RoomScreen.tsx`, `RoomLobby.tsx` e a rota**
 
 `src/components/RoomScreen.tsx`:
 
@@ -2163,14 +2163,14 @@ async function Room({ params }: { params: PageProps<"/room/[code]">["params"] })
 }
 ```
 
-- [ ] **Passo 7: rodar o e2e e ver passar**
+- [x] **Passo 7: rodar o e2e e ver passar**
 
 Run: `npm run test:e2e`
 Esperado: PASS em `online.spec.ts`, `play.spec.ts` (agora em `/local`) e `smoke.spec.ts`.
 Se o e2e falhar porque a aba B entrou com o mesmo id da A, o token está indo para o
 `localStorage`: ele precisa ficar no `sessionStorage` (por aba).
 
-- [ ] **Passo 8: verificação, commit, push e PR da Etapa 2**
+- [x] **Passo 8: verificação, commit, push e PR da Etapa 2**
 
 ```bash
 npm run lint && npm run typecheck && npm test
@@ -2209,13 +2209,13 @@ Anote o link do PR no "Registro".
   - `join(nick, token, send, now)` e `handle(id, msg, now)` (agora com `now`)
   - `TINY: LevelDef & { slug: "99-1" }`
 
-- [ ] **Passo 1: criar a branch da etapa**
+- [x] **Passo 1: criar a branch da etapa**
 
 ```bash
 git checkout feat/online-2-lobby && git checkout -b feat/online-3-match
 ```
 
-- [ ] **Passo 2: fase mínima de teste**
+- [x] **Passo 2: fase mínima de teste**
 
 `src/server/testing/tiny.ts`:
 
@@ -2236,7 +2236,7 @@ export const TINY: LevelDef & { slug: string } = {
 };
 ```
 
-- [ ] **Passo 3: testes da partida**
+- [x] **Passo 3: testes da partida**
 
 `src/server/match.test.ts`:
 
@@ -2342,13 +2342,13 @@ describe("partida autoritativa", () => {
 });
 ```
 
-- [ ] **Passo 4: rodar e ver falhar**
+- [x] **Passo 4: rodar e ver falhar**
 
 Run: `npx vitest run src/server/match.test.ts`
 Esperado: FAIL com "Failed to resolve import ./match". (Se só o primeiro teste falhar por causa
 do mapa da `TINY`, ajuste o mapa até a fase concluir; ele é a base dos outros.)
 
-- [ ] **Passo 5: implementar `match.ts`**
+- [x] **Passo 5: implementar `match.ts`**
 
 ```ts
 import type { Level } from "@/game/engine/level";
@@ -2448,7 +2448,7 @@ export function createMatch(level: Level, players: number, now: number) {
 Run: `npx vitest run src/server/match.test.ts`
 Esperado: PASS.
 
-- [ ] **Passo 6: testes novos da sala**
+- [x] **Passo 6: testes novos da sala**
 
 Em `src/server/room.test.ts`: troque o `setup` para receber `onCleared` e incluir a `TINY`,
 passe `now` em todo `join`/`handle` (use `0` nos testes de lobby) e acrescente:
@@ -2578,12 +2578,12 @@ describe("sala — partida", () => {
 });
 ```
 
-- [ ] **Passo 7: rodar e ver falhar**
+- [x] **Passo 7: rodar e ver falhar**
 
 Run: `npx vitest run src/server/room.test.ts`
 Esperado: FAIL (sala ainda não tem partida; `onCleared` e `now` não existem).
 
-- [ ] **Passo 8: substituir `room.ts` pela versão completa**
+- [x] **Passo 8: substituir `room.ts` pela versão completa**
 
 ```ts
 import { MAX_PLAYERS } from "@/game/engine/constants";
@@ -2795,7 +2795,7 @@ export function createRoom(code: string, deps: RoomDeps, now: number) {
 Atenção ao `cleared` da partida: `toSeats` roda depois do `.then`; se a sala já voltou ao
 lobby (`seats = []`), ninguém recebe. Por isso `CLEARED_MS` (5 s) é bem maior que a gravação.
 
-- [ ] **Passo 9: hub passa `now` e `onCleared`**
+- [x] **Passo 9: hub passa `now` e `onCleared`**
 
 Em `src/server/hub.ts`: `room.join(msg.nick, msg.token, send, now)` e
 `bound.room.handle(bound.id, msg, Date.now())`. O tipo de `deps` continua
@@ -2803,12 +2803,12 @@ Em `src/server/hub.ts`: `room.join(msg.nick, msg.token, send, now)` e
 `beforeEach` passa `onCleared: async () => null`. Em `server.ts`, passe
 `onCleared: async () => null` por enquanto (a Tarefa 10 liga ao banco).
 
-- [ ] **Passo 10: rodar e ver passar**
+- [x] **Passo 10: rodar e ver passar**
 
 Run: `npx vitest run src/server`
 Esperado: PASS.
 
-- [ ] **Passo 11: verificação padrão e commit**
+- [x] **Passo 11: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
@@ -2827,7 +2827,7 @@ git commit -m "feat(server): partida autoritativa com pausa, reconexão e conclu
   `insertTimeBySlug(slug: string, playerCount: number, timeMs: number): Promise<void>`,
   server action `getBestTime(slug: string, playerCount: number): Promise<number | null>`
 
-- [ ] **Passo 1: teste de integração com latências diferentes**
+- [x] **Passo 1: teste de integração com latências diferentes**
 
 Em `src/server/hub.test.ts`, mude o `beforeEach` para
 `createHub({ random: () => 0, levels: [TINY, ...LEVELS], onCleared: async (...a) => (cleared.push(a), 999) })`,
@@ -2890,7 +2890,7 @@ Run: `npx vitest run src/server/hub.test.ts`
 Esperado: PASS (a lógica já existe; este teste prova o caminho real por socket). Se falhar,
 o defeito está na Tarefa 9: corrija lá, não afrouxe o teste.
 
-- [ ] **Passo 2: consultas por slug**
+- [x] **Passo 2: consultas por slug**
 
 Em `src/db/queries.ts`, acrescente (mantenha as antigas até a Etapa 4):
 
@@ -2924,7 +2924,7 @@ export async function getBestTime(slug: string, playerCount: number): Promise<nu
 }
 ```
 
-- [ ] **Passo 3: `server.ts` grava no banco**
+- [x] **Passo 3: `server.ts` grava no banco**
 
 ```ts
 import { bestTimeBySlug, insertTimeBySlug } from "./src/db/queries";
@@ -2942,7 +2942,7 @@ const hub = createHub({
 Verifique: `npm run db:up`, `npm run dev`, e no `psql` (ou `npx tsx --env-file=.env -e`) que
 `bestTimeBySlug("1-1", 2)` responde sem erro.
 
-- [ ] **Passo 4: verificação padrão e commit**
+- [x] **Passo 4: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
@@ -2963,7 +2963,7 @@ git commit -m "feat(server): recordes por slug e teste de integração com latê
 - Produz: `readSoloInput(down: Set<string>): PlayerInput`;
   `OnlineGame({ start, you, isHost, nicks, send, subscribe })`
 
-- [ ] **Passo 1: teste de `readSoloInput`**
+- [x] **Passo 1: teste de `readSoloInput`**
 
 Em `src/game/input.test.ts`:
 
@@ -2980,7 +2980,7 @@ it("um jogador por dispositivo: setas ou WASD, mais qualquer controle", () => {
 
 Run: `npx vitest run src/game/input.test.ts` → FAIL (`readSoloInput` não existe).
 
-- [ ] **Passo 2: implementar `readSoloInput`**
+- [x] **Passo 2: implementar `readSoloInput`**
 
 Em `src/game/input.ts`:
 
@@ -3001,7 +3001,7 @@ export function readSoloInput(down: Set<string>): PlayerInput {
 
 Run: `npx vitest run src/game/input.test.ts` → PASS.
 
-- [ ] **Passo 3: e2e da partida (falha: não há jogo na sala)**
+- [x] **Passo 3: e2e da partida (falha: não há jogo na sala)**
 
 Acrescente em `e2e/online.spec.ts`:
 
@@ -3063,7 +3063,7 @@ test("partida online: cada aba move o próprio cowboy e a outra vê", async ({ c
 
 Run: `npm run test:e2e -- online.spec.ts` → FAIL (a sala não mostra o jogo).
 
-- [ ] **Passo 4: `OnlineGame.tsx`**
+- [x] **Passo 4: `OnlineGame.tsx`**
 
 ```tsx
 "use client";
@@ -3304,7 +3304,7 @@ export default function OnlineGame({ start, you, isHost, nicks, send, subscribe 
 O `declare global` de `window.__sunsetPark` repete o de `Game.tsx` com o mesmo tipo (o
 TypeScript aceita declarações idênticas); o de `Game.tsx` sai na Etapa 4.
 
-- [ ] **Passo 5: `RoomScreen` mostra a partida**
+- [x] **Passo 5: `RoomScreen` mostra a partida**
 
 Em `Connected` (`src/components/RoomScreen.tsx`), pegue `start` e `subscribe` do `useRoom`
 e, antes do `return <RoomLobby …/>`:
@@ -3319,7 +3319,7 @@ if (start && room.state !== "lobby" && me?.playing) {
 
 com `import OnlineGame from "./OnlineGame";`.
 
-- [ ] **Passo 6: rodar o e2e e ver passar; conferir no navegador**
+- [x] **Passo 6: rodar o e2e e ver passar; conferir no navegador**
 
 Run: `npm run test:e2e`
 Esperado: PASS. Depois, manualmente, abra duas janelas em `http://localhost:3000`, jogue a 1-1
@@ -3327,7 +3327,7 @@ até o fim e confira: contagem 3-2-1, seu cowboy responde na hora, o outro se mo
 uma vez só, "Level clear!" com tempo e recorde, volta à sala. Teste também F5 no meio da fase:
 a outra janela mostra "Paused", e a partida retoma após a contagem.
 
-- [ ] **Passo 7: verificação, commit, push e PR da Etapa 3**
+- [x] **Passo 7: verificação, commit, push e PR da Etapa 3**
 
 ```bash
 npm run lint && npm run typecheck && npm test
@@ -3354,20 +3354,20 @@ Anote o link do PR no "Registro".
 - Modificar: `src/game/input.ts`, `src/game/input.test.ts`, `src/db/queries.ts`,
   `README.md`, `PROGRESS.md`
 
-- [ ] **Passo 1: criar a branch da etapa**
+- [x] **Passo 1: criar a branch da etapa**
 
 ```bash
 git checkout feat/online-3-match && git checkout -b feat/online-4-cleanup
 ```
 
-- [ ] **Passo 2: apagar o modo local**
+- [x] **Passo 2: apagar o modo local**
 
 ```bash
 git rm -r src/app/levels src/app/play src/app/local src/components/Game.tsx src/components/Lobby.tsx \
   src/game/lobby.ts src/game/lobby.test.ts src/game/progress.ts src/game/progress.test.ts e2e/play.spec.ts
 ```
 
-- [ ] **Passo 3: `input.ts` só com o necessário**
+- [x] **Passo 3: `input.ts` só com o necessário**
 
 Substitua `src/game/input.ts` por:
 
@@ -3424,7 +3424,7 @@ export function readSoloInput(down: Set<string>): PlayerInput {
 Em `src/game/input.test.ts`, apague os testes de `readInputs`, `deviceLabel` e `inputLabel`
 e mantenha o de `readSoloInput` (Tarefa 11) e os de gamepad adaptados a `readSoloInput`.
 
-- [ ] **Passo 4: consultas antigas**
+- [x] **Passo 4: consultas antigas**
 
 Em `src/db/queries.ts`, apague `listLevels`, `getBestTime`, `insertTime`, `clearedLevelIds`
 e o tipo `LevelRow` se ficarem sem uso. Confirme com:
@@ -3435,7 +3435,7 @@ grep -rn "listLevels\|clearedLevelIds\|insertTime(\|getBestTime(\|game/lobby\|ga
 
 Esperado: só `getBestTime` da server action em `src/app/room/[code]/actions.ts` e o uso em `OnlineGame.tsx`.
 
-- [ ] **Passo 5: rodar tudo**
+- [x] **Passo 5: rodar tudo**
 
 ```bash
 npm run lint && npm run typecheck && npm test && npm run test:e2e
@@ -3443,7 +3443,7 @@ npm run lint && npm run typecheck && npm test && npm run test:e2e
 
 Esperado: PASS (`smoke.spec.ts` e `online.spec.ts`).
 
-- [ ] **Passo 6: README e PROGRESS**
+- [x] **Passo 6: README e PROGRESS**
 
 No `README.md`: o subtítulo vira "A Wild West co-op platformer for 2 to 8 players, online with
 your friends."; a lista de features troca "2 to 8 players: up to 4 on a shared keyboard, plus
@@ -3459,7 +3459,7 @@ No `PROGRESS.md`: item 3 vira "Multiplayer local (substituído pelo online)" com
 tempos (todas liberadas)"; item 12 vira `verificado` com testes
 `timeline.test.ts`, `match.test.ts`, `room.test.ts`, `hub.test.ts`, e2e `online.spec.ts`.
 
-- [ ] **Passo 7: commit, push e PR da Etapa 4**
+- [x] **Passo 7: commit, push e PR da Etapa 4**
 
 ```bash
 git add -A
@@ -3479,6 +3479,6 @@ Anote o link do PR no "Registro".
 | Etapa | PR | Observações |
 |---|---|---|
 | 1 | https://github.com/nardocesar/sunset-park/pull/14 | inclui spec, plano e loop |
-| 2 | | |
-| 3 | | |
-| 4 | | |
+| 2 | https://github.com/nardocesar/sunset-park/pull/15 | lint React 19: useSyncExternalStore no título/sala |
+| 3 | https://github.com/nardocesar/sunset-park/pull/16 | bug da contagem corrigido; 4-1 jogada de ponta a ponta |
+| 4 | https://github.com/nardocesar/sunset-park/pull/17 | README com capturas novas |
