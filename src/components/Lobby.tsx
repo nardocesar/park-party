@@ -6,7 +6,8 @@ import { sharedAudio } from "@/game/audio";
 import { MAX_PLAYERS, VIEW_H, VIEW_W } from "@/game/engine/constants";
 import { deviceLabel, KEYMAPS, readDevice, type Device } from "@/game/input";
 import { formatTeam, lobbyPress, type LobbyAction, type Team } from "@/game/lobby";
-import { COWBOY_NAMES, COWBOYS, COWBOYS_WALK, drawBackground, PLAYER_COLORS, spriteImage } from "@/game/render";
+import { COWBOY_NAMES, drawBackground, PLAYER_COLORS } from "@/game/render";
+import Portrait from "./Portrait";
 
 const ACTIONS: LobbyAction[] = ["jump", "left", "right", "down"];
 const PADS: Device[] = ["g0", "g1", "g2", "g3"];
@@ -196,22 +197,4 @@ function SeatCard({ index, seat }: { index: number; seat: Team[number] | undefin
       <span className="text-[11px] text-dust">{seat.devices.map(deviceLabel).join(" or ")}</span>
     </li>
   );
-}
-
-/** Cowboy em pixel art, andando no lugar. */
-function Portrait({ cowboy }: { cowboy: number }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const ctx = ref.current?.getContext("2d");
-    if (!ctx) return;
-    let step = 0;
-    const draw = () => {
-      ctx.clearRect(0, 0, 14, 16);
-      ctx.drawImage(spriteImage((step++ % 2 ? COWBOYS_WALK : COWBOYS)[cowboy]), 0, 0);
-    };
-    draw();
-    const id = setInterval(draw, 300);
-    return () => clearInterval(id);
-  }, [cowboy]);
-  return <canvas ref={ref} width={14} height={16} className="h-24 w-[84px] [image-rendering:pixelated]" />;
 }

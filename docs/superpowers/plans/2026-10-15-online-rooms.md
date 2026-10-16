@@ -1568,7 +1568,7 @@ git commit -m "feat(server): Next e WebSocket no mesmo processo"
   - `loadNick(): string`, `saveNick(nick: string): void`, `markAutoJoin(code: string)`, `takeAutoJoin(code: string): boolean`
   - `RoomScreen({ code })`; `RoomLobby({ room, you, send })`
 
-- [ ] **Passo 1: e2e do lobby (falha: rota não existe)**
+- [x] **Passo 1: e2e do lobby (falha: rota não existe)**
 
 `e2e/online.spec.ts`:
 
@@ -1606,7 +1606,7 @@ test("duas abas: criar sala, entrar pelo link, trocar cowboy e escolher fase", a
 Run: `npm run test:e2e -- online.spec.ts`
 Esperado: FAIL (não existe "Nickname" na home).
 
-- [ ] **Passo 2: `nick.ts` e `connection.ts`**
+- [x] **Passo 2: `nick.ts` e `connection.ts`**
 
 `src/client/nick.ts`:
 
@@ -1691,7 +1691,7 @@ export function connect(opts: {
 }
 ```
 
-- [ ] **Passo 3: `useRoom.ts`**
+- [x] **Passo 3: `useRoom.ts`**
 
 ```ts
 "use client";
@@ -1776,14 +1776,14 @@ export function useRoom(code: string, nick: string) {
 }
 ```
 
-- [ ] **Passo 4: `Portrait.tsx` (extraído de `Lobby.tsx`)**
+- [x] **Passo 4: `Portrait.tsx` (extraído de `Lobby.tsx`)**
 
 Mova a função `Portrait` de `src/components/Lobby.tsx` para `src/components/Portrait.tsx`
 como `export default function Portrait`, com os imports `useEffect`, `useRef`,
 `COWBOYS`, `COWBOYS_WALK`, `spriteImage` e `"use client"` no topo. Em `Lobby.tsx`,
 `import Portrait from "./Portrait";` e remova os imports que ficarem sem uso.
 
-- [ ] **Passo 5: `Title.tsx` e home**
+- [x] **Passo 5: `Title.tsx` e home**
 
 `src/components/Title.tsx`:
 
@@ -1908,7 +1908,7 @@ export default function LocalPlay() {
 
 Em `e2e/play.spec.ts`, no teste "título → lobby", troque `page.goto("/")` por `page.goto("/local")`.
 
-- [ ] **Passo 6: `RoomScreen.tsx`, `RoomLobby.tsx` e a rota**
+- [x] **Passo 6: `RoomScreen.tsx`, `RoomLobby.tsx` e a rota**
 
 `src/components/RoomScreen.tsx`:
 
@@ -2163,14 +2163,14 @@ async function Room({ params }: { params: PageProps<"/room/[code]">["params"] })
 }
 ```
 
-- [ ] **Passo 7: rodar o e2e e ver passar**
+- [x] **Passo 7: rodar o e2e e ver passar**
 
 Run: `npm run test:e2e`
 Esperado: PASS em `online.spec.ts`, `play.spec.ts` (agora em `/local`) e `smoke.spec.ts`.
 Se o e2e falhar porque a aba B entrou com o mesmo id da A, o token está indo para o
 `localStorage`: ele precisa ficar no `sessionStorage` (por aba).
 
-- [ ] **Passo 8: verificação, commit, push e PR da Etapa 2**
+- [x] **Passo 8: verificação, commit, push e PR da Etapa 2**
 
 ```bash
 npm run lint && npm run typecheck && npm test

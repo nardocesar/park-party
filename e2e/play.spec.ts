@@ -35,7 +35,7 @@ test("lista de fases sem lobby abre a fase 1-1 com 2 jogadores e o teclado contr
 });
 
 test("título → lobby: cada um entra com o próprio pulo, escolhe o cowboy e joga com ele", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/local");
   // a página pode chegar antes da hidratação: repete a tecla até o lobby abrir
   await expect(async () => {
     await page.keyboard.press("Space");
