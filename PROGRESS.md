@@ -17,7 +17,7 @@ Status: `todo` | `investigando` | `implementado` | `verificado` | `bloqueado`
 |---|---|---|---|---|
 | 1 | Movimento, pulo variável, gravidade, coyote time | verificado | 00-overview (consts `Game.SideAction`) | `world.test.ts` › movimento e pulo |
 | 2 | Colisão tiles + AABB entre jogadores; empilhar e ser carregado | verificado | 00-overview (inferido) | `world.test.ts` › empilhar |
-| 3 | Multiplayer local (teclado 4 + Gamepad API) | verificado | — | `input.test.ts` (teclado + gamepad mockado), e2e `play.spec.ts`; gamepad físico não testado |
+| 3 | Multiplayer local (substituído pelo online) | verificado | — | Removido na etapa 4 do online; hoje um jogador por dispositivo (`input.test.ts`) |
 | 4 | Chave compartilhada, porta, vitória com todos na porta | verificado | `KeyComponent`, `GoalComponent` | `world.test.ts` › chave, porta |
 | 5 | Morte/reset coletivo | verificado | — | `world.test.ts` › morte e reset |
 | 6 | Câmera compartilhada + borda da tela bloqueia | verificado | `calcScreenEndWalkVeloX` | `world.test.ts` › câmera compartilhada |
@@ -25,8 +25,8 @@ Status: `todo` | `investigando` | `implementado` | `verificado` | `bloqueado`
 | 8 | Botões/placas de pressão e portões | verificado | `SwitchComponent`, `GateComponent` (velocidades desconhecidas) | `world.test.ts` › botão e portão; fase 1-4 |
 | 9 | Plataformas/elevadores com carga mínima | verificado | `WeightedLiftComponent` (`WAIT_TIME`, `MOVE_SPEED_DEFAULT` desconhecidos) | `world.test.ts` › elevador; fase 1-5 |
 | 10 | Formato de fase + 5 fases próprias no Postgres | verificado | — | 5 fases; `levels.test.ts` resolve todas com 2 jogadores |
-| 11 | Seleção de fase, progresso, melhores tempos | verificado | — | `progress.test.ts`; desbloqueio e avanço verificados no navegador |
-| 12 | Multiplayer online | todo | | Só com aprovação do Carlos |
+| 11 | Seleção de fase e melhores tempos (todas liberadas) | verificado | — | Anfitrião escolhe ou sorteia; recordes por slug (`hub.test.ts`) |
+| 12 | Multiplayer online (salas + rollback) | verificado | — | `timeline.test.ts`, `match.test.ts`, `room.test.ts`, `hub.test.ts`, e2e `online.spec.ts`; plano em `docs/superpowers/plans/2026-10-15-online-rooms.md` |
 
 ## Mundos (mecânicas lidas do binário via REA; fases originais, 4 por mundo)
 
