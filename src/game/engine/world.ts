@@ -34,6 +34,9 @@ import {
 } from "./constants";
 import { isSolidAt, type Level, type ThornDir } from "./level";
 
+/** Distância euclidiana com `sqrt` (arredondamento correto em toda engine; `hypot` não tem essa garantia). */
+const dist = (dx: number, dy: number) => Math.sqrt(dx * dx + dy * dy);
+
 export type PlayerInput = { left: boolean; right: boolean; jump: boolean; down?: boolean };
 export const NO_INPUT: PlayerInput = { left: false, right: false, jump: false, down: false };
 
@@ -606,13 +609,13 @@ export function thornRects(t: Thorn): Rect[] {
 
 function pathLength(path: { x: number; y: number }[]) {
   let total = 0;
-  for (let i = 1; i < path.length; i++) total += Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+  for (let i = 1; i < path.length; i++) total += dist(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
   return total;
 }
 
 function pointAt(path: { x: number; y: number }[], s: number) {
   for (let i = 1; i < path.length; i++) {
-    const seg = Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
+    const seg = dist(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y);
     if (s <= seg || i === path.length - 1) {
       const t = seg === 0 ? 0 : Math.min(1, s / seg);
       return { x: path[i - 1].x + (path[i].x - path[i - 1].x) * t, y: path[i - 1].y + (path[i].y - path[i - 1].y) * t };
@@ -639,7 +642,7 @@ function pushOut(world: World, mover: Rect, dx: number, dy: number, ignore: Set<
 
 function moveThorns(world: World) {
   for (const t of world.thorns) {
-    const length = Math.hypot(t.dx, t.dy);
+    const length = dist(t.dx, t.dy);
     if (length === 0 || t.speed === 0) continue;
     t.t = Math.min(1, Math.max(0, t.t + (t.way * t.speed) / length));
     if (t.t === 1 || t.t === 0) t.way = t.t === 1 ? -1 : 1;
@@ -663,7 +666,7 @@ function applyRope(world: World, length: number, camBounds?: [number, number]) {
     const b = chain[i + 1];
     const ca = center(a);
     const cb = center(b);
-    const d = Math.hypot(cb.x - ca.x, cb.y - ca.y);
+    const d = dist(cb.x - ca.x, cb.y - ca.y);
     if (d <= length) continue;
     const ux = (cb.x - ca.x) / d;
     const uy = (cb.y - ca.y) / d;

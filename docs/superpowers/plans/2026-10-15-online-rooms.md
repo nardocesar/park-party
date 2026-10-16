@@ -124,13 +124,13 @@ Tarefas com e2e também rodam `npm run test:e2e` (precisa do Postgres local: `np
   constantes `LEFT = 1`, `RIGHT = 2`, `JUMP = 4`, `DOWN = 8`
 - Produz: `fuzzInputs(seed: number, players: number, frames: number): number[][]` (bits por quadro)
 
-- [ ] **Passo 1: criar a branch da etapa**
+- [x] **Passo 1: criar a branch da etapa**
 
 ```bash
 git checkout docs/online-rooms-spec && git checkout -b feat/online-1-rollback
 ```
 
-- [ ] **Passo 2: escrever o teste de guarda (falha por causa do `Math.hypot`)**
+- [x] **Passo 2: escrever o teste de guarda (falha por causa do `Math.hypot`)**
 
 `src/game/engine/determinism.test.ts`:
 
@@ -154,12 +154,12 @@ describe("determinismo da engine", () => {
 });
 ```
 
-- [ ] **Passo 3: rodar e ver falhar**
+- [x] **Passo 3: rodar e ver falhar**
 
 Run: `npx vitest run src/game/engine/determinism.test.ts`
 Esperado: FAIL listando 4 ocorrências `world.ts: Math.hypot`.
 
-- [ ] **Passo 4: trocar `Math.hypot` em `world.ts`**
+- [x] **Passo 4: trocar `Math.hypot` em `world.ts`**
 
 Adicione perto do topo de `world.ts`, depois dos imports:
 
@@ -177,13 +177,13 @@ const length = dist(t.dx, t.dy);
 const d = dist(cb.x - ca.x, cb.y - ca.y);
 ```
 
-- [ ] **Passo 5: rodar a suíte inteira**
+- [x] **Passo 5: rodar a suíte inteira**
 
 Run: `npm test`
 Esperado: PASS. Se algum teste existente comparar posição com `toBe` e falhar só na última
 casa decimal, troque aquela asserção por `toBeCloseTo(valor, 6)` e anote no commit.
 
-- [ ] **Passo 6: testes de bits e de snapshot (falham: módulos não existem)**
+- [x] **Passo 6: testes de bits e de snapshot (falham: módulos não existem)**
 
 `src/net/bits.test.ts`:
 
@@ -252,12 +252,12 @@ describe("snapshot do mundo", () => {
 });
 ```
 
-- [ ] **Passo 7: rodar e ver falhar**
+- [x] **Passo 7: rodar e ver falhar**
 
 Run: `npx vitest run src/net/bits.test.ts src/game/engine/snapshot.test.ts`
 Esperado: FAIL com "Failed to resolve import".
 
-- [ ] **Passo 8: implementar**
+- [x] **Passo 8: implementar**
 
 `src/net/bits.ts`:
 
@@ -336,12 +336,12 @@ export function hashWorld(world: World): number {
 }
 ```
 
-- [ ] **Passo 9: rodar e ver passar**
+- [x] **Passo 9: rodar e ver passar**
 
 Run: `npx vitest run src/net src/game/engine`
 Esperado: PASS.
 
-- [ ] **Passo 10: verificação padrão e commit**
+- [x] **Passo 10: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
