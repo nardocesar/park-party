@@ -1220,13 +1220,13 @@ git commit -m "feat(server): sala com anfitrião, cowboys e escolha de fase"
   `handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer): void`, `rooms: Map<string, Room>`, `close(): void`;
   `testClient(url: string)` com `send(msg: ClientMsg, delayMs?: number)`, `next(t, timeoutMs?)`, `inbox`, `closed: Promise<number>`
 
-- [ ] **Passo 1: instalar `ws`**
+- [x] **Passo 1: instalar `ws`**
 
 ```bash
 npm install ws && npm install -D @types/ws
 ```
 
-- [ ] **Passo 2: cliente de teste**
+- [x] **Passo 2: cliente de teste**
 
 `src/server/testing/client.ts`:
 
@@ -1267,7 +1267,7 @@ export async function testClient(url: string) {
 }
 ```
 
-- [ ] **Passo 3: testes de integração do hub**
+- [x] **Passo 3: testes de integração do hub**
 
 `src/server/hub.test.ts`:
 
@@ -1349,12 +1349,12 @@ describe("hub", () => {
 });
 ```
 
-- [ ] **Passo 4: rodar e ver falhar**
+- [x] **Passo 4: rodar e ver falhar**
 
 Run: `npx vitest run src/server/hub.test.ts`
 Esperado: FAIL com "Failed to resolve import ./hub".
 
-- [ ] **Passo 5: implementar**
+- [x] **Passo 5: implementar**
 
 `src/server/hub.ts`:
 
@@ -1453,12 +1453,12 @@ export function createHub(deps: Omit<RoomDeps, "newId">) {
 }
 ```
 
-- [ ] **Passo 6: rodar e ver passar**
+- [x] **Passo 6: rodar e ver passar**
 
 Run: `npx vitest run src/server`
 Esperado: PASS.
 
-- [ ] **Passo 7: verificação padrão e commit**
+- [x] **Passo 7: verificação padrão e commit**
 
 ```bash
 npm run lint && npm run typecheck && npm test
